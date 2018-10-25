@@ -47,6 +47,7 @@ $string['export_csv'] = "Export in CSV format";
 $string['export_ods'] = "Export in ODS format";
 $string['export_xls'] = "Export in XLS format";
 $string['export_json'] = "Export in JSON format";
+$string['export_ldap'] = "Synchronize LDAP server";
 $string['viewreport'] = "View report";
 $string['norecordsfound'] = "No records found";
 $string['jsordering'] = 'JavaScript Ordering';
@@ -360,7 +361,7 @@ $string['comp_customsql_help'] = '<p>Add a working SQL query. Do no use the mood
 
 <p>You can find a lot of SQL Reports here: <a href="http://docs.moodle.org/en/ad-hoc_contributed_reports" target="_blank">ad-hoc contributed reports</a></p>
 
-<p>An updated layout of Moodle\'s tables and their interconnected relations: <a href="https://docs.moodle.org/dev/Database_Schema" target="_blank">Database schema</a></p> 
+<p>An updated layout of Moodle\'s tables and their interconnected relations: <a href="https://docs.moodle.org/dev/Database_Schema" target="_blank">Database schema</a></p>
 
 <p>Since this block supports Tim Hunt\'s CustomSQL Queries Reports, you can use any query.</p>
 

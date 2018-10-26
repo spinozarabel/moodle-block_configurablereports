@@ -240,7 +240,7 @@ if($ldapconn) {
 		}  # end for loop
 	}  # end if flag check
 	echo nl2br(" A total of " . $modcount . " LDAP users' attributes were sync'd from the CSV data" . "\n");
-	echo nl2br(" A total of " . $notaddcount . " LDAP users' attributes were NOT sync'd from the CSV data, check for problems" . "\n");
+	echo nl2br(" A total of " . $notmodcount . " LDAP users' attributes were NOT sync'd from the CSV data, check for problems" . "\n");
 }  # if end $ldapconn
 // all done? clean up
 ldap_close($ldapconn);

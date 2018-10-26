@@ -60,7 +60,7 @@ $flag_delete_users 	= true ;			# This allows the code to delete LDAP users that 
 //
 $ldapserver 				= 'ldaps://rahilmahmood.com';
 $ldapuser   				= 'cn=admin,dc=headstart,dc=edu,dc=in';
-$ldappass   				= 'ZUAHxg$5fCyTEjKn45#D';
+$ldappass   				= 'password';
 $ldaptree   				= "dc=headstart,dc=edu,dc=in";
 $ldapfilter 				= "(objectClass=inetOrgPerson)";
 //$csvfile    				= 'sritonildap.csv';

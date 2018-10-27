@@ -110,7 +110,7 @@ if($ldapconn) {
     $csvcount = count($csv);
 		//
     //print_r($csv[0]);
-		echo nl2br("Number of CSV entries found: " . $csvcount . "\n");
+		echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
 	//
   //
   // Now start to synchonize LDAP with SriToni CSV data
@@ -133,7 +133,7 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) { # does ou contain "Student"?
 				$ou = "student";  # if so add to organization unit ou = student
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . ",dc=headstart,dc=edu,dc=in";
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user
 			//echo $csvdn . "\n";
 			if (!array_key_exists($csvdn, $ldapentries)) {
 				//echo "User not in LDAP, need to add user with uid: " . $csv[$i]["uid"] . "\n" ;
@@ -221,11 +221,11 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) {
 				$ou = "student";
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . ",dc=headstart,dc=edu,dc=in";
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user
 			//echo $csvdn . "\n";
 			if (array_key_exists($csvdn, $ldapentries)) {
-				// this means that a CSV user is present in LDAP directory
-				// We can sync the attributes from CSV to LDAP if flag is set
+				// this means that a SriToni user is present in LDAP directory
+				// We can sync the attributes from SriToni to LDAP if flag is set
 				$entry = $csv[$i];
 				//
 				$mod = ldap_mod_replace($ldapconn,$csvdn,$entry);

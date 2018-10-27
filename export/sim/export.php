@@ -60,10 +60,10 @@ $flag_add_users 		  = 	true;			# this allows the code to add users that don't ex
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 //
 $ldapserver 			= 	'ldaps://rahilmahmood.com';
-$ldapuser   			= 	'cn=admin,dc=headstart,dc=edu,dc=in';
+$ldapuser   			= 	'cn=admin,dc=headstart,dc=edu,dc=in';  	# admin login id
 $ldappass   			= 	'password';
-$ldaptree   			= 	"dc=headstart,dc=edu,dc=in";
-$ldapfilter 			= 	"(objectClass=inetOrgPerson)";	# tailor this to your need
+$ldaptree   			= 	"dc=headstart,dc=edu,dc=in";   			# LDAP base dn
+$ldapfilter 			= 	"(objectClass=inetOrgPerson)";			# tailor this to your need
 //
 // connect
 $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -110,7 +110,7 @@ if($ldapconn) {
     $csvcount = count($csv);
 		//
     //print_r($csv[0]);
-		echo nl2br("Number of CSV entries found: " . $csvcount . "\n");
+		echo nl2br("Number of SriToni Users found: " . $csvcount . "\n");
 	//
   //
   // Now start to synchonize LDAP with SriToni CSV data
@@ -133,7 +133,7 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) { # does ou contain "Student"?
 				$ou = "student";  # if so add to organization unit ou = student
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . ",dc=headstart,dc=edu,dc=in";
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;
 			//echo $csvdn . "\n";
 			if (!array_key_exists($csvdn, $ldapentries)) {
 				//echo "User not in LDAP, need to add user with uid: " . $csv[$i]["uid"] . "\n" ;
@@ -221,7 +221,7 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) {
 				$ou = "student";
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . ",dc=headstart,dc=edu,dc=in";
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;
 			//echo $csvdn . "\n";
 			if (array_key_exists($csvdn, $ldapentries)) {
 				// this means that a CSV user is present in LDAP directory
@@ -239,8 +239,8 @@ if($ldapconn) {
 			}  # end if array_exists
 		}  # end for loop
 	}  # end if flag check
-	echo nl2br(" A total of " . $modcount . " LDAP users' attributes were sync'd from the CSV data" . "\n");
-	echo nl2br(" A total of " . $notmodcount . " LDAP users' attributes were NOT sync'd from the CSV data, check for problems" . "\n");
+	echo nl2br(" A total of " . $modcount . " LDAP users' attributes were sync'd from the SriToni data" . "\n");
+	echo nl2br(" A total of " . $notmodcount . " LDAP users' attributes were NOT sync'd from the SriToni data, check for problems" . "\n");
 }  # if end $ldapconn
 // all done? clean up
 ldap_close($ldapconn);

@@ -59,10 +59,10 @@ $flag_mod_users			  = 	false;			# this allows users's LDAP attributes to be upda
 $flag_add_users 		  = 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 //
-$ldapserver 			= 	'ldaps://rahilmahmood.com';
-$ldapuser   			= 	'cn=admin,dc=headstart,dc=edu,dc=in';  	# admin login id
+$ldapserver 			= 	'ldaps://example.edu.in';
+$ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';  	# admin login id
 $ldappass   			= 	'password';
-$ldaptree   			= 	"dc=headstart,dc=edu,dc=in";   			# LDAP base dn
+$ldaptree   			= 	"dc=example,dc=edu,dc=in";   			# LDAP base dn
 $ldapfilter 			= 	"(objectClass=inetOrgPerson)";			# tailor this to your need
 //
 // connect

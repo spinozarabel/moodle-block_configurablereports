@@ -20,7 +20,7 @@
  * Configurable Reports - A Moodle block for creating customizable reports
  *
  * @package     block_configurable_reports
- * @author:     Juan leyva <http://www.twitter.com/jleyvadelgado>
+ * @author:     Juan leyva <http://www.twitter.com/jleyvadelgado>, modified by Madhu Avasarala 11/03/2018
  * @date:       2013-09-07
  *
  * @copyright  Juan leyva <http://www.twitter.com/jleyvadelgado>
@@ -29,10 +29,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2016020103;  // Plugin version.
+$plugin->version = 2016020104;  // Plugin version.
 $plugin->requires = 2015111600; // require Moodle version (3.0).
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.1.1';
+$plugin->release = '3.1.2';
 $plugin->component = 'block_configurable_reports'; // Full name of the plugin (used for diagnostics)
 $plugin->cron      = 86400; // = Once in 24h, Set min time between cron executions.
                             // Should probably be at night to off load CPU load.

@@ -6,6 +6,9 @@ $string['report_courses'] = "Courses report";
 $string['report_users'] = "Users report";
 $string['report_sql'] = "SQL Report";
 $string['managereports'] = "Manage reports";
+$string['privacy:metadata'] = 'The Configurable Reports block only displays and exports existing data.';
+
+$string['messageprovider:messagefromschool'] = 'Notifications from your school';
 
 $string['report'] = "Report";
 $string['reports'] = "Reports";
@@ -43,12 +46,12 @@ $string['field'] = "Field";
 $string['typeofreport'] = "Type of report";
 $string['enablejsordering'] = "Enable JavaScript ordering";
 $string['enablejspagination'] = "Enable JavaScript Pagination";
+$string['export_sync'] = "Sync LDAP";
+$string['export_sim'] = "Simulate LDAP Sync";
 $string['export_csv'] = "Export in CSV format";
 $string['export_ods'] = "Export in ODS format";
 $string['export_xls'] = "Export in XLS format";
 $string['export_json'] = "Export in JSON format";
-$string['export_sync'] = "Sync Ldap";
-$string['export_sim'] = "Simulate Ldap sync";
 $string['viewreport'] = "View report";
 $string['norecordsfound'] = "No records found";
 $string['jsordering'] = 'JavaScript Ordering';

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// Email form added to enable email to selected users.
+// Email form added to enable email to selected users. Replaced by message
 require_once('../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 
@@ -60,12 +60,26 @@ class sendemail_form extends moodleform {
 
 $form = new \sendemail_form(null, ['usersids' => implode(',', $_POST['userids']), 'courseid' => $_POST['courseid']]);
 
+$message = new \core\message\message();
+
 if ($form->is_cancelled()) {
     redirect(new \moodle_url('/course/view.php?id='.$data->courseid));
 } else if ($data = $form->get_data()) {
     foreach (explode(',', $data->usersids) as $userid) {
         $abouttosenduser = $DB->get_record('user', ['id' => $userid]);
-        email_to_user($abouttosenduser, $USER, $data->subject, format_text($data->content['text']), $data->content['text']);
+        //email_to_user($abouttosenduser, $USER, $data->subject, format_text($data->content['text']), $data->content['text']);
+            $message->component = 'block_configurable_reports';
+		        $message->name = 'messagefromschool';
+		        $message->userfrom = $USER;
+		        $message->userto = $abouttosenduser;
+		        $message->subject = $data->subject;
+		        $message->fullmessage = $data->content['text'];
+            $message->fullmessageformat = FORMAT_HTML;
+		        $message->fullmessagehtml = format_text($data->content['text']);
+            $message->smallmessage = 'small message';
+		        $message->courseid = $data->courseid;
+		        $message->replyto = "noreply@hset.in";
+		      $messageid = message_send($message);
     }
     // After emails were sent... go back to where you came from.
     redirect(new \moodle_url('/course/view.php?id='.$data->courseid));

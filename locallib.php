@@ -400,7 +400,7 @@ function cr_print_table($table, $return = false) {
     $output .= '</table>'."\n";
     $output .= '<input type="hidden" name="courseid" value="'.$COURSE->id.'">';
     if ($isuserid != -1) {
-        $output .= '<input type="submit" value="send emails">';
+        $output .= '<input type="submit" value="send notifications">';
     }
     $output .= '</form>';
 

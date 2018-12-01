@@ -155,6 +155,7 @@ if($ldapconn) {
 						$notaddcount = $notaddcount + 1;
 					}
 				} else {
+            echo "user with dn: " . $csvdn . " Could be added to LDAP server but this is a sim" . "\n";
 						$sim_add_count	=	$sim_add_count + 1;  # increment simulated user addition
 				}
 			}  # if end array_key_exists
@@ -198,6 +199,7 @@ if($ldapconn) {
 						$notdelcount = $notdelcount + 1;
 					}
 				}  else {  # end if flagdel simulate check
+            echo nl2br("user with dn: " . $ldapuser . " could be deleted from LDAP server, this is a sim" . "\n");
 						$sim_del_count	=	$sim_del_count	+	1;
 					}
 			}  # end if in array check

@@ -149,7 +149,7 @@ if($ldapconn) {
 					$add = ldap_add($ldapconn,$csvdn,$entry);
 					if ($add) {
 						$addcount = $addcount + 1;
-						//echo "user with dn: " . $csvdn . "successfully added to LDAP server" . "\n";
+						echo "user with dn: " . $csvdn . "successfully added to LDAP server" . "\n";
 					} else {
 						echo "user with dn: " . $csvdn . " could not be added to LDAP server, check for blank fields" . "\n";
 						$notaddcount = $notaddcount + 1;
@@ -193,7 +193,7 @@ if($ldapconn) {
 					//
 					if ($del) {
 						$delcount = $delcount + 1;
-						//echo "user with dn: " . $csvdn . "successfully added to LDAP server" . "\n";
+						echo "user with dn: " . $csvdn . "successfully deleted to LDAP server" . "\n";
 					} else {
 						echo nl2br("user with dn: " . $ldapuser . " could not be deleted from LDAP server, check for problems" . "\n");
 						$notdelcount = $notdelcount + 1;

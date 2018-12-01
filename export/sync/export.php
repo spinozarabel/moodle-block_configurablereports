@@ -126,6 +126,11 @@ if($ldapconn) {
 		// if this flag is set we can go ahead and add any missing users into LDAP
 		// provided the simulation flag is true
     for ( $i = 0; $i < $csvcount; $i++ ) {
+      // replace plain text passwords with SHA hashed ones
+      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+      //
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) { # does ou contain "Teaching"?
 				$ou = "employee";  # if so add to organization unit ou = employee
@@ -214,6 +219,11 @@ if($ldapconn) {
   if ($flag_mod_users) {
 		//
 		for ( $i = 0; $i < $csvcount; $i++ ) {
+      // replace plain text password with SHA version
+      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+      //
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) {
 				$ou = "employee";

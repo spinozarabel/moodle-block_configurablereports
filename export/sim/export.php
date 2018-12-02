@@ -59,11 +59,11 @@ $flag_mod_users			  = 	false;			# this allows users's LDAP attributes to be upda
 $flag_add_users 		  = 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 //
-$ldapserver 			= 	'ldaps://example.edu.in';
-$ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';  	# admin login id
+$ldapserver 			= 	'ldaps://example.com';
+$ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';
 $ldappass   			= 	'password';
-$ldaptree   			= 	"dc=example,dc=edu,dc=in";   			# LDAP base dn
-$ldapfilter 			= 	"(objectClass=inetOrgPerson)";			# tailor this to your need
+$ldaptree   			= 	"dc=example,dc=edu,dc=in";
+$ldapfilter 			= 	"(objectClass=inetOrgPerson)";	# tailor this to your need
 //
 // connect
 $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -110,7 +110,7 @@ if($ldapconn) {
     $csvcount = count($csv);
 		//
     //print_r($csv[0]);
-		echo nl2br("Number of SriToni Users found: " . $csvcount . "\n");
+		echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
 	//
   //
   // Now start to synchonize LDAP with SriToni CSV data
@@ -126,6 +126,11 @@ if($ldapconn) {
 		// if this flag is set we can go ahead and add any missing users into LDAP
 		// provided the simulation flag is true
     for ( $i = 0; $i < $csvcount; $i++ ) {
+      // replace plain text passwords with SHA hashed ones
+      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+      //
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) { # does ou contain "Teaching"?
 				$ou = "employee";  # if so add to organization unit ou = employee
@@ -133,7 +138,7 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) { # does ou contain "Student"?
 				$ou = "student";  # if so add to organization unit ou = student
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user
 			//echo $csvdn . "\n";
 			if (!array_key_exists($csvdn, $ldapentries)) {
 				//echo "User not in LDAP, need to add user with uid: " . $csv[$i]["uid"] . "\n" ;
@@ -144,13 +149,13 @@ if($ldapconn) {
 					$add = ldap_add($ldapconn,$csvdn,$entry);
 					if ($add) {
 						$addcount = $addcount + 1;
-						//echo "user with dn: " . $csvdn . "successfully added to LDAP server" . "\n";
+						echo nl2br("user with dn: " . $csvdn . " added to LDAP server" . "\n");
 					} else {
-						echo nl2br("user with dn: " . $csvdn . " could not be added to LDAP server, check for blank fields" . "\n");
+						echo nl2br("user with dn: " . $csvdn . " could'nt be added to LDAP server, check for blank fields" . "\n");
 						$notaddcount = $notaddcount + 1;
 					}
 				} else {
-						echo nl2br("user with dn: " . $csvdn . "successfully Simulation added to LDAP server" . "\n");
+            echo nl2br("user with dn: " . $csvdn . " Could be Sim added to LDAP server" . "\n");
 						$sim_add_count	=	$sim_add_count + 1;  # increment simulated user addition
 				}
 			}  # if end array_key_exists
@@ -188,13 +193,13 @@ if($ldapconn) {
 					//
 					if ($del) {
 						$delcount = $delcount + 1;
-						echo nl2br("user with dn: " . $csvdn . "successfully deleted from LDAP server" . "\n");
+						echo nl2br("user with dn: " . $csvdn . " deleted from LDAP server" . "\n");
 					} else {
-						echo nl2br("user with dn: " . $ldapuser . " could not be deleted from LDAP server, check for problems" . "\n");
+						echo nl2br("user with dn: " . $ldapuser . " not deleted from LDAP server, check for problems" . "\n");
 						$notdelcount = $notdelcount + 1;
 					}
 				}  else {  # end if flagdel simulate check
-						echo nl2br("user with dn: " . $csvdn . "successfully simulation deleted from LDAP server" . "\n");
+            echo nl2br("user with dn: " . $ldapuser . " sim deleted from LDAP server" . "\n");
 						$sim_del_count	=	$sim_del_count	+	1;
 					}
 			}  # end if in array check
@@ -216,6 +221,11 @@ if($ldapconn) {
   if ($flag_mod_users) {
 		//
 		for ( $i = 0; $i < $csvcount; $i++ ) {
+      // replace plain text password with SHA version
+      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+      //
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) {
 				$ou = "employee";
@@ -223,11 +233,11 @@ if($ldapconn) {
 			if (strpos($csv[$i]["ou"] , "Student") !== false) {
 				$ou = "student";
 			}
-			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;
+			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user
 			//echo $csvdn . "\n";
 			if (array_key_exists($csvdn, $ldapentries)) {
-				// this means that a CSV user is present in LDAP directory
-				// We can sync the attributes from CSV to LDAP if flag is set
+				// this means that a SriToni user is present in LDAP directory
+				// We can sync the attributes from SriToni to LDAP if flag is set
 				$entry = $csv[$i];
 				//
 				$mod = ldap_mod_replace($ldapconn,$csvdn,$entry);
@@ -241,8 +251,8 @@ if($ldapconn) {
 			}  # end if array_exists
 		}  # end for loop
 	}  # end if flag check
-	echo nl2br(" A total of " . $modcount . " LDAP users' attributes were sync'd from the SriToni data" . "\n");
-	echo nl2br(" A total of " . $notmodcount . " LDAP users' attributes were NOT sync'd from the SriToni data, check for problems" . "\n");
+	echo nl2br(" A total of " . $modcount . " LDAP users' attributes were sync'd from the CSV data" . "\n");
+	echo nl2br(" A total of " . $notaddcount . " LDAP users' attributes were NOT sync'd from the CSV data, check for problems" . "\n");
 }  # if end $ldapconn
 // all done? clean up
 ldap_close($ldapconn);

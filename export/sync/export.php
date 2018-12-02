@@ -149,13 +149,13 @@ if($ldapconn) {
 					$add = ldap_add($ldapconn,$csvdn,$entry);
 					if ($add) {
 						$addcount = $addcount + 1;
-						echo "user with dn: " . $csvdn . "successfully added to LDAP server" . "\n";
+						echo nl2br("user with dn: " . $csvdn . " added to LDAP server" . "\n");
 					} else {
-						echo "user with dn: " . $csvdn . " could not be added to LDAP server, check for blank fields" . "\n";
+						echo nl2br("user with dn: " . $csvdn . " could'nt be added to LDAP server, check for blank fields" . "\n");
 						$notaddcount = $notaddcount + 1;
 					}
 				} else {
-            echo "user with dn: " . $csvdn . " Could be added to LDAP server but this is a sim" . "\n";
+            echo nl2br("user with dn: " . $csvdn . " Could be Sim added to LDAP server" . "\n");
 						$sim_add_count	=	$sim_add_count + 1;  # increment simulated user addition
 				}
 			}  # if end array_key_exists
@@ -193,13 +193,13 @@ if($ldapconn) {
 					//
 					if ($del) {
 						$delcount = $delcount + 1;
-						echo "user with dn: " . $csvdn . "successfully deleted to LDAP server" . "\n";
+						echo nl2br("user with dn: " . $csvdn . " deleted from LDAP server" . "\n");
 					} else {
-						echo nl2br("user with dn: " . $ldapuser . " could not be deleted from LDAP server, check for problems" . "\n");
+						echo nl2br("user with dn: " . $ldapuser . " not deleted from LDAP server, check for problems" . "\n");
 						$notdelcount = $notdelcount + 1;
 					}
 				}  else {  # end if flagdel simulate check
-            echo nl2br("user with dn: " . $ldapuser . " could be deleted from LDAP server, this is a sim" . "\n");
+            echo nl2br("user with dn: " . $ldapuser . " sim deleted from LDAP server" . "\n");
 						$sim_del_count	=	$sim_del_count	+	1;
 					}
 			}  # end if in array check

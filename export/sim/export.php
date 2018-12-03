@@ -58,6 +58,7 @@ $flag_del_simulate		=	  true;
 $flag_mod_users			  = 	false;			# this allows users's LDAP attributes to be updated to that in the CSV file
 $flag_add_users 		  = 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
+$flag_pw_encrypt      =   true;
 //
 $ldapserver 			= 	'ldaps://example.com';
 $ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';
@@ -126,11 +127,13 @@ if($ldapconn) {
 		// if this flag is set we can go ahead and add any missing users into LDAP
 		// provided the simulation flag is true
     for ( $i = 0; $i < $csvcount; $i++ ) {
-      // replace plain text passwords with SHA hashed ones
-      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
-      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
-      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
-      //
+      if ($flag_pw_encrypt) {
+        // replace plain text passwords with SHA hashed ones
+        $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+        $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+        $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+        //
+      }
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) { # does ou contain "Teaching"?
 				$ou = "employee";  # if so add to organization unit ou = employee
@@ -193,13 +196,13 @@ if($ldapconn) {
 					//
 					if ($del) {
 						$delcount = $delcount + 1;
-						echo nl2br("user with dn: " . $csvdn . " deleted from LDAP server" . "\n");
+						echo nl2br("user with dn: " . $ldapuid . " deleted from LDAP server" . "\n");
 					} else {
-						echo nl2br("user with dn: " . $ldapuser . " not deleted from LDAP server, check for problems" . "\n");
+						echo nl2br("user with dn: " . $ldapuid . " couldn't delete from LDAP server, check for problems" . "\n");
 						$notdelcount = $notdelcount + 1;
 					}
 				}  else {  # end if flagdel simulate check
-            echo nl2br("user with dn: " . $ldapuser . " sim deleted from LDAP server" . "\n");
+            echo nl2br("user with dn: " . $ldapuid . " sim deleted from LDAP server" . "\n");
 						$sim_del_count	=	$sim_del_count	+	1;
 					}
 			}  # end if in array check
@@ -221,11 +224,13 @@ if($ldapconn) {
   if ($flag_mod_users) {
 		//
 		for ( $i = 0; $i < $csvcount; $i++ ) {
-      // replace plain text password with SHA version
-      $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
-      $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
-      $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
-      //
+      if ($flag_pw_encrypt) {
+        // replace plain text passwords with SHA hashed ones
+        $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
+        $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+        $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
+        //
+      }
 			$csvuid = $csv[$i]["uid"];
 			if (strpos($csv[$i]["ou"] , "Teaching") !== false) {
 				$ou = "employee";

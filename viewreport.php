@@ -88,6 +88,10 @@ if (!$download) {
         $managereporturl = new \moodle_url('/blocks/configurable_reports/managereport.php', ['courseid' => $report->courseid]);
         $PAGE->navbar->add(get_string('managereports', 'block_configurable_reports'), $managereporturl);
         $PAGE->navbar->add($report->name);
+    } else {
+        // These users don't have the capability to manage reports but we still want them to see some breadcrumbs.
+        $PAGE->navbar->add(get_string('viewreport', 'block_configurable_reports'));
+        $PAGE->navbar->add($report->name);
     }
 
     $PAGE->set_title($reportname);
@@ -101,10 +105,12 @@ if (!$download) {
     }
 
     // Print the report HTML.
-    $reportclass->print_report_page($context);
+    $reportclass->print_report_page($PAGE);
 
 } else {
-
+    // Large exports are likely to take their time and memory.
+    core_php_time_limit::raise();
+    raise_memory_limit(MEMORY_EXTRA);
     $exportplugin = $CFG->dirroot.'/blocks/configurable_reports/export/'.$format.'/export.php';
     if (file_exists($exportplugin)) {
         require_once($exportplugin);

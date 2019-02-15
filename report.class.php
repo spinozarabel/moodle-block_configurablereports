@@ -162,6 +162,8 @@ class report_base {
             if ($request) {
                 foreach ($request as $key => $val) {
                     if (strpos($key, 'filter_') !== false) {
+                        $key = clean_param($key, PARAM_CLEANHTML);
+                        $val = clean_param($val, PARAM_CLEANHTML);
                         $formdata->{$key} = $val;
                     }
                 }
@@ -213,14 +215,19 @@ class report_base {
         $wwwpath = $CFG->wwwroot;
         $request = array_merge($_POST, $_GET);
         if ($request) {
-            $wwwpath = 'viewreport.php?id='.$request['id'];
+            $id = clean_param($request['id'], PARAM_INT);
+            $wwwpath = 'viewreport.php?id='.$id;
             unset($request['id']);
             foreach ($request as $key => $val) {
+                $key = clean_param($key, PARAM_CLEANHTML);
                 if (is_array($val)) {
                     foreach ($val as $k => $v) {
+                        $k = clean_param($k, PARAM_CLEANHTML);
+                        $v = clean_param($v, PARAM_CLEANHTML);
                         $wwwpath .= "&amp;{$key}[$k]=".$v;
                     }
                 } else {
+                    $val = clean_param($val, PARAM_CLEANHTML);
                     $wwwpath .= "&amp;$key=".$val;
                 }
             }
@@ -538,13 +545,13 @@ class report_base {
 
     }
 
-    public function add_jsordering() {
+    public function add_jsordering(\moodle_page $moodle_page) {
         switch (get_config('block_configurable_reports', 'reporttableui')) {
             case 'datatables':
-                cr_add_jsdatatables('#reporttable');
+                cr_add_jsdatatables('#reporttable', $moodle_page);
                 break;
             case 'jquery':
-                cr_add_jsordering('#reporttable');
+                cr_add_jsordering('#reporttable', $moodle_page);
                 echo html_writer::tag('style',
                     '#page-blocks-configurable_reports-viewreport .generaltable {
                     overflow: auto;
@@ -564,7 +571,7 @@ class report_base {
 
     }
 
-    public function print_template($config) {
+    public function print_template($config, \moodle_page $moodle_page) {
         global $DB, $CFG, $OUTPUT;
 
         $pagecontents = array();
@@ -587,11 +594,15 @@ class report_base {
             if ($request) {
                 foreach ($request as $key => $val) {
                     if (strpos($key, 'filter_') !== false) {
+                        $key = clean_param($key, PARAM_CLEANHTML);
                         if (is_array($val)) {
                             foreach ($val as $k => $v) {
+                                $k = clean_param($k, PARAM_CLEANHTML);
+                                $v = clean_param($v, PARAM_CLEANHTML);
                                 $postfiltervars .= "&amp;{$key}[$k]=".$v;
                             }
                         } else {
+                            $val = clean_param($val, PARAM_CLEANHTML);
                             $postfiltervars .= "&amp;$key=".$val;
                         }
                     }
@@ -628,7 +639,7 @@ class report_base {
         }
 
         if ($this->config->jsordering) {
-            $this->add_jsordering();
+            $this->add_jsordering($moodle_page);
         }
         $this->print_filters();
 
@@ -663,7 +674,7 @@ class report_base {
         echo "</div>\n";
     }
 
-    public function print_report_page() {
+    public function print_report_page(\moodle_page $moodlepage) {
         global $DB, $CFG, $OUTPUT, $USER;
 
         cr_print_js_function();
@@ -672,7 +683,7 @@ class report_base {
         $template = (isset($components['template']['config']) && $components['template']['config']->enabled && $components['template']['config']->record) ? $components['template']['config'] : false;
 
         if ($template) {
-            $this->print_template($template);
+            $this->print_template($template, $moodlepage);
             return true;
         }
 
@@ -695,7 +706,7 @@ class report_base {
             $this->print_graphs();
 
             if ($this->config->jsordering) {
-                $this->add_jsordering();
+                $this->add_jsordering($moodlepage);
             }
 
             $this->totalrecords = count($this->finalreport->table->data);
@@ -713,11 +724,15 @@ class report_base {
                 if ($request) {
                     foreach ($request as $key => $val) {
                         if (strpos($key, 'filter_') !== false) {
+                            $key = clean_param($key, PARAM_CLEANHTML);
                             if (is_array($val)) {
                                 foreach ($val as $k => $v) {
+                                    $k = clean_param($k, PARAM_CLEANHTML);
+                                    $v = clean_param($v, PARAM_CLEANHTML);
                                     $postfiltervars .= "&amp;{$key}[$k]=".$v;
                                 }
                             } else {
+                                $val = clean_param($val, PARAM_CLEANHTML);
                                 $postfiltervars .= "&amp;$key=".$val;
                             }
                         }

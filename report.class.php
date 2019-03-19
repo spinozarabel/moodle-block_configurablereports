@@ -163,7 +163,11 @@ class report_base {
                 foreach ($request as $key => $val) {
                     if (strpos($key, 'filter_') !== false) {
                         $key = clean_param($key, PARAM_CLEANHTML);
-                        $val = clean_param($val, PARAM_CLEANHTML);
+                        if (is_array($val)) {
+                            $val = clean_param_array($val, PARAM_CLEANHTML);
+                        } else {
+                            $val = clean_param($val, PARAM_CLEANHTML);
+                        }
                         $formdata->{$key} = $val;
                     }
                 }
@@ -644,7 +648,12 @@ class report_base {
         $this->print_filters();
 
         echo "<div id=\"printablediv\">\n";
-        echo format_text($pagecontents['header'], FORMAT_HTML);
+        // Print the header.
+        if (is_array($pagecontents['header'])) {
+            echo format_text($pagecontents['header']['text'], $pagecontents['header']['format']);
+        } else {
+            echo format_text($pagecontents['header'], FORMAT_HTML);
+        }
 
         $a = new \stdClass();
         $a->totalrecords = $this->totalrecords;
@@ -666,7 +675,13 @@ class report_base {
             }
         }
 
-        echo format_text($pagecontents['footer'], FORMAT_HTML);
+        // Print the footer.
+        if (is_array($pagecontents['footer'])) {
+            echo format_text($pagecontents['footer']['text'], $pagecontents['footer']['format']);
+        } else {
+            echo format_text($pagecontents['footer'], FORMAT_HTML);
+        }
+
         echo "</div>\n";
         echo '<div class="centerpara"><br />';
         echo $OUTPUT->pix_icon('print', get_string('printreport', 'block_configurable_reports'), 'block_configurable_reports');

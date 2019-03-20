@@ -29,23 +29,10 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	
 	require_once(__DIR__ . '/razorpay_php_master/Razorpay.php');
-	use Razorpay\Api\Api;
 	
 	$api_key 	= "api key here";
 	$api_secret = "api secret here";
-
-	$api = new Api($api_key, $api_secret);
-	
-	$va_constructor = array(
-							'receiver_types' => array('bank_account'), 
-							'description' 	 => 'Virtual Account for Sritoni1 Moodle1', 
-							'notes' 		 => array(
-														'sritoni_id' => '00_00-01'
-													 )
-							);
-	$virtualAccount  = $api->virtualAccount->create($va_constructor);
-	print_r($virtualAccount);
-	exit;
+	$api = new Razorpay\Api\Api($api_key, $api_secret);
 
     $table    = $report->table;
     $matrix   = array();
@@ -73,7 +60,6 @@ function export_report($report)
         }
     }
 
-
     $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
 
     array_walk($csv, function(&$a) use ($csv) 
@@ -81,11 +67,25 @@ function export_report($report)
 			$a = array_combine($csv[0], $a);
 		});
 	array_shift($csv); # remove column header
-		// find number of entries extracted from CSV into array
+	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
-
-
+	
+    // create virtual accounts. For each account create the data needed in an array
+    $va_constructor = array(
+							'receivers' => array('types' => array(
+																	'bank_account'
+																 )
+												), 
+							'description' 	 => 'Virtual Account for Sritoni1 Moodle1', 
+							'notes' 		 => array(
+														'sritoni_id' => '00_00-01'
+													 )
+							);
+	$virtualAccount  = $api->virtualAccount->create($va_constructor);
+	//
+	print_r($virtualAccount);
+	exit;
 }
 //
 // Theis function takes an entry downloaded from LDAP and cleans it up

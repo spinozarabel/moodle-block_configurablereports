@@ -1,7 +1,7 @@
 <?php
 
 // Include Requests only if not already defined
-if (class_exists('Requests') === false)
+/*if (class_exists('Requests') === false)
 {
     require_once __DIR__.'/libs/Requests-1.7.0/library/Requests.php';
 }
@@ -19,7 +19,7 @@ catch (\Exception $e)
 {
     throw new Exception('Requests class found but did not match');
 }
-
+*/
 spl_autoload_register(function ($class)
 {
     // project-specific namespace prefix

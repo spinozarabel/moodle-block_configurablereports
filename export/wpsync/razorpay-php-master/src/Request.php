@@ -15,6 +15,10 @@ if (defined('CURL_SSLVERSION_TLSv1_1') === false)
 {
     define('CURL_SSLVERSION_TLSv1_1', 5);
 }
+if (defined('CURL_SSLVERSION_TLSv1_2') === false)
+{
+    define('CURL_SSLVERSION_TLSv1_2', 6);
+}
 
 /**
  * Request class to communicate to the request libarary
@@ -62,7 +66,7 @@ class Request
 
     public function setCurlSslOpts($curl)
     {
-        curl_setopt($curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_1);
+        curl_setopt($curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
     }
 
     /**

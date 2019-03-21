@@ -95,7 +95,7 @@ function export_report($report)
 *
 *
 */
-function create_virtualaccount( $post, $url )
+function create_virtualaccount( $post, $url, $api_key, $api_secret )
 {
 	$headers    = array();
     $headers[]  = "Content-Type: application/json";
@@ -115,7 +115,7 @@ function create_virtualaccount( $post, $url )
         CURLOPT_TIMEOUT        => 120,      // timeout on response
         CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
         CURLOPT_SSL_VERIFYPEER => true,     // enable SSL Cert checks
-		CURLOPT_SSL_VERIFYHOST => true,
+		CURLOPT_SSL_VERIFYHOST => 2,
 		CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
     );
 	

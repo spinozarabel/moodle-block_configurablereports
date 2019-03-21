@@ -18,9 +18,9 @@
  * Configurable Reports
  * A Moodle block for creating customizable reports
  * @package blocks
- * @author: Juan leyva <http://www.twitter.com/jleyvadelgado>
- * @date: 2009
- * This is the sync version with HTML output
+ * @author: Madhu Avasarala
+ * @date: 03/21/2019
+ * This is the Razorpay account sync version 1.0
  */
 
 function export_report($report) 
@@ -68,40 +68,67 @@ function export_report($report)
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
 	
+	// Get all the active virtual accounts from Razorpay
+	
+	
     // create virtual accounts. For each account create the data needed in an array
-    $va_constructor = array(
-							'receivers' => array('types' => array(
-																	'bank_account'
-																 )
-												), 
-							'description' 	 => 'Virtual Account for Sritoni2 Moodle2', 
-							'notes' 		 => array(
-														'idnumber' => '00_00-02'
-													 )
-							);
-	$post = json_encode($va_constructor);
-	$url = "https://api.razorpay.com/v1/virtual_accounts";
+	$virtualAccounts  = getAllVirtualAccounts($api_key, $api_secret);
 	
-	$virtualAccount  = create_virtualaccount( $post, $url, $api_key, $api_secret );
-	$result_array = json_decode($virtualAccount);
-	
-	//
-	print_r($result_array);
+	print_r($virtualAccounts);
 	exit;
 }
 
-/*
+/* function getAllVirtualAccounts()
+*  gets all virtual accounts
+*
+*
+*/
+function getAllVirtualAccounts($api_key, $api_secret)
+{
+	$url = "https://api.razorpay.com/v1/virtual_accounts";
+	$post = "";
+	$virtualAccounts = postDataToServerUsingCurl( $post, $url, $api_key, $api_secret );
+	return $virtualAccounts;
+}
+
+/* function createVirtualAccount() creates a new razorpay virtual account
 *
 *
 *
 */
-function create_virtualaccount( $post, $url, $api_key, $api_secret )
+function createVirtualAccount($api_key, $api_secret, $useridnumber, $username)
 {
+	$url = "https://api.razorpay.com/v1/virtual_accounts";
+	$post = array(
+					'receivers' => array('types' => array(
+															'bank_account'
+														 )
+										), 
+					'description' 	 => 'Virtual Account for ' . $username, 
+					'notes' 		 => array(
+												'idnumber' => $useridnumber,
+												'name'	   => $username
+											  )
+				 );
+	$virtualAccount = postDataToServerUsingCurl( $post, $url, $api_key, $api_secret );
+	return $virtualAccount;
+}
+/*
+* This function uses curl using POST method to send data to server
+* It returns the result of the trasaction as a stdclass object
+* @param $post is an associative array containing the parameters as required by Razorpay
+* @param $url is the URL of razorpay
+* @param $api_key is the key ID sepcified by Razorpay for account being used
+* @param $api_secret is the corresponding secret issued by Razorpay
+*/
+function postDataToServerUsingCurl( $post, $url, $api_key, $api_secret )
+{
+	$post_json  = json_encode($post);
 	$headers    = array();
     $headers[]  = "Content-Type: application/json";
     $options = array(
 	    CURLOPT_POST		   => true,
-		CURLOPT_POSTFIELDS	   => $post,
+		CURLOPT_POSTFIELDS	   => $post_json,
 		CURLOPT_URL			   => $url,
 		CURLOPT_USERPWD		   => $api_key . ":" . $api_secret,
         CURLOPT_RETURNTRANSFER => true,     // return web page
@@ -119,7 +146,7 @@ function create_virtualaccount( $post, $url, $api_key, $api_secret )
 		CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
     );
 	
-    $ch      = curl_init( $url );
+    $ch     = curl_init( $url );
     curl_setopt_array( $ch, $options );
     $result = curl_exec( $ch );
 	if (curl_errno($ch)) 
@@ -127,7 +154,7 @@ function create_virtualaccount( $post, $url, $api_key, $api_secret )
 		echo 'Error:' . curl_error($ch);
       }
     curl_close( $ch );
-    return $result;
+    return json_decode($result);
 }
 
 //

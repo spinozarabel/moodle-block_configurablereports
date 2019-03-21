@@ -28,11 +28,8 @@ function export_report($report)
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
 	
-	require_once(__DIR__ . '/razorpay_php_master/Razorpay.php');
-	
 	$api_key 	= "api key here";
 	$api_secret = "api secret here";
-	$api = new Razorpay\Api\Api($api_key, $api_secret);
 
     $table    = $report->table;
     $matrix   = array();
@@ -77,16 +74,62 @@ function export_report($report)
 																	'bank_account'
 																 )
 												), 
-							'description' 	 => 'Virtual Account for Sritoni1 Moodle1', 
+							'description' 	 => 'Virtual Account for Sritoni2 Moodle2', 
 							'notes' 		 => array(
-														'sritoni_id' => '00_00-01'
+														'idnumber' => '00_00-02'
 													 )
 							);
-	$virtualAccount  = $api->virtualAccount->create($va_constructor);
+	$post = json_encode($va_constructor);
+	$url = "https://api.razorpay.com/v1/virtual_accounts";
+	
+	$virtualAccount  = create_virtualaccount($url, $post);
+	$result_array = json_decode($virtualAccount);
+	
 	//
-	print_r($virtualAccount);
+	print_r($result_array);
 	exit;
 }
+
+/*
+*
+*
+*
+*/
+function create_virtualaccount( $post, $url )
+{
+	$headers    = array();
+    $headers[]  = "Content-Type: application/json";
+    $options = array(
+	    CURLOPT_POST		   => true,
+		CURLOPT_POSTFIELDS	   => $post,
+		CURLOPT_URL			   => $url,
+		CURLOPT_USERPWD		   => $api_key . ":" . $api_secret,
+        CURLOPT_RETURNTRANSFER => true,     // return web page
+		CURLOPT_HTTPHEADER	   => $headers,
+//      CURLOPT_HEADER         => false,    // don't return headers
+//      CURLOPT_FOLLOWLOCATION => true,     // follow redirects
+//      CURLOPT_ENCODING       => "",       // handle all encodings
+//      CURLOPT_USERAGENT      => "spider", // who am i
+//      CURLOPT_AUTOREFERER    => true,     // set referer on redirect
+        CURLOPT_CONNECTTIMEOUT => 20,      // timeout on connect
+        CURLOPT_TIMEOUT        => 120,      // timeout on response
+        CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
+        CURLOPT_SSL_VERIFYPEER => true,     // enable SSL Cert checks
+		CURLOPT_SSL_VERIFYHOST => true,
+		CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
+    );
+	
+    $ch      = curl_init( $url );
+    curl_setopt_array( $ch, $options );
+    $result = curl_exec( $ch );
+	if (curl_errno($ch)) 
+	  {
+		echo 'Error:' . curl_error($ch);
+      }
+    curl_close( $ch );
+    return $result;
+}
+
 //
 // Theis function takes an entry downloaded from LDAP and cleans it up
 // to make it an associative array.

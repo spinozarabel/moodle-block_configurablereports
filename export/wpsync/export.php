@@ -82,7 +82,7 @@ function export_report($report)
 	$post = json_encode($va_constructor);
 	$url = "https://api.razorpay.com/v1/virtual_accounts";
 	
-	$virtualAccount  = create_virtualaccount($url, $post);
+	$virtualAccount  = create_virtualaccount( $post, $url, $api_key, $api_secret );
 	$result_array = json_decode($virtualAccount);
 	
 	//

@@ -103,9 +103,9 @@ function export_report($report)
 	exit;
 }
 
-/** function cleanUpEntry( $entry )
+/** function cleanUpEntry
 *  This function takes an entry downloaded from LDAP and cleans it up
-*/ to make it an associative array.
+*/
 
 function cleanUpEntry( $entry ) {
   $retEntry = array();

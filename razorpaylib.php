@@ -14,6 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/** getPayments($vaid, $api_key, $api_secret)
+*   gets all payments associated with a given virtual account id
+*   returns a collection, see https://razorpay.com/docs/smart-collect/api/#fetch-all
+*
+*/
+function getPayments($vaid, $api_key, $api_secret)
+{
+	$url = "https://api.razorpay.com/v1/virtual_accounts/" . $vaid . "/payments;
+	$collection = getDatafromServerUsingCurl( $url, $api_key, $api_secret );
+	return $collections;
+}
+
 /** getAllVirtualAccounts()
 *   gets all virtual accounts as a collection
 *  

@@ -59,6 +59,8 @@ function export_report($report)
     }
 
     $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
+	
+	
 
     array_walk($csv, function(&$a) use ($csv) 
 		{
@@ -69,9 +71,12 @@ function export_report($report)
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
 	
+	
+	
     // Fetch all virtual accounts from Razorpay as a collection
 	$va_collection  = getAllVirtualAccounts($api_key, $api_secret);
 	$virtualAccounts = $va_collection->items;
+	
 	
 	// remove all closed accounts from the returned object $virtualAccounts
 	foreach ($virtualAccounts as $key => $va) 
@@ -81,13 +86,19 @@ function export_report($report)
 				unset($virtualAccounts[$key]);
 				}
 		}
+		
+		
 	//count the total number of active accounts available
 	$vacount = count($virtualAccounts);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
+	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	
+	$vaid = $virtualAccounts[0]->id;
+	$payment_collection = getPayments($vaid, $api_key, $api_secret);
+	$payments = $payment_collection->items
+	print_r($payments);
 
 	exit;
 }

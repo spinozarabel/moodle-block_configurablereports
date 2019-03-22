@@ -23,7 +23,7 @@ function getPayments($vaid, $api_key, $api_secret)
 {
 	$url = "https://api.razorpay.com/v1/virtual_accounts/" . $vaid . "/payments";
 	$collection = getDatafromServerUsingCurl( $url, $api_key, $api_secret );
-	return $collections;
+	return $collection;
 }
 
 /** getAllVirtualAccounts()

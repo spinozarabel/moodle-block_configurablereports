@@ -68,8 +68,9 @@ function export_report($report)
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
 	
-    // Fetch all virtual accounts from Razorpay
-	$virtualAccounts  = getAllVirtualAccounts($api_key, $api_secret);
+    // Fetch all virtual accounts from Razorpay as a collection
+	$va_collection  = getAllVirtualAccounts($api_key, $api_secret);
+	$virtualAccounts = $va_collection->items;
 	
 	// remove all closed accounts from the returned object $virtualAccounts
 	foreach ($virtualAccounts as $key => $va) 

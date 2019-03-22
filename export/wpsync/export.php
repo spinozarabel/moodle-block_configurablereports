@@ -68,12 +68,26 @@ function export_report($report)
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
 	
-	// Get all the active virtual accounts from Razorpay
-	
-	
-    // create virtual accounts. For each account create the data needed in an array
+    // Fetch all virtual accounts from Razorpay
 	$virtualAccounts  = getAllVirtualAccounts($api_key, $api_secret);
 	
+	// remove all closed accounts from the returned object $virtualAccounts
+	foreach ($virtualAccounts as $key => $va) 
+		{
+			if($va->status == "closed") 
+				{
+				unset($virtualAccounts[$key]);
+				}
+		}
+	//
+	$vacount = count($virtualAccounts);
+	echo nl2br("Number of Active Razorpay Virtual Accounts found: " . $vacount . "\n");
+	
+	// for each of the csv users check to see if they have an associated account.
+	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
+	
+	// for each of the virtual accounts see if associated user is in csv data.
+	// if yes unset that virtual account. At end all remaining accounts need to be closed.
 	print_r($virtualAccounts);
 	exit;
 }

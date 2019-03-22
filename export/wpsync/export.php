@@ -97,15 +97,16 @@ function export_report($report)
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
 	$vaid = $virtualAccounts[0]->id;
 	$payment_collection = getPayments($vaid, $api_key, $api_secret);
-	$payments = $payment_collection->items
+	$payments = $payment_collection->items;
 	print_r($payments);
 
 	exit;
 }
 
-/* function cleanUpEntry( $entry )
+/** function cleanUpEntry( $entry )
 *  This function takes an entry downloaded from LDAP and cleans it up
 */ to make it an associative array.
+
 function cleanUpEntry( $entry ) {
   $retEntry = array();
   for ( $i = 0; $i < $entry['count']; $i++ ) {

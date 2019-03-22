@@ -27,6 +27,7 @@ function export_report($report)
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
+	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
 	
 	$api_key 	= "api key here";
 	$api_secret = "api secret here";
@@ -66,7 +67,7 @@ function export_report($report)
 	array_shift($csv); # remove column header
 	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
-	echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
+	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
 	
     // Fetch all virtual accounts from Razorpay as a collection
 	$va_collection  = getAllVirtualAccounts($api_key, $api_secret);
@@ -80,134 +81,20 @@ function export_report($report)
 				unset($virtualAccounts[$key]);
 				}
 		}
-	//
+	//count the total number of active accounts available
 	$vacount = count($virtualAccounts);
-	echo nl2br("Number of Active Razorpay Virtual Accounts found: " . $vacount . "\n");
+	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
 	
-	// for each of the virtual accounts see if associated user is in csv data.
-	// if yes unset that virtual account. At end all remaining accounts need to be closed.
-	print_r($virtualAccounts);
+
 	exit;
 }
 
-/* function getAllVirtualAccounts()
-*  gets all virtual accounts
-*
-*
-*/
-function getAllVirtualAccounts($api_key, $api_secret)
-{
-	$url = "https://api.razorpay.com/v1/virtual_accounts";
-	$virtualAccounts = getDatafromServerUsingCurl( $url, $api_key, $api_secret );
-	return $virtualAccounts;
-}
-
-/* function createVirtualAccount() creates a new razorpay virtual account
-*
-*
-*
-*/
-function createVirtualAccount($api_key, $api_secret, $useridnumber, $username)
-{
-	$url = "https://api.razorpay.com/v1/virtual_accounts";
-	$post = array(
-					'receivers' => array('types' => array(
-															'bank_account'
-														 )
-										), 
-					'description' 	 => 'Virtual Account for ' . $username, 
-					'notes' 		 => array(
-												'idnumber' => $useridnumber,
-												'name'	   => $username
-											  )
-				 );
-	$virtualAccount = postDataToServerUsingCurl( $post, $url, $api_key, $api_secret );
-	return $virtualAccount;
-}
-/*
-* This function uses curl using POST method to send data to server
-* It returns the result of the trasaction as a stdclass object
-* @param $post is an associative array containing the parameters as required by Razorpay
-* @param $url is the URL of razorpay
-* @param $api_key is the key ID sepcified by Razorpay for account being used
-* @param $api_secret is the corresponding secret issued by Razorpay
-*/
-function getDatafromServerUsingCurl( $url, $api_key, $api_secret )
-{
-    $options = array(
-		CURLOPT_URL			   => $url,
-		CURLOPT_USERPWD		   => $api_key . ":" . $api_secret,
-        CURLOPT_RETURNTRANSFER => true,     // return web page
-        CURLOPT_CONNECTTIMEOUT => 20,      // timeout on connect
-        CURLOPT_TIMEOUT        => 120,      // timeout on response
-        CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-        CURLOPT_SSL_VERIFYPEER => true,     // enable SSL Cert checks
-		CURLOPT_SSL_VERIFYHOST => 2,
-		CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
-    );
-	
-    $ch     = curl_init( $url );
-    curl_setopt_array( $ch, $options );
-    $result = curl_exec( $ch );
-	if (curl_errno($ch)) 
-	  {
-		echo 'Error:' . curl_error($ch);
-      }
-    curl_close( $ch );
-    return json_decode($result);
-}
-
-
-/*
-* This function uses curl using POST method to send data to server
-* It returns the result of the trasaction as a stdclass object
-* @param $post is an associative array containing the parameters as required by Razorpay
-* @param $url is the URL of razorpay
-* @param $api_key is the key ID sepcified by Razorpay for account being used
-* @param $api_secret is the corresponding secret issued by Razorpay
-*/
-function postDataToServerUsingCurl( $post, $url, $api_key, $api_secret )
-{
-	$post_json  = json_encode($post);
-	$headers    = array();
-    $headers[]  = "Content-Type: application/json";
-    $options = array(
-	    CURLOPT_POST		   => true,
-		CURLOPT_POSTFIELDS	   => $post_json,
-		CURLOPT_URL			   => $url,
-		CURLOPT_USERPWD		   => $api_key . ":" . $api_secret,
-        CURLOPT_RETURNTRANSFER => true,     // return web page
-		CURLOPT_HTTPHEADER	   => $headers,
-//      CURLOPT_HEADER         => false,    // don't return headers
-//      CURLOPT_FOLLOWLOCATION => true,     // follow redirects
-//      CURLOPT_ENCODING       => "",       // handle all encodings
-//      CURLOPT_USERAGENT      => "spider", // who am i
-//      CURLOPT_AUTOREFERER    => true,     // set referer on redirect
-        CURLOPT_CONNECTTIMEOUT => 20,      // timeout on connect
-        CURLOPT_TIMEOUT        => 120,      // timeout on response
-        CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-        CURLOPT_SSL_VERIFYPEER => true,     // enable SSL Cert checks
-		CURLOPT_SSL_VERIFYHOST => 2,
-		CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
-    );
-	
-    $ch     = curl_init( $url );
-    curl_setopt_array( $ch, $options );
-    $result = curl_exec( $ch );
-	if (curl_errno($ch)) 
-	  {
-		echo 'Error:' . curl_error($ch);
-      }
-    curl_close( $ch );
-    return json_decode($result);
-}
-
-//
-// Theis function takes an entry downloaded from LDAP and cleans it up
-// to make it an associative array.
+/* function cleanUpEntry( $entry )
+*  This function takes an entry downloaded from LDAP and cleans it up
+*/ to make it an associative array.
 function cleanUpEntry( $entry ) {
   $retEntry = array();
   for ( $i = 0; $i < $entry['count']; $i++ ) {

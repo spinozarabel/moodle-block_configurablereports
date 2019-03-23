@@ -103,7 +103,7 @@ function export_report($report)
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID
 			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
-			echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
+			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			
 			if(is_null($va)) 
@@ -127,7 +127,9 @@ function export_report($report)
 		}
 		unset($csvuser); // break foreach reference
 	
-	echo nl2br("New Virtual Accounts created for: " . $count_va_created . "\n");
+	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
+	
+	
 	/*
 	$vaid = $virtualAccounts[0]->id;
 	$payment_collection = getPayments($vaid, $api_key, $api_secret);

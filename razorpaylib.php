@@ -14,6 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
+/** getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
+*   given a student useridnumber, and the array of active virtual accounts,
+*   returns the corresponding virtual account. 
+*
+*/
+function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
+{
+	$item = null;
+	foreach($virtualAccounts as $va) 
+	{
+		if ($useridnumber == $va->notes->idnumber) 
+		{
+			$item = $$va;
+			return $item;
+		}
+	}
+}
+
 /** getPayments($vaid, $api_key, $api_secret)
 *   gets all payments associated with a given virtual account id
 *   returns a collection, see https://razorpay.com/docs/smart-collect/api/#fetch-all

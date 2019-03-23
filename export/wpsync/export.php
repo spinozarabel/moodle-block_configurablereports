@@ -20,7 +20,8 @@
  * @package blocks
  * @author: Madhu Avasarala
  * @date: 03/21/2019
- * This is the Razorpay account sync version 1.0
+ * This is the Razorpay account sync_add version 1.0
+ * Adds Raxorpay Virtual Account for all students if not already existing
  */
 
 function export_report($report) 
@@ -95,16 +96,45 @@ function export_report($report)
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
+	foreach ($csv as $key => $csvuser) 
+		{
+			// get student id number
+			$useridnumber = $csvuser["employeenumber"];
+			// get virtual account corespondin to this student ID
+			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
+			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
+			
+			if($va) 
+				{
+				unset($csv[$key]);
+				}
+		}
+	// Now all remaining members of $csv do not have matching virtual accounts so create them
+	foreach ($csv as $key => $csvuser) 
+		{
+			// get student id number and user name from CSV array
+			$useridnumber = $csvuser["employeenumber"];
+			$username = $csvuser["uid"];
+			$userfullname = $csvuser["displayname"];
+			
+			// create a new virtual account for this user_error
+			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
+			echo nl2br("New Virtual Account created for: " . $userfullname . "VA ID: " . $va->id . "\n");
+		}
+			
+	/*
 	$vaid = $virtualAccounts[0]->id;
 	$payment_collection = getPayments($vaid, $api_key, $api_secret);
 	$payments = $payment_collection->items;
 	print_r($payments);
+	*/
 
 	exit;
 }
 
 /** function cleanUpEntry
 *  This function takes an entry downloaded from LDAP and cleans it up
+* and makes it an associative array
 */
 
 function cleanUpEntry( $entry ) {

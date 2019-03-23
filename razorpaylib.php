@@ -18,7 +18,7 @@
 /** getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 *   given a student useridnumber, and the array of active virtual accounts,
 *   returns the corresponding virtual account. 
-*
+*   if not found, returns null
 */
 function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 {

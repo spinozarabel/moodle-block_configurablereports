@@ -87,6 +87,7 @@ function export_report($report)
 				unset($virtualAccounts[$key]);
 				}
 		}
+		unset($va); // break reference of previous foreach
 		
 		
 	//count the total number of active accounts available
@@ -102,12 +103,14 @@ function export_report($report)
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID
 			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
+			echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			
-			if($va) 
+			if(is_null($va)) 
 				{
-				unset($csv[$key]);
+					break;
 				}
+			unset($csv[$key]);
 		}
 	// Now all remaining members of $csv do not have matching virtual accounts so create them
 	foreach ($csv as $key => $csvuser) 
@@ -120,6 +123,7 @@ function export_report($report)
 			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
 			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
 		}
+		unset($csvuser); // break foreach reference
 			
 	/*
 	$vaid = $virtualAccounts[0]->id;

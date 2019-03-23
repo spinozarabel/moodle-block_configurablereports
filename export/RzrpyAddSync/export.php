@@ -115,11 +115,10 @@ function export_report($report)
 			// get student id number and user name from CSV array
 			$useridnumber = $csvuser["employeenumber"];
 			$username = $csvuser["uid"];
-			$userfullname = $csvuser["displayname"];
 			
 			// create a new virtual account for this user_error
 			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
-			echo nl2br("New Virtual Account created for: " . $userfullname . "VA ID: " . $va->id . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
 		}
 			
 	/*

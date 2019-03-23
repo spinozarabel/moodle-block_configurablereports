@@ -27,7 +27,7 @@ function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 	{
 		if ($useridnumber == $va->notes->idnumber) 
 		{
-			$item = $$va;
+			$item = $va;
 			return $item;
 		}
 	}

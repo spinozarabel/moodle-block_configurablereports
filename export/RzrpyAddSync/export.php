@@ -113,6 +113,7 @@ function export_report($report)
 			unset($csv[$key]);
 		}
 	// Now all remaining members of $csv do not have matching virtual accounts so create them
+	$count_va_created = 0; //initialize count
 	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number and user name from CSV array
@@ -121,10 +122,12 @@ function export_report($report)
 			
 			// create a new virtual account for this user_error
 			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
+			$count_va_created += 1;  // increment count
 			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
 		}
 		unset($csvuser); // break foreach reference
-			
+	
+	echo nl2br("New Virtual Accounts created for: " . $count_va_created . "\n");
 	/*
 	$vaid = $virtualAccounts[0]->id;
 	$payment_collection = getPayments($vaid, $api_key, $api_secret);

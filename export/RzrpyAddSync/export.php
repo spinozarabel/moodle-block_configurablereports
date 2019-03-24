@@ -32,9 +32,11 @@ function export_report($report)
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
+	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
 	
-	$api_key 	= "api key here";
-	$api_secret = "api secret here";
+	
+	$api_key 	= getRazorpayApiKey();
+	$api_secret = getRazorpayApiSecret();
 
     $table    = $report->table;
     $matrix   = array();

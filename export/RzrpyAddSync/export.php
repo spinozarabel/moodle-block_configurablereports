@@ -117,6 +117,8 @@ function export_report($report)
 				}
 			unset($csv[$key]);
 		}
+	unset($csvuser);  // break reference in foreach loop
+	
 	// Now all remaining members of $csv do not have matching virtual accounts so create them
 	$count_va_created = 0; //initialize count
 	foreach ($csv as $key => $csvuser) 
@@ -137,29 +139,6 @@ function export_report($report)
 	
 	
 	
-	//rebuild the CSV array
-	if (!empty($table->head)) 
-	{
-        $countcols = count($table->head);
-        $keys      = array_keys($table->head);
-        $lastkey   = end($keys);
-        foreach ($table->head as $key => $heading) 
-		{
-            $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($heading))));
-        }
-    }
-
-    if (!empty($table->data)) 
-	{
-        foreach ($table->data as $rkey => $row) 
-		{
-            foreach ($row as $key => $item) 
-			{
-                $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($item))));
-            }
-        }
-    }
-
     $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
 	
 	

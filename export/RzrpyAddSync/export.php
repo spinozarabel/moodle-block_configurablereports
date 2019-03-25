@@ -102,7 +102,7 @@ function export_report($report)
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	/*foreach ($csv as $key => $csvuser) 
+	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
@@ -133,10 +133,41 @@ function export_report($report)
 		unset($csvuser); // break foreach reference
 	
 	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
-	*/
+	
+	
+	
+	
+	//rebuild the CSV array
+	if (!empty($table->head)) 
+	{
+        $countcols = count($table->head);
+        $keys      = array_keys($table->head);
+        $lastkey   = end($keys);
+        foreach ($table->head as $key => $heading) 
+		{
+            $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($heading))));
+        }
+    }
+
+    if (!empty($table->data)) 
+	{
+        foreach ($table->data as $rkey => $row) 
+		{
+            foreach ($row as $key => $item) 
+			{
+                $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($item))));
+            }
+        }
+    }
+
+    $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
+	
+	
+	
+	
+	
 	// for each user in CSV list corresponding VA id, latest payment made and its payment date
 	
-	//
 	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number and user name from CSV array
@@ -158,15 +189,6 @@ function export_report($report)
 			echo nl2br("User: " . $username . "associated VA ID: " . $va->id . " Last payment amount: " 
                                 . $last_payment_amount . " Made on: " . 	$last_payment_date . "\n");
 		}
-
-			
-	
-	/*
-	$vaid = $virtualAccounts[0]->id;
-	$payment_collection = getPayments($vaid, $api_key, $api_secret);
-	$payments = $payment_collection->items;
-	print_r($payments);
-	*/
 
 	exit;
 }

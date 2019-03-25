@@ -152,11 +152,11 @@ function export_report($report)
 			// 
 			if ($payments_collection->count)
 				{
-					$last_payment_amount 	= $payments_collection->items[0]->amount;
+					$last_payment_amount 	= $payments_collection->items[0]->amount/100;
 					$last_payment_date 		= date('m/d/Y', $payments_collection->items[0]->created_at);	
 				}
-			echo nl2br("User: " . $username . "associated VA ID: " . $va->id . "Last payment amount: " 
-                                . $last_payment_amount . "Made on: " . 	$last_payment_date . "\n");
+			echo nl2br("User: " . $username . "associated VA ID: " . $va->id . " Last payment amount: " 
+                                . $last_payment_amount . " Made on: " . 	$last_payment_date . "\n");
 		}
 
 			

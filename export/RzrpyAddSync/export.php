@@ -102,7 +102,7 @@ function export_report($report)
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	foreach ($csv as $key => $csvuser) 
+	/*foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
@@ -125,7 +125,7 @@ function export_report($report)
 			$useridnumber = $csvuser["employeenumber"];
 			$username = $csvuser["uid"];
 			
-			// create a new virtual account for this user_error
+			// create a new virtual account for this user
 			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
 			$count_va_created += 1;  // increment count
 			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
@@ -133,9 +133,8 @@ function export_report($report)
 		unset($csvuser); // break foreach reference
 	
 	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
-	
+	*/
 	// for each user in CSV list corresponding VA id, latest payment made and its payment date
-	$csv = $matrix; // Re-initialize our CSV array since we might have unset some users earlier in account creation
 	
 	//
 	foreach ($csv as $key => $csvuser) 

@@ -31,6 +31,7 @@ function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 			return $item;
 		}
 	}
+	unset ($va); // break for each reference
 }
 
 /** getLastPayment($vaid, $api_key, $api_secret)

@@ -150,7 +150,7 @@ function export_report($report)
 			$last_payment_amount = 0;
 			$last_payment_date = "NA";
 			// 
-			if ($last_payment)
+			if (isset($last_payment->amount))
 				{
 					$last_payment_amount 	= ($last_payment->amount)/100;
 					$last_payment_date 		= date('m/d/Y', $last_payment->created_at);	

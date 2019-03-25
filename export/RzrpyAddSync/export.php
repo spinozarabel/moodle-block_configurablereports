@@ -146,11 +146,11 @@ function export_report($report)
 			// get VA corresponding to this user
 			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
 			// get payments for this VA
-			$payments_collection = getPayments($va->id, $api_key, $api_secret);
+			$last_payment = getLastPayment($vaid, $api_key, $api_secret)
 			$last_payment_amount = 0;
 			$last_payment_date = "NA";
 			// 
-			if ($payments_collection->count)
+			if ($last_payment)
 				{
 					$last_payment_amount 	= $payments_collection->items[0]->amount/100;
 					$last_payment_date 		= date('m/d/Y', $payments_collection->items[0]->created_at);	

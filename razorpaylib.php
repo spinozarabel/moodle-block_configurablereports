@@ -14,11 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/** getAllActiveVirtualAccounts($api_key, $api_secret)
+*   
+*   returns all active Virtual Accounts in Razorpay 
+*   
+*/
+function getAllActiveVirtualAccounts($api_key, $api_secret)
+{
+    //first Fetch all virtual accounts from Razorpay as a collection
+	$virtualAccounts = getAllVirtualAccounts($api_key, $api_secret)->items;
+	
+	
+	// remove all closed accounts from the returned object $virtualAccounts
+	foreach ($virtualAccounts as $key => $va) 
+		{
+			if($va->status == "closed") 
+				{
+				unset($virtualAccounts[$key]);
+				}
+		}
+		unset($va); // break reference of previous foreach
+		
+		
+	return $virtualAccounts;
+}
 
 /** getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 *   given a student useridnumber, and the array of active virtual accounts,
 *   returns the corresponding virtual account. 
 *   if not found, returns null
+*   ver 1.1
 */
 function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 {
@@ -36,16 +61,18 @@ function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 
 /** getLastPayment($vaid, $api_key, $api_secret)
 *   gets Last payment associated with a given virtual account id
-*   returns a payment object
+*   returns a valid payment object or null if no payments found for VA with this id
 *
 */
 function getLastPayment($vaid, $api_key, $api_secret)
 {
+	$last_payment = null; // initialze to null
+	
 	$payments_collection = getPayments($vaid, $api_key, $api_secret);  // get all payments as collection for this VAid
+	
 	if ($payments_collection->count)
 	{
-		$payments = $payments_collection->items;
-		$last_payment = $payments[0];
+		$last_payment = $payments_collection->items[0]; // assumes latest payment is 1st item in payment collection
 		return $last_payment;	
 	}
 }

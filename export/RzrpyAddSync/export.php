@@ -83,7 +83,7 @@ function export_report($report)
 	$va_collection  = getAllVirtualAccounts($api_key, $api_secret);
 	$virtualAccounts = $va_collection->items;
 	
-	
+
 	// remove all closed accounts from the returned object $virtualAccounts
 	foreach ($virtualAccounts as $key => $va) 
 		{
@@ -99,7 +99,7 @@ function export_report($report)
 	$vacount = count($virtualAccounts);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
-	
+/*	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
 	foreach ($csv as $key => $csvuser) 
@@ -136,12 +136,7 @@ function export_report($report)
 	
 	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
 	
-	
-	
-	
-    $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
-	
-	
+	*/
 	
 	
 	

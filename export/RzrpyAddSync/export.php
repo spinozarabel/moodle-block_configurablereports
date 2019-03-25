@@ -80,21 +80,7 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$va_collection  = getAllVirtualAccounts($api_key, $api_secret);
-	$virtualAccounts = $va_collection->items;
-	
-
-	// remove all closed accounts from the returned object $virtualAccounts
-	foreach ($virtualAccounts as $key => $va) 
-		{
-			if($va->status == "closed") 
-				{
-				unset($virtualAccounts[$key]);
-				}
-		}
-		unset($va); // break reference of previous foreach
-		
-		
+	$virtualAccounts  = getAllActiveVirtualAccounts($api_key, $api_secret)	
 	//count the total number of active accounts available
 	$vacount = count($virtualAccounts);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");

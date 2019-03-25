@@ -33,6 +33,22 @@ function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 	}
 }
 
+/** getLastPayment($vaid, $api_key, $api_secret)
+*   gets Last payment associated with a given virtual account id
+*   returns a payment object
+*
+*/
+function getLastPayment($vaid, $api_key, $api_secret)
+{
+	$payments_collection = getPayments($vaid, $api_key, $api_secret);  // get all payments as collection for this VAid
+	if ($payments_collection->count)
+	{
+		$payments = $payments_collection->items;
+		$last_payment = $payments[0];
+		return $last_payment;	
+	}
+}
+
 /** getPayments($vaid, $api_key, $api_secret)
 *   gets all payments associated with a given virtual account id
 *   returns a collection, see https://razorpay.com/docs/smart-collect/api/#fetch-all

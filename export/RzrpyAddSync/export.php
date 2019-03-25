@@ -134,6 +134,12 @@ function export_report($report)
 	
 	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
 	
+	// for each user in CSV list corresponding VA id, latest payment made and its payment date
+	$csv = $matrix; // Re-initialize our CSV array since we might have unset some users earlier in account creation
+	$vaid = "va_CAzGBbrfX7TdBx";
+	$payments_collection = getPayments($vaid, $api_key, $api_secret);
+	print_r($payments_collection);
+			
 	
 	/*
 	$vaid = $virtualAccounts[0]->id;

@@ -66,7 +66,7 @@ function getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts)
 */
 function getLastPayment($vaid, $api_key, $api_secret)
 {
-	$last_payment = null; // initialze to null
+	//$last_payment = null; // initialze to null
 	
 	$payments_collection = getPayments($vaid, $api_key, $api_secret);  // get all payments as collection for this VAid
 	

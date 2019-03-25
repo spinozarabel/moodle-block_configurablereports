@@ -72,9 +72,9 @@ function getLastPayment($vaid, $api_key, $api_secret)
 	
 	if ($payments_collection->count)
 	{
-		$last_payment = $payments_collection->items[0]; // assumes latest payment is 1st item in payment collection
-		return $last_payment;	
+		$last_payment = $payments_collection->items[0]; // assumes latest payment is 1st item in payment collection	
 	}
+	return $last_payment;
 }
 
 /** getPayments($vaid, $api_key, $api_secret)

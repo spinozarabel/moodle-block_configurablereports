@@ -80,7 +80,7 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts  = getAllActiveVirtualAccounts($api_key, $api_secret)	
+	$virtualAccounts  = getAllActiveVirtualAccounts($api_key, $api_secret);	
 	//count the total number of active accounts available
 	$vacount = count($virtualAccounts);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");

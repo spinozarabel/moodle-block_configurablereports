@@ -136,9 +136,31 @@ function export_report($report)
 	
 	// for each user in CSV list corresponding VA id, latest payment made and its payment date
 	$csv = $matrix; // Re-initialize our CSV array since we might have unset some users earlier in account creation
-	$vaid = "va_CAzGBbrfX7TdBx";
-	$payments_collection = getPayments($vaid, $api_key, $api_secret);
-	print_r($payments_collection);
+	
+	//
+	foreach ($csv as $key => $csvuser) 
+		{
+			// get student id number and user name from CSV array
+			$useridnumber = $csvuser["employeenumber"];
+			$username = $csvuser["uid"];
+			
+			// get VA corresponding to this user
+			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
+			// get payments for this VA
+			$payments_collection = getPayments($va->id, $api_key, $api_secret);
+			// initialize some values that will be set if conditions met below
+			$last_payment_amount = 0;
+			$last_payment_date = "NA";
+			// 
+			if ($payment_collection->count)
+				{
+					$last_payment_amount 	= $payment_collection->items[0]->amount;
+					$last_payment_date 		= date('m/d/Y', $payment_collection->items[0]->created_at);	
+				}
+			echo nl2br("User: " . $username . "associated VA ID: " . $va->id . "Last payment amount: " 
+                                . $last_payment_amount . "Made on: " . 	$last_payment_date . "\n");
+		}
+
 			
 	
 	/*

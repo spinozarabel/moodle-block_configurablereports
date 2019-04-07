@@ -131,10 +131,10 @@ class report_sql_payments extends report_base {
 							}
 							$col_array[	$col_index] = $colname; // creating a numerically indexed column name array
 							$col_index = $col_index + 1; 
-							}
+						}
 							// ----end customization by Madhu --------------------------
                             $tablehead[] = str_replace('_', ' ', $colname);
-                        }
+                    }
                     }
                     $arrayrow = array_values((array) $row);
                     foreach ($arrayrow as $ii => $cell) {
@@ -179,5 +179,5 @@ class report_sql_payments extends report_base {
         return true;
     }
 
-}
+
 

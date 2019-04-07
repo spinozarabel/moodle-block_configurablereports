@@ -120,20 +120,27 @@ class report_sql_payments extends report_base {
             $sql = $this->prepare_sql($sql);
 
             if ($rs = $this->execute_query($sql)) {
+				error_log(print_r($rs,true));
                 foreach ($rs as $row) {
                     if (empty($finaltable)) {
                         foreach ($row as $colname => $value) {
-							error_log(print_r('colname',true));
-							error_log(print_r($colname,true));
-							error_log(print_r('value',true));
-							error_log(print_r($value,true));
+							// customization by madhu to recognize json named columns --- begin---
+							if ( preg_match("/\bjson.\b/i", $colname) ) {
+								// this column name should have the prefix'json.' removed
+								$colname = str_replace("json.", "", $colname); // replace 'json.' with blank
+								if (!$json_value) {
+									$json_value = json_decode($value, true); // forms array decoding json string
+									//error_log(print_r($json_value,true));
+								}
+							}
+							// ----end customization by Madhu --------------------------
                             $tablehead[] = str_replace('_', ' ', $colname);
                         }
                     }
                     $arrayrow = array_values((array) $row);
                     foreach ($arrayrow as $ii => $cell) {
-						error_log(print_r('cell',true));
-						error_log(print_r($cell,true));
+						// customization by Madhu for json columns start --------------------------
+						
                         $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
                         $arrayrow[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
                     }

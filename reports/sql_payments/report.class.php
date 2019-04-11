@@ -121,30 +121,13 @@ class report_sql_payments extends report_base {
 
             if ($rs = $this->execute_query($sql)) {
                 foreach ($rs as $row) {
-                    if (empty($finaltable)) {  // this is only done once using 1st row to populate the table headings
-						$col_index = 0;  // initialize column count
+                    if (empty($finaltable)) {
                         foreach ($row as $colname => $value) {
-							// customization by madhu to recognize json named columns --- begin---
-							if ( preg_match("/\bjson.\b/i", $colname) ) {
-								// this column name should have the prefix'json.' removed
-								$colname = str_replace("json.", "", $colname); // replace 'json.' with blank
-							}
-							$col_array[	$col_index] = $colname; // creating a numerically indexed column name array
-							$col_index = $col_index + 1; 
-						}
-							// ----end customization by Madhu --------------------------
                             $tablehead[] = str_replace('_', ' ', $colname);
-                    }
+                        }
                     }
                     $arrayrow = array_values((array) $row);
                     foreach ($arrayrow as $ii => $cell) {
-						// customization by Madhu for json columns start --------------------------
-						if ( preg_match("/\b[{\b/i", $cell) ) {
-							// this cell is json encoded string, need to decode into array
-							$cell_array = json_decode($cell, true);
-							$key = $col_array[ii]; // this is the column name for this cell
-							$cell = $cell_array[$key]; 
-						}
                         $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
                         $arrayrow[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
                     }
@@ -179,5 +162,4 @@ class report_sql_payments extends report_base {
         return true;
     }
 
-
-
+}

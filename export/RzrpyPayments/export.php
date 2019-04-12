@@ -85,7 +85,7 @@ function export_report($report)
 	$vacount = count($virtualAccounts);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
-	
+/*	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
 	foreach ($csv as $key => $csvuser) 
@@ -97,26 +97,24 @@ function export_report($report)
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			
-			if(is_null($va)) 	// VA doesn't exist, need to create so keep this entry, go to next item
+			if(is_null($va)) 
 				{
 					break;
 				}
-			unset($csv[$key]);	// the account exists and so no ned to create one, remove this entry from the array
+			unset($csv[$key]);
 		}
-	unset($csvuser);  // break reference in foreach loop on exit
+	unset($csvuser);  // break reference in foreach loop
 	
 	// Now all remaining members of $csv do not have matching virtual accounts so create them
 	$count_va_created = 0; //initialize count
-	
 	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number and user name from CSV array
-			$useridnumber 	= $csvuser["employeenumber"];  // this is the unique sritoni idnumber assigned by school
-			$username 		= $csvuser["uid"];             // uniques username assigned by school
-			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
+			$useridnumber = $csvuser["employeenumber"];
+			$username = $csvuser["uid"];
 			
 			// create a new virtual account for this user
-			//$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username, $userid);
+			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username);
 			$count_va_created += 1;  // increment count
 			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
 		}
@@ -124,6 +122,33 @@ function export_report($report)
 	
 	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
 	
+	*/
+	
+	
+	
+	// for each user in CSV list corresponding VA id, latest payment made and its payment date
+	
+	foreach ($csv as $key => $csvuser) 
+		{
+			// get student id number and user name from CSV array
+			$useridnumber = $csvuser["employeenumber"];
+			$username = $csvuser["uid"];
+			
+			// get VA corresponding to this user
+			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
+			// get payments for this VA
+			$payments_collection = getPayments($va->id, $api_key, $api_secret);
+			$last_payment_amount = 0;
+			$last_payment_date = "NA";
+			// 
+			if ($payments_collection->count)
+				{
+					$last_payment_amount 	= $payments_collection->items[0]->amount/100;
+					$last_payment_date 		= date('m/d/Y H:i:s', $payments_collection->items[0]->created_at);	
+				}
+			echo nl2br("User: " . $username . "associated VA ID: " . $va->id . " Last payment amount: " 
+                                . $last_payment_amount . " Made on: " . 	$last_payment_date . "\n");
+		}
 
 	exit;
 }

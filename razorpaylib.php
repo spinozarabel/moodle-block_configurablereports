@@ -4,6 +4,7 @@ defined('MOODLE_INTERNAL') || die();
 //defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 // lib version 1.0
+//     version 1.1 Added systemid to craete account function
 
 /** getAllActiveVirtualAccounts($api_key, $api_secret)
 *   
@@ -93,11 +94,11 @@ function getAllVirtualAccounts($api_key, $api_secret)
 }
 
 /** createVirtualAccount() creates a new razorpay virtual account
-*
-*
-*
+*	$idnumber is the unique sritoni idnumber given to all students and staff by school
+*   $username is the unique user name, also the login
+*   $id is the unique system id that is used in the tables for user internally by Moodle
 */
-function createVirtualAccount($api_key, $api_secret, $useridnumber, $username)
+function createVirtualAccount($api_key, $api_secret, $idnumber, $username, $id)
 {
 	$url = "https://api.razorpay.com/v1/virtual_accounts";
 	$post = array(
@@ -107,8 +108,8 @@ function createVirtualAccount($api_key, $api_secret, $useridnumber, $username)
 										), 
 					'description' 	 => 'Virtual Account for ' . $username, 
 					'notes' 		 => array(
-												'idnumber' => $useridnumber,
-												'name'	   => $username
+												'idnumber' => $idnumber,
+												'id'	   => $id,
 											  )
 				 );
 	$virtualAccount = postDataToServerUsingCurl( $post, $url, $api_key, $api_secret );

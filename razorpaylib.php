@@ -1,7 +1,7 @@
 <?php
 
-//defined('MOODLE_INTERNAL') || die();
-defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+defined('MOODLE_INTERNAL') || die();
+//defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 // lib version 1.1
 

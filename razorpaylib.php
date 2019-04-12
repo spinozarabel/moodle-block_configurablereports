@@ -1,10 +1,9 @@
 <?php
 
-defined('MOODLE_INTERNAL') || die();
-//defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+//defined('MOODLE_INTERNAL') || die();
+defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
-// lib version 1.0
-//     version 1.1 Added systemid to craete account function
+// lib version 1.1
 
 /** getAllActiveVirtualAccounts($api_key, $api_secret)
 *   
@@ -69,6 +68,18 @@ function getLastPayment($vaid, $api_key, $api_secret)
 	return $last_payment;
 }
 
+/** getPaymentDetails($payment_id, $api_key, $api_secret)
+*   gets all payments associated with a given virtual account id
+*   returns a collection, see https://razorpay.com/docs/smart-collect/api/#fetch-all
+*
+*/
+function getPaymentDetails($payment_id, $api_key, $api_secret)
+{
+	$url = "https://api.razorpay.com/v1/payments/" . $payment_id . "/bank_transfer";
+	$payment = getDatafromServerUsingCurl( $url, $api_key, $api_secret );
+	return $payment;
+}
+
 /** getPayments($vaid, $api_key, $api_secret)
 *   gets all payments associated with a given virtual account id
 *   returns a collection, see https://razorpay.com/docs/smart-collect/api/#fetch-all
@@ -94,11 +105,11 @@ function getAllVirtualAccounts($api_key, $api_secret)
 }
 
 /** createVirtualAccount() creates a new razorpay virtual account
-*	$idnumber is the unique sritoni idnumber given to all students and staff by school
-*   $username is the unique user name, also the login
-*   $id is the unique system id that is used in the tables for user internally by Moodle
+*
+*
+*
 */
-function createVirtualAccount($api_key, $api_secret, $idnumber, $username, $id)
+function createVirtualAccount($api_key, $api_secret, $useridnumber, $username, $userid)
 {
 	$url = "https://api.razorpay.com/v1/virtual_accounts";
 	$post = array(
@@ -108,8 +119,8 @@ function createVirtualAccount($api_key, $api_secret, $idnumber, $username, $id)
 										), 
 					'description' 	 => 'Virtual Account for ' . $username, 
 					'notes' 		 => array(
-												'idnumber' => $idnumber,
-												'id'	   => $id,
+												'idnumber' => $useridnumber,
+												'id'	   => $userid,
 											  )
 				 );
 	$virtualAccount = postDataToServerUsingCurl( $post, $url, $api_key, $api_secret );

@@ -116,9 +116,9 @@ function export_report($report)
 			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
 			
 			// create a new virtual account for this user
-			//$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username, $userid);
+			$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username, $userid);
 			$count_va_created += 1;  // increment count
-			echo nl2br("New Virtual Account created for: " . $username . "VA ID: " . $va->id . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . " with VA ID: " . $va->id . "\n");
 		}
 		unset($csvuser); // break foreach reference
 	

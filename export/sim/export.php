@@ -26,6 +26,8 @@
 function export_report($report) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
+	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
+	
 
     $table    = $report->table;
     $matrix   = array();
@@ -49,7 +51,8 @@ function export_report($report) {
     }
     // Here is where we start the code for LDAP sync
     // ver 1.2 assumes LDAP has 2 organization units, ou=student and ou=employee
-// added capability to modify replace LDAP attributes using CSV data
+	// added capability to modify replace LDAP attributes using CSV data
+	// ver 1.3 added get password function
 // config
 // the following 3 flags control simulation or actual operation
 $flag_add_simulate 		=	  true;
@@ -60,10 +63,10 @@ $flag_add_users 		  = 	true;			# this allows the code to add users that don't ex
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 $flag_pw_encrypt      =   true;
 //
-$ldapserver 			= 	'ldaps://example.com';
-$ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';
-$ldappass   			= 	'password';
-$ldaptree   			= 	"dc=example,dc=edu,dc=in";
+$ldapserver 			= 	getLdapServer(); 	// 'ldaps://example.com'
+$ldapuser   			= 	getLdapAdmin();  	// 'cn=admin,dc=example,dc=edu,dc=in'
+$ldappass   			= 	getLdapPassword();
+$ldaptree   			= 	getLdapTree();		// "dc=example,dc=edu,dc=in";
 $ldapfilter 			= 	"(objectClass=inetOrgPerson)";	# tailor this to your need
 //
 // connect

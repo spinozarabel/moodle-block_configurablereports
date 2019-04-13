@@ -60,10 +60,10 @@ $flag_add_users 		  = 	true;			# this allows the code to add users that don't ex
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 $flag_pw_encrypt      =   true;
 //
-$ldapserver 			= 	'ldaps://example.com';
-$ldapuser   			= 	'cn=admin,dc=example,dc=edu,dc=in';
-$ldappass   			= 	'password';
-$ldaptree   			= 	"dc=example,dc=edu,dc=in";
+$ldapserver 			= 	getLdapServer(); 	// 'ldaps://example.com'
+$ldapuser   			= 	getLdapAdmin();  	// 'cn=admin,dc=example,dc=edu,dc=in'
+$ldappass   			= 	getLdapPassword();
+$ldaptree   			= 	getLdapTree();		// "dc=example,dc=edu,dc=in";
 $ldapfilter 			= 	"(objectClass=inetOrgPerson)";	# tailor this to your need
 //
 // connect

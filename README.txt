@@ -1,4 +1,4 @@
-Configurable Reports Block
+Configurable Reports Block, See at bottom for my mods...
 
 Installation, Documentation, Tutorials....
 See http://docs.moodle.org/en/blocks/configurable_reports/
@@ -210,3 +210,7 @@ Release date Thursday, 29 September 2011, 10:47 AM
 1.0 (2010090100) for Moodle 1.9
 Release date Thursday, 29 September 2011, 10:38 AM
 ----------------------------------------------------------------------
+branch name: 36_msg_RzrpayAddSync
+Tracks 3.6.0 with following changes:
+Send message instead of send mail, export options to sync to LDAP server,
+export options to create Virtual Accounts at razorpay.com

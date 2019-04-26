@@ -130,7 +130,7 @@ function export_report($report)
 		}
 		unset($csvuser); // break foreach reference
 	
-	echo nl2br("New Virtual Accounts created: " . $count_va_created . "\n");
+	echo nl2br("New Virtual Accounts simulation created: " . $count_va_created . "\n");
 	
 
 	exit;

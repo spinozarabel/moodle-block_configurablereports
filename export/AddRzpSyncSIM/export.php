@@ -34,9 +34,13 @@ function export_report($report)
 	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
 	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
 	
+	$site_name	= " contains hset once";
+	$api_key_hset 	= getRazorpayApiKey($site_name);
+	$api_secret_hset = getRazorpayApiSecret($site_name);
 	
-	$api_key 	= getRazorpayApiKey();
-	$api_secret = getRazorpayApiSecret();
+	$site_name	= " contains llp once";
+	$api_key_llp 	= getRazorpayApiKey($site_name);
+	$api_secret_llp = getRazorpayApiSecret($site_name);
 
     $table    = $report->table;
     $matrix   = array();
@@ -80,9 +84,11 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts  = getAllActiveVirtualAccounts($api_key, $api_secret);	
+	$virtualAccounts_hset	= getAllActiveVirtualAccounts($api_key_hset, $api_secret_hset);	
+	//$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
 	//count the total number of active accounts available
-	$vacount = count($virtualAccounts);
+	// assume that number is same between HSET and LLP sites
+	$vacount = count($virtualAccounts_hset);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
 	
@@ -92,8 +98,8 @@ function export_report($report)
 		{
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
-			// get virtual account corespondin to this student ID
-			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts);
+			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
+			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			
@@ -105,7 +111,7 @@ function export_report($report)
 		}
 	unset($csvuser);  // break reference in foreach loop on exit
 	
-	// Now all remaining members of $csv do not have matching virtual accounts so create them
+	// Now all remaining members of $csv do not have matching virtual accounts so create them for both HSET and LLP
 	$count_va_created = 0; //initialize count
 	
 	foreach ($csv as $key => $csvuser) 
@@ -116,9 +122,11 @@ function export_report($report)
 			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
 			
 			// create a new virtual account for this user
-			//$va = createVirtualAccount($api_key, $api_secret, $useridnumber, $username, $userid);
+			//$va_hset 		= createVirtualAccount($api_key_hset, $api_secret_hset, $useridnumber, $username, $userid);
+			//$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
+			//
 			$count_va_created += 1;  // increment count
-			echo nl2br("New Virtual Account created for: " . $username . " with VA ID: " . "not created yet" . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . " with VA ID: " . "simulation, not created yet" . "\n");
 		}
 		unset($csvuser); // break foreach reference
 	

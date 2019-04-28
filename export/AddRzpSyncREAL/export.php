@@ -22,9 +22,11 @@ defined('MOODLE_INTERNAL') || die();
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Madhu Avasarala
- * @date: 03/21/2019
+ * @date: 04/27/2019
  * This is the Razorpay account sync_add version 1.0
  * Adds Raxorpay Virtual Account for all students if not already existing
+ * Adds accounts for HSET and HSEA-LLP and updates profile_field_virtualaccounts with JSON encoding
+ * ver 1.1
  */
 
 function export_report($report) 
@@ -85,7 +87,7 @@ function export_report($report)
 	
     // Fetch all virtual accounts from Razorpay as a collection
 	$virtualAccounts_hset	= getAllActiveVirtualAccounts($api_key_hset, $api_secret_hset);	
-	//$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
+	$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
 	//count the total number of active accounts available
 	// assume that number is same between HSET and LLP sites
 	$vacount = count($virtualAccounts_hset);
@@ -99,16 +101,20 @@ function export_report($report)
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
-			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
+			$va_hset = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
+			$va_llp  = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
+			
+			
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			
-			if(is_null($va)) 	// VA doesn't exist, need to create so keep this entry, go to next item
+			if(is_null($va_hset)) 	// VA doesn't exist, need to create so keep this entry, go to next item
 				{
-					break;
+					continue;       // keep this element, go to next user in for each loop
 				}
-			unset($csv[$key]);	// the account exists and so no ned to create one, remove this entry from the array
+			unset($csv[$key]);	    // the account exists and so no need to create one, remove this entry from the array
 		}
+	// TO DO before removing the entry lets update the user profile field for good measure?
 	unset($csvuser);  // break reference in foreach loop on exit
 	
 	// Now all remaining members of $csv do not have matching virtual accounts so create them for both HSET and LLP
@@ -123,11 +129,57 @@ function export_report($report)
 			
 			// create a new virtual account for this user
 			$va_hset 		= createVirtualAccount($api_key_hset, $api_secret_hset, $useridnumber, $username, $userid);
-			//$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
-			//
+			
+			
+			// prepare the array of account information to be JSON encoded
+			if ($va_hset->id)
+			{
+				$acct_hset = array	(
+									"beneficiary_name"  => $va_hset->receivers[0]->name,
+									"va_id"             => $va_hset->id,
+									"account_number"    => $va_hset->receivers[0]->account_number,
+									"va_ifsc_code"      => $va_hset->receivers[0]->ifsc,
+									);
+				$accounts[0]	= $acct_hset;
+			}
+			
+			// create a new VA for this user at HSEA-LLP
+			$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
+			
+			// prepare the array of account information to be JSON encoded
+			if ($va_llp->id)
+			{
+				$acct_hseallp = array	(
+									"beneficiary_name"  => $va_hseallp->receivers[0]->name,
+									"va_id"             => $va_hseallp->id,
+									"account_number"    => $va_hseallp->receivers[0]->account_number,
+									"va_ifsc_code"      => $va_hseallp->receivers[0]->ifsc,
+									);
+				$accounts[1]	= $acct_hseallp;
+			}
+			
+			// JSON encode array if array is valid
+			if ($accounts) 
+			{
+				$accounts_json	= json_encode($accounts);
+			}
+			
+			// Get the Moodle profile_field_virtualaccounts for this user to update
+			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+																					'userid'   =>  $userid,
+																					'fieldid'  =>  $field->id,
+																					)
+															);  // Get fieldid based on shortname "virtualaccounts"
+			// this data will be empty since we have not yet created VAs for this user
+			
+			$user_profile_virtualaccounts->data = $accounts_json;
+			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+			
+			
 			$count_va_created += 1;  // increment count
 			echo nl2br("New Virtual Account created for: " . $username . " for HSET payments, VA ID: " . $va_hset->id . "\n");
-			//echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id . "\n");
 		}
 		unset($csvuser); // break foreach reference
 	

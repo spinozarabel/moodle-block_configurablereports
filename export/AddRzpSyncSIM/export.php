@@ -105,7 +105,7 @@ function export_report($report)
 			
 			if(is_null($va)) 	// VA doesn't exist, need to create so keep this entry, go to next item
 				{
-					break;
+					continue;
 				}
 			unset($csv[$key]);	// the account exists and so no ned to create one, remove this entry from the array
 		}

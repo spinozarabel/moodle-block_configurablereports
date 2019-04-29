@@ -58,15 +58,15 @@ function export_report($report) {
 $flag_add_simulate 		=	  true;
 $flag_del_simulate		=	  true;
 // the following flags control actual (not simulated) operations
-$flag_mod_users			  = 	false;			# this allows users's LDAP attributes to be updated to that in the CSV file
-$flag_add_users 		  = 	true;			# this allows the code to add users that don't exist yet in LDAP directory
+$flag_mod_users			= 	false;			# this allows users's LDAP attributes to be updated to that in the CSV file
+$flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
-$flag_pw_encrypt      =   true;
-//
-$ldapserver 			= 	getLdapServer(); 	// 'ldaps://example.com'
-$ldapuser   			= 	getLdapAdmin();  	// 'cn=admin,dc=example,dc=edu,dc=in'
-$ldappass   			= 	getLdapPassword();
-$ldaptree   			= 	getLdapTree();		// "dc=example,dc=edu,dc=in";
+$flag_pw_encrypt      	=   true;
+// get the following data from the config settings of this block
+$ldapserver 			= 	get_config('block_configurable_reports', 'ldap_server'); 	// 'ldaps://example.com'
+$ldapuser   			= 	get_config('block_configurable_reports', 'ldap_admin');  	// 'cn=admin,dc=example,dc=edu,dc=in'
+$ldappass   			= 	get_config('block_configurable_reports', 'ldap_password');
+$ldaptree   			= 	get_config('block_configurable_reports', 'ldap_tree');		// "dc=example,dc=edu,dc=in";
 $ldapfilter 			= 	"(objectClass=inetOrgPerson)";	# tailor this to your need
 //
 // connect

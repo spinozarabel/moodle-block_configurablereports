@@ -1,6 +1,6 @@
 <?php
 
-if (!defined( "ABSPATH" ) && !defined( "MOODLE_INTERNAL" )
+if (!defined( "ABSPATH" ) && !defined( "MOODLE_INTERNAL" ) )
 {
 	die( 'No script kiddies please!' );
 }

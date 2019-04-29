@@ -29,12 +29,13 @@ class sritoni_razorpay_api
 		{
 			// we are in MOODLE environment
 			// based on passed in $site_name change the strings for config select. $site must be passed correctlt for this to work
-			if ('site name contains hset case independent, then')
+			if (stripos($site_name, 'hset') !== false)
 			{
 				$key_string 	= 'razorpay_api_key_hset';
 				$secret_string 	= 'razorpay_api_secret_hset';
 			}
-			if 'site name contains llp case independent, then')
+			
+			if (stripos($site_name, 'llp') !== false)
 			{
 				$key_string 	= 'razorpay_api_key_llp';
 				$secret_string 	= 'razorpay_api_secret_llp';

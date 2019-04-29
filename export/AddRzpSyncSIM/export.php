@@ -100,7 +100,7 @@ function export_report($report)
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
-			$va = $razorpay_api_hset->getVirtualAccountGivenSritoniId();
+			$va = $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			

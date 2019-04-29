@@ -18,14 +18,14 @@ class sritoni_razorpay_api
 	
 	public function __construct( $site_name = null ) 
 	{
-		if (defined("ABSPATH")
+		if ( defined("ABSPATH") )
 		{
 			// we are in wordpress environment, don't care about argument since get_option is site dependendent
 			$api_key		= $this->getoption("sritoni_settings", "razorpay_key");
 			$api_secret		= $this->getoption("sritoni_settings", "razorpay_secret");
 		}
 		
-		if (defined("MOODLE_INTERNAL")
+		if ( defined("MOODLE_INTERNAL") )
 		{
 			// we are in MOODLE environment
 			// based on passed in $site_name change the strings for config select. $site must be passed correctlt for this to work

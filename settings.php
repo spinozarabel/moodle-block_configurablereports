@@ -50,27 +50,27 @@ if ($ADMIN->fulltree) {
 		
 	// Following added by MA 04/29/2019
 	
-	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_key_hset', 'Razorpay API Key for HSET'),
-                    'Enter API Key of Razorpay Account for HSET'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_key_hset', 'Razorpay API Key for HSET',
+                    'Enter API Key of Razorpay Account for HSET', '', PARAM_RAW, 40));
 	
-	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_secret_hset', 'Razorpay API Secret for HSET'),
-                    'Enter API Secret of Razorpay Account for HSET'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_secret_hset', 'Razorpay API Secret for HSET',
+                    'Enter API Secret of Razorpay Account for HSET', '', PARAM_RAW, 40));
 		
-	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_key_llp', 'Razorpay API Key for HSEA-LLP'),
-                    'Enter API Key of Razorpay Account for HSEA-LLP'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_key_llp', 'Razorpay API Key for HSEA-LLP',
+                    'Enter API Key of Razorpay Account for HSEA-LLP', '', PARAM_RAW, 40));
 	
-	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_secret_llp', 'Razorpay API Secret for HSEA-LLP'),
-                    'Enter API Secret of Razorpay Account for HSEA-LLP'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/razorpay_api_secret_llp', 'Razorpay API Secret for HSEA-LLP',
+                    'Enter API Secret of Razorpay Account for HSEA-LLP', '', PARAM_RAW, 40));
 					
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL'),
-                    'ldaps://example.com', 'block_configurable_reports'), '', PARAM_URL, 30));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL',
+                    'ldaps://example.com', 'block_configurable_reports', '', PARAM_URL, 30));
 					
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_admin', 'LDAP Admin'),
-                    'cn=admin,dc=example,dc=edu,dc=in'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_admin', 'LDAP Admin',
+                    'cn=admin,dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
 	
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_password', 'LDAP Admin Password'),
-                    'Enter password for LDAP Admin Account'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_password', 'LDAP Admin Password',
+                    'Enter password for LDAP Admin Account', '', PARAM_RAW, 40));
 					
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree'),
-                    'dc=example,dc=edu,dc=in'), '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree',
+                    'dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
 }

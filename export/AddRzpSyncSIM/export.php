@@ -22,25 +22,25 @@ defined('MOODLE_INTERNAL') || die();
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Madhu Avasarala
- * @date: 03/21/2019
- * This is the Razorpay account sync_add version 1.0
- * Adds Raxorpay Virtual Account for all students if not already existing
+ * @date: 04/29/2019
+ * This is the Razorpay account sync_add version 1.1
+ * Simulate-Adds Raxorpay Virtual Account for all students if not already existing
+ * 1.0 uses razorpay.lib
+ * 1.1 uses class defined in sritoni_razorpay_api.php that is useable for both Moodle and Wordpress
  */
 
 function export_report($report) 
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
-	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
-	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
+	require_once($CFG->dirroot."/blocks/configurable_reports/sritoni_razorpay_api.php"); // file contains class for razorpay API
+		
+	$site_name			= " contains hset once";
+	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
+
 	
-	$site_name	= " contains hset once";
-	$api_key_hset 	= getRazorpayApiKey($site_name);
-	$api_secret_hset = getRazorpayApiSecret($site_name);
-	
-	$site_name	= " contains llp once";
-	$api_key_llp 	= getRazorpayApiKey($site_name);
-	$api_secret_llp = getRazorpayApiSecret($site_name);
+	$site_name			= " contains llp once";
+	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
 
     $table    = $report->table;
     $matrix   = array();
@@ -84,8 +84,9 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts_hset	= getAllActiveVirtualAccounts($api_key_hset, $api_secret_hset);	
-	//$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
+	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
+	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();	
+
 	//count the total number of active accounts available
 	// assume that number is same between HSET and LLP sites
 	$vacount = count($virtualAccounts_hset);
@@ -99,7 +100,7 @@ function export_report($report)
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
-			$va = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
+			$va = $razorpay_api_hset->getVirtualAccountGivenSritoniId();
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
 			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
 			

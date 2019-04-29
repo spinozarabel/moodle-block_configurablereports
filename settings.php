@@ -63,7 +63,7 @@ if ($ADMIN->fulltree) {
                     'Enter API Secret of Razorpay Account for HSEA-LLP', '', PARAM_RAW, 40));
 					
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL',
-                    'ldaps://example.com', 'block_configurable_reports', '', PARAM_URL, 30));
+                    'ldaps://example.com', '', PARAM_URL, 30));
 					
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_admin', 'LDAP Admin',
                     'cn=admin,dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));

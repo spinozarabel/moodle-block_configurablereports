@@ -26,7 +26,6 @@
 function export_report($report) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
-	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
 	
 
     $table    = $report->table;

@@ -99,7 +99,8 @@ function export_report($report)
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
 	foreach ($virtualAccounts_hset->items as $key => $va) // looping through array of iems, each item is a VA
 		{
-			// 
+			//
+			error_log(print_r($va,true));
 			$va_id		 		= $va->id; // this is the VA ID of this account number
 			$va_useridnumber	= $va->notes->idnumber;
 			

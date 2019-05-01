@@ -33,16 +33,15 @@ function export_report($report)
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
-	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
-	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
+	require_once($CFG->dirroot."/blocks/configurable_reports/sritoni_razorpay_api.php");
+
 	
-	$site_name	= " contains hset once";
-	$api_key_hset 	= getRazorpayApiKey($site_name);
-	$api_secret_hset = getRazorpayApiSecret($site_name);
+	$site_name			= " contains hset once";
+	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
+
 	
-	$site_name	= " contains llp once";
-	$api_key_llp 	= getRazorpayApiKey($site_name);
-	$api_secret_llp = getRazorpayApiSecret($site_name);
+	$site_name			= " contains llp once";
+	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
 
     $table    = $report->table;
     $matrix   = array();
@@ -86,104 +85,71 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts_hset	= getAllActiveVirtualAccounts($api_key_hset, $api_secret_hset);	
-	$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
+	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
+	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
 	//count the total number of active accounts available
 	// assume that number is same between HSET and LLP sites
 	$vacount = count($virtualAccounts_hset);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
+	$va_array_hset	= (array) $virtualAccounts_hset;
+	$va_array_llp	= (array) $virtualAccounts_llp;
 	
-	// for each of the csv users check to see if they have an associated account.
-	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	foreach ($csv as $key => $csvuser) 
+	$del_count	= 0; // initialize counter for number of deleted VAs
+	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
+	foreach ($virtualAccounts_hset->items as $key => $va) // looping through array of iems, each item is a VA
 		{
-			// get student id number
-			$useridnumber = $csvuser["employeenumber"];
-			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
-			$va_hset = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
-			$va_llp  = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
+			// 
+			$va_id		 		= $va->id; // this is the VA ID of this account number
+			$va_useridnumber	= $va->notes->idnumber;
 			
+			// Is there a student in the $csv array having this idnumber?
+			if (in_array($va_useridnumber, array_column($csv, "uid")))
+			{
+				// A valid student account exists for this VA so we need to keep this account
+				continue; // skip this VA and go to next VA in foreach loop
+			}
+			// if we are here, there is no valid user in CSV and so we need to close this account
+			$va_closed			= $razorpay_api_hset->closeVirtualAccount($va_id);
 			
-			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
-			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
+			if ($va_closed->status == "closed" )
+			{
+				echo nl2br("Successfully Closed VA HSET for Student ID: " . $va_useridnumber . "VA ID: " . $va_id . "\n");
+				$del_count = $del_count + 1;
+			}
 			
-			if(is_null($va_hset)) 	// VA doesn't exist, need to create so keep this entry, go to next item
-				{
-					continue;       // keep this element, go to next user in for each loop
-				}
-			unset($csv[$key]);	    // the account exists and so no need to create one, remove this entry from the array
 		}
-	// TO DO before removing the entry lets update the user profile field for good measure?
-	unset($csvuser);  // break reference in foreach loop on exit
+
+	unset($va);  // break reference in foreach loop on exit
+	echo nl2br("Successfully Closed " . $del_count . " HSET VA accounts" . "\n");
 	
-	// Now all remaining members of $csv do not have matching virtual accounts so create them for both HSET and LLP
-	$count_va_created = 0; //initialize count
-	
-	foreach ($csv as $key => $csvuser) 
+	$del_count	= 0; // initialize counter for number of deleted VAs
+	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
+	foreach ($virtualAccounts_llp->items as $key => $va) // looping through array of iems, each item is a VA
 		{
-			// get student id number and user name from CSV array
-			$useridnumber 	= $csvuser["employeenumber"];  // this is the unique sritoni idnumber assigned by school
-			$username 		= $csvuser["uid"];             // uniques username assigned by school
-			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
+			// 
+			$va_id	 			= $va->id; // this is the VA ID of this account number
+			$va_useridnumber	= $va->notes->idnumber;
 			
-			// create a new virtual account for this user
-			$va_hset 		= createVirtualAccount($api_key_hset, $api_secret_hset, $useridnumber, $username, $userid);
-			
-			
-			// prepare the array of account information to be JSON encoded
-			if ($va_hset->id)
+			// Is there a student in the $csv array having this idnumber?
+			if (in_array($va_useridnumber, array_column($csv, "uid")))
 			{
-				$acct_hset = array	(
-									"beneficiary_name"  => $va_hset->receivers[0]->name,
-									"va_id"             => $va_hset->id,
-									"account_number"    => $va_hset->receivers[0]->account_number,
-									"va_ifsc_code"      => $va_hset->receivers[0]->ifsc,
-									);
-				$accounts[0]	= $acct_hset;
+				// A valid student account exists for this VA so we need to keep this account
+				continue; // skip this VA and go to next VA in foreach loop
+			}
+			// if we are here, there is no valid user in CSV and so we need to close this account
+			$va_closed			= $razorpay_api_llp->closeVirtualAccount($va_id);
+			
+			if ($va_closed->status == "closed" )
+			{
+				echo nl2br("Successfully Closed VA HSEA LLP for Student ID: " . $va_useridnumber . "VA ID: " . $va_id . "\n");
+				$del_count = $del_count + 1;
 			}
 			
-			// create a new VA for this user at HSEA-LLP
-			$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
-			
-			// prepare the array of account information to be JSON encoded
-			if ($va_llp->id)
-			{
-				$acct_hseallp = array	(
-									"beneficiary_name"  => $va_hseallp->receivers[0]->name,
-									"va_id"             => $va_hseallp->id,
-									"account_number"    => $va_hseallp->receivers[0]->account_number,
-									"va_ifsc_code"      => $va_hseallp->receivers[0]->ifsc,
-									);
-				$accounts[1]	= $acct_hseallp;
-			}
-			
-			// JSON encode array if array is valid
-			if ($accounts) 
-			{
-				$accounts_json	= json_encode($accounts);
-			}
-			
-			// Get the Moodle profile_field_virtualaccounts for this user to update
-			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
-			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
-																					'userid'   =>  $userid,
-																					'fieldid'  =>  $field->id,
-																					)
-															);  // Get fieldid based on shortname "virtualaccounts"
-			// this data will be empty since we have not yet created VAs for this user
-			
-			$user_profile_virtualaccounts->data = $accounts_json;
-			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
-			
-			
-			$count_va_created += 1;  // increment count
-			echo nl2br("New Virtual Account created for: " . $username . " for HSET payments, VA ID: " . $va_hset->id . "\n");
-			echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id . "\n");
 		}
-		unset($csvuser); // break foreach reference
-	
-	echo nl2br("New Virtual Accounts created at each of HSET and HSEA-LLP sites: " . $count_va_created . "\n");
+
+	unset($va);  // break reference in foreach loop on exit
+	echo nl2br("Successfully Closed " . $del_count . " HSEA-LLP accounts" . "\n");
 	
 
 	exit;

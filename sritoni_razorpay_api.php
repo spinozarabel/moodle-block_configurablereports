@@ -154,6 +154,21 @@ class sritoni_razorpay_api
 		return $last_payment;
 	}
 	
+	/** closeVirtualAccount($va_id) closes the razorpay virtual account given the VA ID
+	*
+	*
+	*
+	*/
+	function closeVirtualAccount($va_id)
+	{
+		$rel_url = "virtual_accounts/" . $va_id;
+		$post = array(
+						"status" 		 => "closed"
+					 );
+		$closedVirtualAccount = $this->postDataToServerUsingCurl( $post, $rel_url );
+		return $closedVirtualAccount;
+	}
+	
 	/** createVirtualAccount() creates a new razorpay virtual account
 	*
 	*

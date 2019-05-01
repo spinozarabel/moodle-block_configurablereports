@@ -23,9 +23,9 @@ defined('MOODLE_INTERNAL') || die();
  * @package blocks
  * @author: Madhu Avasarala
  * @date: 04/27/2019
- * This is the Razorpay account sync_add version 1.1
- * Adds Raxorpay Virtual Account for all students if not already existing
- * Adds accounts for HSET and HSEA-LLP and updates profile_field_virtualaccounts with JSON encoding
+ * This is the Razorpay account Del sync version 1.1
+ * Closes Raxorpay Virtual Account for all students who are NOT in list of generated Report
+ * 
  * ver 1.1
  */
 
@@ -33,15 +33,16 @@ function export_report($report)
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
-	require_once($CFG->dirroot."/blocks/configurable_reports/sritoni_razorpay_api.php");
-
+	require_once($CFG->dirroot."/blocks/configurable_reports/razorpaylib.php");
+	require_once($CFG->dirroot."/blocks/configurable_reports/ignore_key.php");
 	
-	$site_name			= " contains hset once";
-	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
-
+	$site_name	= " contains hset once";
+	$api_key_hset 	= getRazorpayApiKey($site_name);
+	$api_secret_hset = getRazorpayApiSecret($site_name);
 	
-	$site_name			= " contains llp once";
-	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
+	$site_name	= " contains llp once";
+	$api_key_llp 	= getRazorpayApiKey($site_name);
+	$api_secret_llp = getRazorpayApiSecret($site_name);
 
     $table    = $report->table;
     $matrix   = array();
@@ -85,8 +86,8 @@ function export_report($report)
 	
 	
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
-	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
+	$virtualAccounts_hset	= getAllActiveVirtualAccounts($api_key_hset, $api_secret_hset);	
+	$virtualAccounts_llp  	= getAllActiveVirtualAccounts($api_key_llp, $api_secret_llp); // uncomment once LLP account created razorpay
 	//count the total number of active accounts available
 	// assume that number is same between HSET and LLP sites
 	$vacount = count($virtualAccounts_hset);
@@ -100,8 +101,8 @@ function export_report($report)
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
 			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
-			$va_hset = $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
-			$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
+			$va_hset = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
+			$va_llp  = getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
 			
 			
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
@@ -126,9 +127,8 @@ function export_report($report)
 			$username 		= $csvuser["uid"];             // uniques username assigned by school
 			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
 			
-			// create a new virtual account for this user in both HSET and HSEA-LLP razorpay accounts
-			$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-			$va_llp			= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
+			// create a new virtual account for this user
+			$va_hset 		= createVirtualAccount($api_key_hset, $api_secret_hset, $useridnumber, $username, $userid);
 			
 			
 			// prepare the array of account information to be JSON encoded
@@ -143,6 +143,8 @@ function export_report($report)
 				$accounts[0]	= $acct_hset;
 			}
 			
+			// create a new VA for this user at HSEA-LLP
+			$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
 			
 			// prepare the array of account information to be JSON encoded
 			if ($va_llp->id)
@@ -176,8 +178,8 @@ function export_report($report)
 			
 			
 			$count_va_created += 1;  // increment count
-			echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
-			echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . " for HSET payments, VA ID: " . $va_hset->id . "\n");
+			echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id . "\n");
 		}
 		unset($csvuser); // break foreach reference
 	

@@ -123,8 +123,8 @@ function export_report($report)
 			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
 			
 			// create a new virtual account for this user
-			//$va_hset 		= createVirtualAccount($api_key_hset, $api_secret_hset, $useridnumber, $username, $userid);
-			//$va_llp			= createVirtualAccount($api_key_llp, $api_secret_llp, $useridnumber, $username, $userid);
+			//$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
+			//$va_llp			= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
 			//
 			$count_va_created += 1;  // increment count
 			echo nl2br("New Virtual Account created for: " . $username . " with VA ID: " . "simulation, not created yet" . "\n");

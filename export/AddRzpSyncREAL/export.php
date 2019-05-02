@@ -172,9 +172,8 @@ function export_report($report)
 																					'userid'   =>  $userid,
 																					'fieldid'  =>  $field->id,
 																					)
-															);  // Get fieldid based on shortname "virtualaccounts"
-			// this data will be empty since we have not yet created VAs for this user
-			
+															);
+			error_log(print_r($user_profile_virtualaccounts,true));
 			$user_profile_virtualaccounts->data = $accounts_json;
 			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
 

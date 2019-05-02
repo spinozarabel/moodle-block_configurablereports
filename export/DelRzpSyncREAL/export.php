@@ -131,6 +131,8 @@ function export_report($report)
 			// 
 			$va_id	 			= $va->id; // this is the VA ID of this account number
 			$va_useridnumber	= $va->notes->idnumber;
+			$va_description		= $va->description;
+			$va_username		= str_ireplace("Virtual Account for ", "", $va_description);
 			
 			// Is there a student in the $csv array having this idnumber?
 			if (in_array($va_useridnumber, array_column($csv, "uid")))
@@ -143,7 +145,7 @@ function export_report($report)
 			
 			if ($va_closed->status == "closed" )
 			{
-				echo nl2br("Successfully Closed VA HSEA LLP for Student ID: " . $va_useridnumber . "VA ID: " . $va_id . "\n");
+				echo nl2br("Successfully Closed VA HSEA LLP for Student username: " . $va_username . "VA ID: " . $va_id . "\n");
 				$del_count = $del_count + 1;
 			}
 			

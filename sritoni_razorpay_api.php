@@ -165,7 +165,7 @@ class sritoni_razorpay_api
 		$post = array(
 						'status' 		 => 'closed'
 					 );
-		$closedVirtualAccount = $this->postDataToServerUsingCurl( $post, $rel_url );
+		$closedVirtualAccount = $this->patchDataToServerUsingCurl( $post, $rel_url );
 		return $closedVirtualAccount;
 	}
 	
@@ -240,6 +240,52 @@ class sritoni_razorpay_api
 		$headers[]  = "Content-Type: application/json";
 		$options = array(
 			CURLOPT_POST		   => true,
+			CURLOPT_POSTFIELDS	   => $post_json,
+			CURLOPT_URL			   => $url,
+			CURLOPT_USERPWD		   => $this->password,
+			CURLOPT_RETURNTRANSFER => true,     // return web page
+			CURLOPT_HTTPHEADER	   => $headers,
+	//      CURLOPT_HEADER         => false,    // don't return headers
+	//      CURLOPT_FOLLOWLOCATION => true,     // follow redirects
+	//      CURLOPT_ENCODING       => "",       // handle all encodings
+	//      CURLOPT_USERAGENT      => "spider", // who am i
+	//      CURLOPT_AUTOREFERER    => true,     // set referer on redirect
+			CURLOPT_CONNECTTIMEOUT => 20,      // timeout on connect
+			CURLOPT_TIMEOUT        => 120,      // timeout on response
+			CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
+			CURLOPT_SSL_VERIFYPEER => true,     // enable SSL Cert checks
+			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_SSLVERSION	   => CURL_SSLVERSION_TLSv1_2
+		);
+		
+		$ch     = curl_init( $url );
+		curl_setopt_array( $ch, $options );
+		$result = curl_exec( $ch );
+		if (curl_errno($ch)) 
+		  {
+			echo 'Error:' . curl_error($ch);
+		  }
+		curl_close( $ch );
+		return json_decode($result);
+	}
+	
+	/** postDataToServerUsingCurl( $post, $url, $api_key, $api_secret )
+	* This function uses curl using POST method to send data to server
+	* It returns the result of the trasaction as a stdclass object
+	* @param $post is an associative array containing the parameters as required by Razorpay
+	* @param $url is the URL of razorpay
+	* @param $api_key is the key ID sepcified by Razorpay for account being used
+	* @param $api_secret is the corresponding secret issued by Razorpay
+	*/
+	function patchDataToServerUsingCurl( $post, $rel_url )
+	{
+		$url		= "https://api.razorpay.com/v1/" . $rel_url;
+		$post_json  = json_encode($post);
+		$headers    = array();
+		$headers[]  = "Content-Type: application/json";
+		$options = array(
+	//      CURLOPT_POST		   => true,
+			CURLOPT_CUSTOMREQUEST  => 'PATCH',
 			CURLOPT_POSTFIELDS	   => $post_json,
 			CURLOPT_URL			   => $url,
 			CURLOPT_USERPWD		   => $this->password,

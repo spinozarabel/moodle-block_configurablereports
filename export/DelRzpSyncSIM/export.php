@@ -115,14 +115,14 @@ function export_report($report)
 			
 			//if ($va_closed->status == "closed" )
 			//{
-				echo nl2br("Successfully Closed VA HSET for Student username: " . $va_username . "VA ID: " . $va_id . "\n");
+				echo nl2br("Successfully SIMULATION Closed VA HSET for Student username: " . $va_username . "VA ID: " . $va_id . "\n");
 				$del_count = $del_count + 1;
 			//}
 			
 		}
 
 	unset($va);  // break reference in foreach loop on exit
-	echo nl2br("Successfully Closed " . $del_count . " HSET VA accounts" . "\n");
+	echo nl2br("Successfully SIMULATION Closed " . $del_count . " HSET VA accounts" . "\n");
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
@@ -145,14 +145,14 @@ function export_report($report)
 			
 			//if ($va_closed->status == "closed" )
 			//{
-				echo nl2br("Successfully Closed VA HSET for Student username: " . $va_username . "VA ID: " . $va_id . "\n");
+				echo nl2br("Successfully SIMULATION Closed VA HSET for Student username: " . $va_username . "VA ID: " . $va_id . "\n");
 				$del_count = $del_count + 1;
 			//}
 			
 		}
 
 	unset($va);  // break reference in foreach loop on exit
-	echo nl2br("Successfully Closed " . $del_count . " HSEA-LLP accounts" . "\n");
+	echo nl2br("Successfully SIMULATION Closed " . $del_count . " HSEA-LLP accounts" . "\n");
 	
 
 	exit;

@@ -109,6 +109,7 @@ function export_report($report)
 			}
 			// if we are here, there is no valid user in CSV and so we need to close this account
 			$va_closed			= $razorpay_api_hset->closeVirtualAccount($va_id);
+			error_log(print_r($va_closed,true));
 			
 			if ($va_closed->status == "closed" )
 			{

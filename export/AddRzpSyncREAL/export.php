@@ -113,7 +113,7 @@ function export_report($report)
 				}
 			unset($csv[$key]);	    // the account exists and so no need to create one, remove this entry from the array
 		}
-	// TO DO before removing the entry lets update the user profile field for good measure?
+
 	unset($csvuser);  // break reference in foreach loop on exit
 	
 	// Now all remaining members of $csv do not have matching virtual accounts so create them for both HSET and LLP
@@ -134,11 +134,15 @@ function export_report($report)
 			// prepare the array of account information to be JSON encoded
 			if ($va_hset->id)
 			{
+				$beneficiary_name	= $va_hset->receivers[0]->name;
+				$va_id				= $va_hset->id;
+				$account_number	    = $va_hset->receivers[0]->account_number;
+				$va_ifsc_code       = $va_hset->receivers[0]->ifsc;
 				$acct_hset = array	(
-									"beneficiary_name"  => $va_hset->receivers[0]->name,
-									"va_id"             => $va_hset->id,
-									"account_number"    => $va_hset->receivers[0]->account_number,
-									"va_ifsc_code"      => $va_hset->receivers[0]->ifsc,
+									"beneficiary_name"  => $beneficiary_name,
+									"va_id"             => $va_id,
+									"account_number"    => $account_number,
+									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[0]	= $acct_hset;
 			}
@@ -147,11 +151,15 @@ function export_report($report)
 			// prepare the array of account information to be JSON encoded
 			if ($va_llp->id)
 			{
+				$beneficiary_name	= $va_llp->receivers[0]->name;
+				$va_id				= $va_llp->id;
+				$account_number	    = $va_llp->receivers[0]->account_number;
+				$va_ifsc_code       = $va_llp->receivers[0]->ifsc;
 				$acct_hseallp = array	(
-									"beneficiary_name"  => $va_hseallp->receivers[0]->name,
-									"va_id"             => $va_hseallp->id,
-									"account_number"    => $va_hseallp->receivers[0]->account_number,
-									"va_ifsc_code"      => $va_hseallp->receivers[0]->ifsc,
+									"beneficiary_name"  => $beneficiary_name,
+									"va_id"             => $va_id,
+									"account_number"    => $account_number,
+									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[1]	= $acct_hseallp;
 			}

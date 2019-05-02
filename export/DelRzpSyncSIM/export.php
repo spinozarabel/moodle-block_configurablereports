@@ -92,7 +92,7 @@ function export_report($report)
 	$vacount = count($virtualAccounts_hset);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
-
+error_log(print_r($virtualAccounts_hset,true));
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array

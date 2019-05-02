@@ -35,14 +35,16 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/sritoni_razorpay_api.php");
 
-	
+	//-------------------- create new API interfaces section 1-------------------------------->
 	$site_name			= " contains hset once";
 	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
 
 	
 	$site_name			= " contains llp once";
 	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
+	//--------------------- end of section 1 -----------------------------------------------------
 
+	//--------------------- create the report table and the csv users matrix section 2--------------------->
     $table    = $report->table;
     $matrix   = array();
     $filename = 'report';
@@ -81,6 +83,7 @@ function export_report($report)
 	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
+	//----------------------------------- end of section 2 --------------------------------------->
 	
 	
 	
@@ -167,13 +170,14 @@ function export_report($report)
 			}
 			
 			// Get the Moodle profile_field_virtualaccounts for this user to update
+			// you may get error if this record has not been set before
 			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
 			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
 																					'userid'   =>  $userid,
 																					'fieldid'  =>  $field->id,
 																					)
 															);
-			error_log(print_r($user_profile_virtualaccounts,true));
+
 			$user_profile_virtualaccounts->data = $accounts_json;
 			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
 

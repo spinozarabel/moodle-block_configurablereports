@@ -95,7 +95,7 @@ function export_report($report)
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
-	foreach ($virtualAccounts_hset->items as $key => $va) // looping through array of iems, each item is a VA
+	foreach ($virtualAccounts_hset as $key => $va) // looping through array of iems, each item is a VA
 		{
 			// 
 			$va_id		 		= $va->id; // this is the VA ID of this account number
@@ -123,7 +123,7 @@ function export_report($report)
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
-	foreach ($virtualAccounts_llp->items as $key => $va) // looping through array of iems, each item is a VA
+	foreach ($virtualAccounts_llp as $key => $va) // looping through array of iems, each item is a VA
 		{
 			// 
 			$va_id	 			= $va->id; // this is the VA ID of this account number

@@ -92,14 +92,13 @@ function export_report($report)
 	$vacount = count($virtualAccounts_hset);
 	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
 	
-error_log(print_r($virtualAccounts_hset,true));
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
-	foreach ($virtualAccounts_hset->items as $key => $va) // looping through array of iems, each item is a VA
+	foreach ($virtualAccounts_hset as $key => $va) // looping through array of iems, each item is a VA
 		{
 			//
-			error_log(print_r($va,true));
+			
 			$va_id		 		= $va->id; // this is the VA ID of this account number
 			$va_useridnumber	= $va->notes->idnumber;
 			
@@ -125,7 +124,7 @@ error_log(print_r($virtualAccounts_hset,true));
 	
 	$del_count	= 0; // initialize counter for number of deleted VAs
 	// for each of the active virtual accounts check to see if corresponding user exists in CSV array
-	foreach ($virtualAccounts_llp->items as $key => $va) // looping through array of iems, each item is a VA
+	foreach ($virtualAccounts_llp as $key => $va) // looping through array of iems, each item is a VA
 		{
 			// 
 			$va_id	 			= $va->id; // this is the VA ID of this account number

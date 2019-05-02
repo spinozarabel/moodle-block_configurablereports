@@ -163,7 +163,7 @@ class sritoni_razorpay_api
 	{
 		$rel_url = "virtual_accounts/" . $va_id;
 		$post = array(
-						"status" 		 => "closed"
+						'status' 		 => 'closed'
 					 );
 		$closedVirtualAccount = $this->postDataToServerUsingCurl( $post, $rel_url );
 		return $closedVirtualAccount;

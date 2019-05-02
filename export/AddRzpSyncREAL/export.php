@@ -23,10 +23,10 @@ defined('MOODLE_INTERNAL') || die();
  * @package blocks
  * @author: Madhu Avasarala
  * @date: 04/27/2019
- * This is the Razorpay account sync_add version 1.1
+ * This is the Razorpay account sync_add version 1.2
  * Adds Raxorpay Virtual Account for all students if not already existing
  * Adds accounts for HSET and HSEA-LLP and updates profile_field_virtualaccounts with JSON encoding
- * ver 1.1
+ * ver 1.2
  */
 
 function export_report($report) 
@@ -87,52 +87,47 @@ function export_report($report)
     // Fetch all virtual accounts from Razorpay as a collection
 	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
 	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
-	//count the total number of active accounts available
-	// assume that number is same between HSET and LLP sites
-	$vacount = count($virtualAccounts_hset);
-	echo nl2br("Number of Active Razorpay Virtual Accounts: " . $vacount . "\n");
+
+	echo nl2br("Number of Present Active Razorpay Virtual Accounts for HSET: " . count($virtualAccounts_hset) . "\n");
+	echo nl2br("Number of Present Active Razorpay Virtual Accounts for LLP : " . count($virtualAccounts_llp)  . "\n");
 	
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
+	
 	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number
 			$useridnumber = $csvuser["employeenumber"];
-			// get virtual account corespondin to this student ID. We check only HSET since it is true for LLP also by design
+			
+			// get virtual account corespondin to this student ID for both sites
 			$va_hset = $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
-			$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
+			$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId( $useridnumber, $virtualAccounts_llp);
 			
+			// initialzie counts
+			$count_va_hset 	= 0; //initialize count
+			$count_va_llp 	= 0; //initialize count
 			
-			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
-			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
-			
-			if(is_null($va_hset)) 	// VA doesn't exist, need to create so keep this entry, go to next item
-				{
-					continue;       // keep this element, go to next user in for each loop
-				}
-			unset($csv[$key]);	    // the account exists and so no need to create one, remove this entry from the array
-		}
-
-	unset($csvuser);  // break reference in foreach loop on exit
-	
-	// Now all remaining members of $csv do not have matching virtual accounts so create them for both HSET and LLP
-	$count_va_created = 0; //initialize count
-	
-	foreach ($csv as $key => $csvuser) 
-		{
-			// get student id number and user name from CSV array
+			// keep data ready needed for creating VAs for this user. It maynot be used if accounts exist
 			$useridnumber 	= $csvuser["employeenumber"];  // this is the unique sritoni idnumber assigned by school
 			$username 		= $csvuser["uid"];             // uniques username assigned by school
-			$userid   		= $csvuser["id"];              // unique id used internally by Moodle in the user tables
+			$userid   		= $csvuser["id"]; 
 			
-			// create a new virtual account for this user in both HSET and HSEA-LLP razorpay accounts
-			$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-			$va_llp			= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
+			if(is_null($va_hset))
+			{
+				// VA for HSET does'nt exist so create one
+				$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
+				$count_va_hset	+=1; // increment count				
+			}
 			
+			if(is_null($va_llp))
+			{
+				// VA for HSEA-LLP does'nt exist so create one
+				$va_llp 		= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
+				$count_va_llp	+=1; // increment count				
+			}
 			
-			// prepare the array of account information to be JSON encoded
-			if ($va_hset->id)
+			if ($va_hset) // by now this should eist, but just in case the creation didn't work due to some reason
 			{
 				$beneficiary_name	= $va_hset->receivers[0]->name;
 				$va_id				= $va_hset->id;
@@ -145,11 +140,10 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[0]	= $acct_hset;
+				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
 			}
 			
-			
-			// prepare the array of account information to be JSON encoded
-			if ($va_llp->id)
+			if ($va_llp) // by now this should eist, but just in case the creation didn't work due to some reason
 			{
 				$beneficiary_name	= $va_llp->receivers[0]->name;
 				$va_id				= $va_llp->id;
@@ -162,9 +156,9 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[1]	= $acct_hseallp;
+				echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
 			}
 			
-			// JSON encode array if array is valid
 			if ($accounts) 
 			{
 				$accounts_json	= json_encode($accounts);
@@ -181,15 +175,10 @@ function export_report($report)
 			
 			$user_profile_virtualaccounts->data = $accounts_json;
 			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
-			
-			
-			$count_va_created += 1;  // increment count
-			echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
-			echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
+
 		}
-		unset($csvuser); // break foreach reference
-	
-	echo nl2br("New Virtual Accounts created at each of HSET and HSEA-LLP sites: " . $count_va_created . "\n");
+
+	unset($csvuser);  // break reference in foreach loop on exit
 	
 
 	exit;

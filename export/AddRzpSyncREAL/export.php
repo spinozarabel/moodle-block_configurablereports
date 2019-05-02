@@ -117,14 +117,16 @@ function export_report($report)
 			{
 				// VA for HSET does'nt exist so create one
 				$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_hset	+=1; // increment count				
+				$count_va_hset	+=1; // increment count	
+				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
 			}
 			
 			if(is_null($va_llp))
 			{
 				// VA for HSEA-LLP does'nt exist so create one
 				$va_llp 		= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_llp	+=1; // increment count				
+				$count_va_llp	+=1; // increment count	
+				echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
 			}
 			
 			if ($va_hset) // by now this should eist, but just in case the creation didn't work due to some reason
@@ -140,7 +142,7 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[0]	= $acct_hset;
-				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
+				
 			}
 			
 			if ($va_llp) // by now this should eist, but just in case the creation didn't work due to some reason
@@ -156,7 +158,7 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[1]	= $acct_hseallp;
-				echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
+				
 			}
 			
 			if ($accounts) 

@@ -134,7 +134,7 @@ function export_report($report)
 			
 			if ($va_hset) // by now this should eist, but just in case the creation didn't work due to some reason
 			{
-				$beneficiary_name	= $va_hset->receivers[0]->name;
+				$beneficiary_name	= "Head Start Educational Trust";
 				$va_id				= $va_hset->id;
 				$account_number	    = $va_hset->receivers[0]->account_number;
 				$va_ifsc_code       = $va_hset->receivers[0]->ifsc;
@@ -150,7 +150,7 @@ function export_report($report)
 			
 			if ($va_llp) // by now this should eist, but just in case the creation didn't work due to some reason
 			{
-				$beneficiary_name	= $va_llp->receivers[0]->name;
+				$beneficiary_name	= "HSEA LLP";
 				$va_id				= $va_llp->id;
 				$account_number	    = $va_llp->receivers[0]->account_number;
 				$va_ifsc_code       = $va_llp->receivers[0]->ifsc;

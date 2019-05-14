@@ -135,10 +135,10 @@ if($ldapconn) {
         //
       }
 			$csvuid = $csv[$i]["uid"];
-			if (strpos($csv[$i]["ou"] , "Teaching") !== false) { # does ou contain "Teaching"?
+			if (stripos($csv[$i]["ou"] , "Teaching") !== false) { # does ou contain "Teaching"?
 				$ou = "employee";  # if so add to organization unit ou = employee
 			}
-			if (strpos($csv[$i]["ou"] , "Student") !== false) { # does ou contain "Student"?
+			if (stripos($csv[$i]["ou"] , "Student") !== false) { # does ou contain "Student"?
 				$ou = "student";  # if so add to organization unit ou = student
 			}
 			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user
@@ -232,10 +232,10 @@ if($ldapconn) {
         //
       }
 			$csvuid = $csv[$i]["uid"];
-			if (strpos($csv[$i]["ou"] , "Teaching") !== false) {
+			if (stripos($csv[$i]["ou"] , "Teaching") !== false) {
 				$ou = "employee";
 			}
-			if (strpos($csv[$i]["ou"] , "Student") !== false) {
+			if (stripos($csv[$i]["ou"] , "Student") !== false) {
 				$ou = "student";
 			}
 			$csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $ldaptree;  # form the dn of the user

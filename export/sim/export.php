@@ -122,8 +122,8 @@ if($ldapconn) {
 	//
 	$addcount 			= 0;	# keeps track of number of users added to LDAP
 	$notaddcount 		= 0; # keeps track of users not added due to problems
-	//$sim_add_count 	= 0; # keeps track of simulated user additions not needed now
-	//$sim_del_count 	= 0; # keeps track of simulated user deletions not needed now
+	$sim_add_count 		= 0; # keeps track of simulated user additions not needed now
+	$sim_del_count 		= 0; # keeps track of simulated user deletions not needed now
 	//
 	if ($flag_add_users) {
 		// if this flag is set we can go ahead and add any missing users into LDAP

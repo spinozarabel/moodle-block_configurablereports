@@ -95,7 +95,10 @@ function export_report($report)
 
 	echo nl2br("Number of Present Active Razorpay Virtual Accounts for HSET: " . count($virtualAccounts_hset) . "\n");
 	echo nl2br("Number of Present Active Razorpay Virtual Accounts for LLP : " . count($virtualAccounts_llp)  . "\n");
-	
+		
+	// initialize counts of accounts to be added if missing
+	$count_va_hset_created	=	0;
+	$count_va_llp_created	=	0; 
 	
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
@@ -103,34 +106,27 @@ function export_report($report)
 	foreach ($csv as $key => $csvuser) 
 		{
 			// get student id number
-			$useridnumber = $csvuser["employeenumber"];
+			$useridnumber 	= $csvuser["employeenumber"];	// this is the unique sritoni idnumber assigned by school
+			$username 		= $csvuser["uid"];				// unique username assigned by school
+			$userid   		= $csvuser["id"];				// unique id used internally by Moodle in the user tables
 			
 			// get virtual account corespondin to this student ID for both sites
 			$va_hset = $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
 			$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId( $useridnumber, $virtualAccounts_llp);
 			
-			// initialzie counts
-			$count_va_hset 	= 0; //initialize count
-			$count_va_llp 	= 0; //initialize count
-			
-			// keep data ready needed for creating VAs for this user. It maynot be used if accounts exist
-			$useridnumber 	= $csvuser["employeenumber"];  	// this is the unique sritoni idnumber assigned by school
-			$username 		= $csvuser["uid"];             	// unique sritoni username assigned by school
-			$userid   		= $csvuser["id"]; 				// unique id used internally by Moodle in the user tables
-			
 			if(is_null($va_hset))
 			{
 				// VA for HSET does'nt exist for this user, so create one
-				$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_hset	+=1; // increment count	
+				$va_hset 				 = $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
+				$count_va_hset_created	+=1; // increment count	
 				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
 			}
 			
 			if(is_null($va_llp))
 			{
 				// VA for HSEA-LLP does'nt exist so create one
-				$va_llp 		= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_llp	+=1; // increment count	
+				$va_llp 				 = $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
+				$count_va_llp_created	+=1; // increment count	
 				echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
 			}
 			
@@ -187,6 +183,8 @@ function export_report($report)
 
 	unset($csvuser);  // break reference in foreach loop on exit
 	
+	echo nl2br("Number of new Virtual Accounts created for HSET: " . $count_va_hset_created . "\n");
+	echo nl2br("Number of new Virtual Accounts created for HSEA LLP: " . $count_va_llp_created . "\n");
 
 	exit;
 }

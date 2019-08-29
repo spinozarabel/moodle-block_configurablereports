@@ -86,7 +86,14 @@ function export_report($report)
 	
     // Fetch all virtual accounts from Razorpay as a collection
 	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
-	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();	
+	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
+	
+	if (empty($virtualAccounts_hset))
+	{	// no virtual accounts returned so none exist
+		
+		echo nl2br("No Virtual Accounts Exist on Razorpay, SmartCollect feature Turned Off?"  . "\n");
+		return;
+	}
 
 	//count the total number of active accounts available for each payment site
 	// assume that number is not same

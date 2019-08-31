@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
  * This is the Razorpay account sync_add version 1.2
  * Adds Raxorpay Virtual Account for all students if not already existing
  * Adds accounts for HSET and HSEA-LLP and updates profile_field_virtualaccounts with JSON encoding
+ * 1.3 08/31/2019 Checks if bank account name or beneficiary is correct for each account created
  * 1.2 08/11/19 checks individually for account for each site and creates account if not present for any site
  * 1.1 uses class defined in sritoni_razorpay_api.php that is useable for both Moodle and Wordpress
  * 1.0 uses razorpay.lib
@@ -120,6 +121,12 @@ function export_report($report)
 				$va_hset 				 = $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
 				$count_va_hset_created	+=1; // increment count	
 				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
+				// check if newly created Virtual Account has the correct beneficiary
+				if ($va_hset->name != "Head Start Educational Trust")
+				{
+					echo nl2br("Created Virtual Account for: " . $username . " for HSET payments, has wrong beneficiary: " . $va_hset->name . "\n");
+					return;
+				}
 			}
 			
 			if(is_null($va_llp))

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// This line protects the file from being accessed by a URL directly.                                                               
+// This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 //
 /**
@@ -30,16 +30,16 @@ defined('MOODLE_INTERNAL') || die();
  * 1.0 uses razorpay.lib
  */
 
-function export_report($report) 
+function export_report($report)
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/sritoni_razorpay_api.php"); // file contains class for razorpay API
-		
+
 	$site_name			= " contains hset once";
 	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
 
-	
+
 	$site_name			= " contains llp once";
 	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
 
@@ -47,22 +47,22 @@ function export_report($report)
     $matrix   = array();
     $filename = 'report';
 
-    if (!empty($table->head)) 
+    if (!empty($table->head))
 	{
         $countcols = count($table->head);
         $keys      = array_keys($table->head);
         $lastkey   = end($keys);
-        foreach ($table->head as $key => $heading) 
+        foreach ($table->head as $key => $heading)
 		{
             $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($heading))));
         }
     }
 
-    if (!empty($table->data)) 
+    if (!empty($table->data))
 	{
-        foreach ($table->data as $rkey => $row) 
+        foreach ($table->data as $rkey => $row)
 		{
-            foreach ($row as $key => $item) 
+            foreach ($row as $key => $item)
 			{
                 $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($item))));
             }
@@ -70,10 +70,10 @@ function export_report($report)
     }
 
     $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
-	
-	
 
-    array_walk($csv, function(&$a) use ($csv) 
+
+
+    array_walk($csv, function(&$a) use ($csv)
 		{
 			$a = array_combine($csv[0], $a);
 		});
@@ -81,17 +81,23 @@ function export_report($report)
 	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
-	
-	
-	
+
+
+
     // Fetch all virtual accounts from Razorpay as a collection
 	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
 	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
-	
+
 	if (empty($virtualAccounts_hset))
 	{	// no virtual accounts returned so none exist
-		
-		echo nl2br("No Virtual Accounts Exist on Razorpay, SmartCollect feature Turned Off?"  . "\n");
+
+		echo nl2br("No Virtual Accounts Exist for HSET on Razorpay, API or other problem?"  . "\n");
+		return;
+	}
+    if (empty($virtualAccounts_llp))
+	{	// no virtual accounts returned so none exist
+
+		echo nl2br("No Virtual Accounts Exist for HSEA LLP on Razorpay, API or other problem?"  . "\n");
 		return;
 	}
 
@@ -101,18 +107,44 @@ function export_report($report)
 	$vacount_llp	= count($virtualAccounts_llp);
 	echo nl2br("Number of Active Razorpay Virtual Accounts HSET: " 		. 	$vacount_hset 	. "\n");
 	echo nl2br("Number of Active Razorpay Virtual Accounts HSEA LLP: "	. 	$vacount_llp 	. "\n");
-	
+
+    // define table and heading
+    ?>
+        <style>
+    	  table {
+    		border-collapse: collapse;
+    	  }
+    	  th, td {
+    		border: 1px solid orange;
+    		padding: 10px;
+    		text-align: left;
+    	  }
+        </style>
+        <table style="width:100%">
+    		<tr>
+    			<th>Student Name</th>
+    			<th>employeenumber</th>
+    			<th>HSET VA ID</th>
+                <th>HSET Account No</th>
+                <th>HSET IFSC</th>
+    			<th>HSEA LLP VA ID</th>
+                <th>HSEA LLP Account No</th>
+                <th>HSEA LLP IFSC</th>
+    		</tr>
+    <?php
+
 	// initialize counts of accounts to be added if missing
 	$count_va_hset_created	=	0;
 	$count_va_llp_created	=	0;
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	foreach ($csv as $key => $csvuser) 
+	foreach ($csv as $key => $csvuser)
 		{
 			// get student id number
 			$useridnumber 	= $csvuser["employeenumber"];	// this is the unique sritoni idnumber assigned by school
 			$username 		= $csvuser["uid"];				// unique username assigned by school
 			$userid   		= $csvuser["id"];				// unique id used internally by Moodle in the user tables
+            $user_display_name = $csvuser["displayname"];
 			// get virtual account corespondin to this student ID
 			$va_hset	= $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
 			$va_llp 	= $razorpay_api_llp->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
@@ -125,6 +157,17 @@ function export_report($report)
 				echo nl2br("Student ID: " . $useridnumber . "VA for HSET simulation created: " . "\n");
 				$count_va_hset_created	=	$count_va_hset_created + 1; // increment count of accounts created
 			}
+            else
+            {
+                ?>
+                    <tr>
+    					<td><?php echo htmlspecialchars($user_display_name); ?></td>
+                        <td><?php echo htmlspecialchars($useridnumber); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->id); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->account_number); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->ifsc); ?></td>
+                <?php
+            }
 			if(is_null($va_llp))
 			{	// create a new virtual account for this user for this site, if not already present
 				//$va_llp 		= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
@@ -132,8 +175,18 @@ function export_report($report)
 				echo nl2br("Student ID: " . $useridnumber . "VA for HSEA LLP simulation created: " . "\n");
 				$count_va_llp_created	=	$count_va_llp_created + 1; // increment count of accounts created
 			}
-			
+            else
+            {
+                ?>
+                    <td><?php echo htmlspecialchars($va_llp->id); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->account_number); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->ifsc); ?></td>
+                </tr>
+                <?php
+            }
+
 		}
+        ?></table><?php
 	unset($csvuser);  // break reference in foreach loop on exit
 	// print total number of new accounts added
 	echo nl2br("Number of new Razorpay Virtual Accounts simulation created for HSET: " 		. 	$count_va_hset_created 	. "\n");

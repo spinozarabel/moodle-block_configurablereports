@@ -89,12 +89,12 @@ function export_report($report)
 	//$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
 
 	//count the total number of active accounts available for each payment site
-	// assume that number is not same
+	/*
 	$vacount_hset 	= count($virtualAccounts_hset);
 	$vacount_llp	= count($virtualAccounts_llp);
 	echo nl2br("Number of Active Razorpay Virtual Accounts HSET: " 		. 	$vacount_hset 	. "\n");
 	echo nl2br("Number of Active Razorpay Virtual Accounts HSEA LLP: "	. 	$vacount_llp 	. "\n");
-
+    */
     // define table and heading
     ?>
         <style>
@@ -136,7 +136,9 @@ function export_report($report)
             // read in user field containing razorpay accounts stored as array read in by SQL
             $moodle_vas_obj = json_decode($moodle_vadata, false); // decoded as object
 			// check from student profile if va_id for HSET account is "not assigned" meaning not created yet
+
 			$va_hset	= $moodle_vas_obj[0];
+            error_log(print_r($va_hset, true));
             // check from student profile if va_id for HSET account is "not assigned" meaning not created yet
 			$va_llp 	= $moodle_vas_obj[1];
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");

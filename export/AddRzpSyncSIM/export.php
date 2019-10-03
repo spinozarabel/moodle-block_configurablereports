@@ -150,9 +150,9 @@ function export_report($report)
                     <tr>
     					<td><?php echo htmlspecialchars($user_display_name); ?></td>
                         <td><?php echo htmlspecialchars($useridnumber); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->id); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->account_number); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->ifsc); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->va_id); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->account_number); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->va_ifsc_code); ?></td>
                 <?php
 			}
             else
@@ -161,9 +161,9 @@ function export_report($report)
                     <tr>
     					<td><?php echo htmlspecialchars($user_display_name); ?></td>
                         <td><?php echo htmlspecialchars($useridnumber); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->id); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->account_number); ?></td>
-                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->ifsc); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->va_id); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->account_number); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->va_ifsc_code); ?></td>
                 <?php
             }
 			if( $va_llp->va_id == "not assigned" )

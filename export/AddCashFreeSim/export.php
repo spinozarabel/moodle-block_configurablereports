@@ -35,8 +35,8 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
-	$vAupdate_hset  =   false;       // do not update Virtual account for HSET
-    $vAupdate_llp   =   false;       // do not update Virtual account for LLP
+	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree
+    $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree
 
 	//$site_name			= " contains llp once";
 	//$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
@@ -97,7 +97,7 @@ function export_report($report)
 	//---------------------- end of section 2 --------------------------------------------->
 
     // -------begin section 3 Fetch all virtual accounts ----------------------->
-	$vAccounts_hset	= $pg_api_hset->listAllVirtualAccounts();
+	// $vAccounts_hset	= $pg_api_hset->listAllVirtualAccounts();
 	//$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();		// site sritoni.org/hsea-llp-payments
 
 	//echo nl2br("Number of Present Active Razorpay Virtual Accounts for HSET: " . count($virtualAccounts_hset) . "\n");
@@ -124,12 +124,12 @@ function export_report($report)
             }
 
 			//$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId( $useridnumber, $virtualAccounts_llp);
-            // pad moodleuserid with 0's to get vAccountId
+            // pad moodleuserid with 0's to get vAccountId to meet min 4 chars reqirement for this
             $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
-            // check if this account ID exists in the list of accounts
-			$vAccountExists =  $pg_api_hset->vAExists($vAccountId, $vAccounts_hset); // boolean value
+            // get details of this account using user'smoodle id
+			$vA =  $pg_api_hset->getvAccountGivenId($moodleuserid);
 
-            if (!$vAccountExists)
+            if ( empty($vA) ) // true if $vA is null
             {		// VA for HSET does'nt exist for this user, so create one
 				//$vA_hset 	= $pg_api_hset->createVirtualAccount($moodleuserid, $fullname, $phone, $email);
 				$count_va_hset_created	+=1; // increment count

@@ -82,8 +82,9 @@ function export_report($report)
     $csvcount = count($csv);
 
     // Fetch all virtual accounts from Razorpay as a collection
-	//$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
-	//$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
+	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
+	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
+    error_log(print_r($virtualAccounts_llp, true));
 
 	//count the total number of active accounts available for each payment site
 	/*

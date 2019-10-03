@@ -170,18 +170,18 @@ function export_report($report)
 			{	// create a new virtual account for this user for this site, if not already present
 				$count_va_llp_created	=	$count_va_llp_created + 1; // increment count of accounts created
                 ?>
-                    <td><?php echo htmlspecialchars($va_llp->id); ?></td>
-                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->account_number); ?></td>
-                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->ifsc); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->va_id); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->account_number); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->va_ifsc_code); ?></td>
                 </tr>
                 <?php
 			}
             else
             {
                 ?>
-                    <td><?php echo htmlspecialchars($va_llp->id); ?></td>
-                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->account_number); ?></td>
-                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->ifsc); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->va_id); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->account_number); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->va_ifsc_code); ?></td>
                 </tr>
                 <?php
             }

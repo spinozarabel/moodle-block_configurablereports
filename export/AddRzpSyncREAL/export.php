@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// This line protects the file from being accessed by a URL directly.                                                               
+// This line protects the file from being accessed by a URL directly.
 defined('MOODLE_INTERNAL') || die();
 //
 /**
@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * 1.0 uses razorpay.lib
  */
 
-function export_report($report) 
+function export_report($report)
 {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
@@ -42,7 +42,7 @@ function export_report($report)
 	$site_name			= " contains hset once";
 	$razorpay_api_hset 	= new sritoni_razorpay_api($site_name);
 
-	
+
 	$site_name			= " contains llp once";
 	$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
 	//--------------------- end of section 1 -----------------------------------------------------
@@ -52,22 +52,22 @@ function export_report($report)
     $matrix   = array();
     $filename = 'report';
 
-    if (!empty($table->head)) 
+    if (!empty($table->head))
 	{
         $countcols = count($table->head);
         $keys      = array_keys($table->head);
         $lastkey   = end($keys);
-        foreach ($table->head as $key => $heading) 
+        foreach ($table->head as $key => $heading)
 		{
             $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($heading))));
         }
     }
 
-    if (!empty($table->data)) 
+    if (!empty($table->data))
 	{
-        foreach ($table->data as $rkey => $row) 
+        foreach ($table->data as $rkey => $row)
 		{
-            foreach ($row as $key => $item) 
+            foreach ($row as $key => $item)
 			{
                 $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($item))));
             }
@@ -75,10 +75,10 @@ function export_report($report)
     }
 
     $csv   =  $matrix;  # instead of downloading and parsing, we are reusing
-	
-	
 
-    array_walk($csv, function(&$a) use ($csv) 
+
+
+    array_walk($csv, function(&$a) use ($csv)
 		{
 			$a = array_combine($csv[0], $a);
 		});
@@ -87,40 +87,42 @@ function export_report($report)
     $csvcount = count($csv);
 	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
 	//----------------------------------- end of section 2 --------------------------------------->
-	
-	
-	
+
+
+
     // Fetch all virtual accounts from Razorpay as a collection
 	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();	// site sritoni.org/hset-payments
 	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();		// site sritoni.org/hsea-llp-payments
 
 	echo nl2br("Number of Present Active Razorpay Virtual Accounts for HSET: " . count($virtualAccounts_hset) . "\n");
 	echo nl2br("Number of Present Active Razorpay Virtual Accounts for LLP : " . count($virtualAccounts_llp)  . "\n");
-		
+
 	// initialize counts of accounts to be added if missing
 	$count_va_hset_created	=	0;
-	$count_va_llp_created	=	0; 
-	
+	$count_va_llp_created	=	0;
+
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
-	
-	foreach ($csv as $key => $csvuser) 
+
+	foreach ($csv as $key => $csvuser)
 		{
 			// get student id number
 			$useridnumber 	= $csvuser["employeenumber"];	// this is the unique sritoni idnumber assigned by school
 			$username 		= $csvuser["uid"];				// unique username assigned by school
 			$userid   		= $csvuser["id"];				// unique id used internally by Moodle in the user tables
-			
-			// get virtual account corespondin to this student ID for both sites
-			$va_hset = $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
-			$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId( $useridnumber, $virtualAccounts_llp);
-			
-			if(is_null($va_hset))
+            $moodle_vadata  = $csvuser["vadata"];           // JSON encoded razorpay account data
+            $user_display_name = $csvuser["displayname"];
+
+            // read in user field containing razorpay accounts stored as array read in by SQL
+            $moodle_vas_obj = json_decode($moodle_vadata, false); // decoded as object
+			$va_hset	= $moodle_vas_obj[0];
+			$va_llp 	= $moodle_vas_obj[1];
+
+			if( $va_hset->va_id == "not assigned" )
 			{
 				// VA for HSET does'nt exist for this user, so create one
 				$va_hset 				 = $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_hset_created	+=1; // increment count	
-				echo nl2br("New Virtual Account created for: " . $username . " for HSET payments,     VA ID: " . $va_hset->id . "\n");
+				$count_va_hset_created	+=1; // increment count
 				// check if newly created Virtual Account has the correct beneficiary
 				if ($va_hset->name != "Head Start Educational Trust")
 				{
@@ -128,15 +130,14 @@ function export_report($report)
 					return;
 				}
 			}
-			
-			if(is_null($va_llp))
+
+			if( $va_llp->va_id == "not assigned" )
 			{
 				// VA for HSEA-LLP does'nt exist so create one
 				$va_llp 				 = $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
-				$count_va_llp_created	+=1; // increment count	
-				echo nl2br("New Virtual Account created for: " . $username . " for HSEA-LLP payments, VA ID: " . $va_llp->id  . "\n");
+				$count_va_llp_created	+=1; // increment count
 			}
-			
+
 			if ($va_hset) // by now this should eist. Update Moodle profile field for old as well as newly created, just in case changed offline
 			{
 				$beneficiary_name	= "Head Start Educational Trust";
@@ -150,9 +151,9 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[0]	= $acct_hset;
-				
+
 			}
-			
+
 			if ($va_llp) // by now this should eist. Update Moodle profile field for old as well as newly created, just in case changed offline
 			{
 				$beneficiary_name	= "HSEA LLP";
@@ -166,14 +167,14 @@ function export_report($report)
 									"va_ifsc_code"      => $va_ifsc_code,
 									);
 				$accounts[1]	= $acct_hseallp;
-				
+
 			}
-			
-			if ($accounts) 
+
+			if ($accounts)
 			{
 				$accounts_json	= json_encode($accounts);
 			}
-			
+
 			// Get the Moodle profile_field_virtualaccounts for this user to update
 			// you may get error if this record has not been set before
 			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
@@ -189,7 +190,7 @@ function export_report($report)
 		}
 
 	unset($csvuser);  // break reference in foreach loop on exit
-	
+
 	echo nl2br("Number of new Virtual Accounts created for HSET: " . $count_va_hset_created . "\n");
 	echo nl2br("Number of new Virtual Accounts created for HSEA LLP: " . $count_va_llp_created . "\n");
 

@@ -85,21 +85,8 @@ function export_report($report)
 
 
     // Fetch all virtual accounts from Razorpay as a collection
-	$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
-	$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
-
-	if (empty($virtualAccounts_hset))
-	{	// no virtual accounts returned so none exist
-
-		echo nl2br("No Virtual Accounts Exist for HSET on Razorpay, API or other problem?"  . "\n");
-		return;
-	}
-    if (empty($virtualAccounts_llp))
-	{	// no virtual accounts returned so none exist
-
-		echo nl2br("No Virtual Accounts Exist for HSEA LLP on Razorpay, API or other problem?"  . "\n");
-		return;
-	}
+	//$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
+	//$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();
 
 	//count the total number of active accounts available for each payment site
 	// assume that number is not same
@@ -144,18 +131,27 @@ function export_report($report)
 			$useridnumber 	= $csvuser["employeenumber"];	// this is the unique sritoni idnumber assigned by school
 			$username 		= $csvuser["uid"];				// unique username assigned by school
 			$userid   		= $csvuser["id"];				// unique id used internally by Moodle in the user tables
+            $moodle_vadata  = $csvuser["vadata"];           // JSON encoded razorpay account data
             $user_display_name = $csvuser["displayname"];
-			// get virtual account corespondin to this student ID
-			$va_hset	= $razorpay_api_hset->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_hset);
-			$va_llp 	= $razorpay_api_llp->getVirtualAccountGivenSritoniId($useridnumber, $virtualAccounts_llp);
+            // read in user field containing razorpay accounts stored as array read in by SQL
+            $moodle_vas_obj = json_decode($moodle_vadata, false); // decoded as object
+			// check from student profile if va_id for HSET account is "not assigned" meaning not created yet
+			$va_hset	= $moodle_vas_obj[0];
+            // check from student profile if va_id for HSET account is "not assigned" meaning not created yet
+			$va_llp 	= $moodle_vas_obj[1];
 			//echo nl2br("Student ID: " . $useridnumber . "VA ID: " . $va->id . "\n");
-			// if this is not null then unset this item since we want to create accounts for those who don't have them yet
-			if(is_null($va_hset))
+			// if this is not assigned we need to create an account for this user
+			if( $va_hset->va_id == "not assigned" )
 			{	// create a new virtual account for this user for this site, if not already present
-				//$va_hset 		= $razorpay_api_hset->createVirtualAccount($useridnumber, $username, $userid);
-				//echo nl2br("Student ID: " . $useridnumber . "VA for HSET created: " . $va_hset->id . "\n");
-				echo nl2br("Student ID: " . $useridnumber . "VA for HSET simulation created: " . "\n");
 				$count_va_hset_created	=	$count_va_hset_created + 1; // increment count of accounts created
+                ?>
+                    <tr>
+    					<td><?php echo htmlspecialchars($user_display_name); ?></td>
+                        <td><?php echo htmlspecialchars($useridnumber); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->id); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->account_number); ?></td>
+                        <td><?php echo htmlspecialchars($va_hset->receivers[0]->ifsc); ?></td>
+                <?php
 			}
             else
             {
@@ -168,12 +164,15 @@ function export_report($report)
                         <td><?php echo htmlspecialchars($va_hset->receivers[0]->ifsc); ?></td>
                 <?php
             }
-			if(is_null($va_llp))
+			if( $va_llp->va_id == "not assigned" )
 			{	// create a new virtual account for this user for this site, if not already present
-				//$va_llp 		= $razorpay_api_llp->createVirtualAccount($useridnumber, $username, $userid);
-				//echo nl2br("Student ID: " . $useridnumber . "VA for HSEA LLP created: " . $va_llp->id . "\n");
-				echo nl2br("Student ID: " . $useridnumber . "VA for HSEA LLP simulation created: " . "\n");
 				$count_va_llp_created	=	$count_va_llp_created + 1; // increment count of accounts created
+                ?>
+                    <td><?php echo htmlspecialchars($va_llp->id); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->account_number); ?></td>
+                    <td><?php echo htmlspecialchars($va_llp->receivers[0]->ifsc); ?></td>
+                </tr>
+                <?php
 			}
             else
             {

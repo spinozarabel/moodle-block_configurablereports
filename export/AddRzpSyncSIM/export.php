@@ -123,6 +123,9 @@ function export_report($report)
 	// initialize counts of accounts to be added if missing
 	$count_va_hset_created	=	0;
 	$count_va_llp_created	=	0;
+
+    $count_va_hset_existing	=	0;
+	$count_va_llp_existing	=	0;
 	// for each of the csv users check to see if they have an associated account.
 	// if they do unset them from the csv data. All remaining csv users need new virtual accounts.
 	foreach ($csv as $key => $csvuser)
@@ -157,6 +160,7 @@ function export_report($report)
 			}
             else
             {
+                $count_va_hset_existing	+=	1;   // increment existing accounts counter
                 ?>
                     <tr>
     					<td><?php echo htmlspecialchars($user_display_name); ?></td>
@@ -178,6 +182,7 @@ function export_report($report)
 			}
             else
             {
+                $count_va_llp_existing	+=	1;   // increment existing accounts counter
                 ?>
                     <td><?php echo htmlspecialchars($va_llp->va_id); ?></td>
                     <td><?php echo htmlspecialchars($va_llp->account_number); ?></td>
@@ -190,6 +195,9 @@ function export_report($report)
         ?></table><?php
 	unset($csvuser);  // break reference in foreach loop on exit
 	// print total number of new accounts added
+    echo nl2br("Number of existing Razorpay VAs for HSET for this set in report: " 		. 	$count_va_hset_existing 	. "\n");
+    echo nl2br("Number of existing Razorpay VAs for HSEA LLP for this set in report: " 		. 	$count_va_llp_existing 	. "\n");
+
 	echo nl2br("Number of new Razorpay Virtual Accounts simulation created for HSET: " 		. 	$count_va_hset_created 	. "\n");
 	echo nl2br("Number of new Razorpay Virtual Accounts simulation created for HSEA LLP: "	. 	$count_va_llp_created 	. "\n");
 

@@ -80,9 +80,6 @@ function export_report($report)
 	array_shift($csv); # remove column header
 	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
-	echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
-
-
 
     // Fetch all virtual accounts from Razorpay as a collection
 	//$virtualAccounts_hset	= $razorpay_api_hset->getAllActiveVirtualAccounts();
@@ -195,6 +192,7 @@ function export_report($report)
         ?></table><?php
 	unset($csvuser);  // break reference in foreach loop on exit
 	// print total number of new accounts added
+    echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
     echo nl2br("Number of existing Razorpay VAs for HSET for this set in report: " 		. 	$count_va_hset_existing 	. "\n");
     echo nl2br("Number of existing Razorpay VAs for HSEA LLP for this set in report: " 		. 	$count_va_llp_existing 	. "\n");
 

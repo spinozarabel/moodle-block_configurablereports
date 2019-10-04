@@ -35,11 +35,11 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
-	$vAupdate_hset  =   false;       // do not update Virtual account for HSET
-    $vAupdate_llp   =   false;       // do not update Virtual account for LLP
+	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree
+    $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree
+    // declare empty array used to populate moodle user profile field with account information
+    $accounts       = array();
 
-	//$site_name			= " contains llp once";
-	//$razorpay_api_llp 	= new sritoni_razorpay_api($site_name);
 	//--------------------- end of section 1 -----------------------------------------------------
 
 	//--------------------- create the report table and the csv users matrix section 2--------------------->
@@ -87,27 +87,39 @@ function export_report($report)
 	$site_name			= " contains hset once";
     try
         {
+          // creates a new API instance, autheticates using ID and secret and generates token
+          // token is valid for only 5 minutes so make sure this API is done by then
           $pg_api_hset = new CfAutoCollect($site_name);    // create a new API instance
         }
     catch (Exception $e)
         {
           error_log( $e->getMessage() );
-          echo nl2br("Error creating cashfree_api instance: " . $e->getMessage() . "\n");
+          echo nl2br("Error creating cashfree_api instance for HSET: " . $e->getMessage() . "\n");
+          return;
         }
-	//---------------------- end of section 2 --------------------------------------------->
 
-    // -------begin section 3 Fetch all virtual accounts ----------------------->
-	$vAccounts_hset	= $pg_api_hset->listAllVirtualAccounts();
-	//$virtualAccounts_llp	= $razorpay_api_llp->getAllActiveVirtualAccounts();		// site sritoni.org/hsea-llp-payments
+    $site_name			= " contains llp once";
+    try
+        {
+          // creates a new API instance, autheticates using ID and secret and generates token
+          // token is valid for only 5 minutes so make sure this API is done by then
+          $pg_api_llp = new CfAutoCollect($site_name);    // create a new API instance
+        }
+    catch (Exception $e)
+        {
+          error_log( $e->getMessage() );
+          echo nl2br("Error creating cashfree_api instance for HSEA LLP: " . $e->getMessage() . "\n");
+          return;
+        }
+	//---------------------- end of section 2 dreating API instances ---------->
 
-	//echo nl2br("Number of Present Active Razorpay Virtual Accounts for HSET: " . count($virtualAccounts_hset) . "\n");
-	//echo nl2br("Number of Present Active Razorpay Virtual Accounts for LLP : " . count($virtualAccounts_llp)  . "\n");
+    // -----begin section 3 for each user in CSV table check if accounts exist->
 
 	// initialize counts of accounts to be added if missing
 	$count_va_hset_created	=	0;
 	$count_va_llp_created	=	0;
 
-	// for each of the csv users extract data to create new VA
+	// for each of the csv users extract data from CSV table
 
 	foreach ($csv as $key => $csvuser)
 		{
@@ -123,20 +135,35 @@ function export_report($report)
                 $phone  = "1234567890";     // phone dummy number
             }
 
-			//$va_llp  = $razorpay_api_llp->getVirtualAccountGivenSritoniId( $useridnumber, $virtualAccounts_llp);
             // pad moodleuserid with 0's to get vAccountId
             $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
-            // check if this account ID exists in the list of accounts
-			$vAccountExists =  $pg_api_hset->vAExists($vAccountId, $vAccounts_hset); // boolean value
 
-            if (!$vAccountExists)
-            {		// VA for HSET does'nt exist for this user, so create one
-				$vA_hset 	= $pg_api_hset->createVirtualAccount($moodleuserid, $fullname, $phone, $email);
-				$count_va_hset_created	+=1; // increment count
-				echo nl2br("New VA for HSET created for: " . $moodleusername .
-                    " accountNumber: " . $vA_hset->accountNumber .
-                    " IFSC: " . $vA_hset->ifsc . "\n");
+            // get details of this account using user'smoodle id
+			$vA_hset =  $pg_api_hset->getvAccountGivenId($vAccountId);
+
+            if (empty($vA_hset))
+            {	// VA for HSET does'nt exist, so create one
+				$vA_hset 	= $pg_api_hset->createVirtualAccount($vAccountId, $fullname, $phone, $email);
+                if(vA_hset)
+                {   // Account created is not null and so successfull
+                    $count_va_hset_created	+= 1; // increment count
+                    $accounts[0] = array	(
+        									"beneficiary_name"  => "Head Start Educational Trust" ,
+        									"va_id"             => $vAccountId ,
+        									"account_number"    => $vA_hset->accountNumber ,
+        									"va_ifsc_code"      => $vA_hset->ifsc ,
+        									);
+                }
 			}
+            else
+            {   // the account for HSET already exists, details got by function getvAccountGivenId above
+                $accounts[0] = array	(
+                                        "beneficiary_name"  => "Head Start Educational Trust" ,
+                                        "va_id"             => $vA_hset->vAccountId ,
+                                        "account_number"    => $vA_hset->virtualAccountNumber ,
+                                        "va_ifsc_code"      => $vA_hset->ifsc ,
+                                        );
+            }
 			/*
 			if(is_null($va_llp))
 			{
@@ -147,21 +174,6 @@ function export_report($report)
 			}
             */
 
-			if ($va_hset) // by now this should eist. Update Moodle Profile Field with latest info of VA
-			{
-				$beneficiary_name	= "Head Start Educational Trust";
-				$va_id				= $vAccountId;
-				$account_number	    = $vA_hset->accountNumber;
-				$va_ifsc_code       = $vA_hset->ifsc;
-				$acct_hset = array	(
-									"beneficiary_name"  => $beneficiary_name,
-									"va_id"             => $va_id,
-									"account_number"    => $account_number,
-									"va_ifsc_code"      => $va_ifsc_code,
-									);
-				$accounts[0]	= $acct_hset;
-
-			}
 			/*
 			if ($va_llp) // by now this should eist. Update Moodle profile field for old as well as newly created, just in case changed offline
 			{

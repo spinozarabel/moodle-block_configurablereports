@@ -168,7 +168,7 @@ function export_report($report)
             if (empty($vA))
             {	// VA for HSET does'nt exist, so create one
 				$vA 	= $pg_api_hset->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if(vA)
+                if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_hset_created	+= 1; // increment count
                     $accounts[0] = array	(
@@ -195,7 +195,7 @@ function export_report($report)
             if (empty($vA))
             {	// VA for HSEA LLP does'nt exist, so create one
 				$vA 	= $pg_api_llp->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if(vA)
+                if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
                     $accounts[1] = array	(

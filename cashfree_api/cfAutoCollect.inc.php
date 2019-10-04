@@ -131,8 +131,8 @@ class CfAutoCollect
             "email: {$email}"
         ];
         $curlResponse = $this->postCurl($endpoint, $headers, $params);
-        //error_log("curl response of accountcreate");
-        //error_log(print_r($curlResponse));
+        error_log("curl response of accountcreate");
+        error_log(print_r($curlResponse));
         if ($curlResponse->status == "SUCCESS")
         {
             return $curlResponse->data; // returns new account object

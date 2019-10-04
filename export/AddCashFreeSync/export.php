@@ -165,103 +165,14 @@ function export_report($report)
             // get details of this HSET account using user'smoodle id
 			$vA =  $pg_api_hset->getvAccountGivenId($vAccountId);
 
-            if (empty($vA))
-            {	// VA for HSET does'nt exist, so create one
-				$vA 	= $pg_api_hset->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if($vA)
-                {   // Account created is not null and so successfull
-                    $count_va_hset_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber;
-                    $ifsc                   = $vA->ifsc;
-
-                    $accounts_hset = array	(
-        									"beneficiary_name"  => "Head Start Educational Trust" ,
-        									"va_id"             => $vAccountId ,
-        									"account_number"    => $account_number ,
-        									"va_ifsc_code"      => $ifsc ,
-        									);
-                    $accounts[0]    = $accounts_hset;
-                }
-			}
-            else
-            {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $account_number         = $vA->virtualAccountNumber;
-                $ifsc                   = $vA->ifsc;
-
-                $accounts_hset = array	(
-                                        "beneficiary_name"  => "Head Start Educational Trust" ,
-                                        "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $account_number ,
-                                        "va_ifsc_code"      => $ifsc ,
-                                        );
-                $accounts[0]    = $accounts_hset;
-            }
+            
 
             // get details of this HSEA LLP account using user'smoodle id
 			$vA =  $pg_api_llp->getvAccountGivenId($vAccountId);
 
-            if (empty($vA))
-            {	// VA for HSEA LLP does'nt exist, so create one
-				$vA 	= $pg_api_llp->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if($vA)
-                {   // Account created is not null and so successfull
-                    $count_va_llp_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber;
-                    $ifsc                   = $vA->ifsc;
 
-                    $accounts_llp = array	(
-        									"beneficiary_name"  => "HSEA LLP" ,
-        									"va_id"             => $vAccountId ,
-        									"account_number"    => $account_number ,
-        									"va_ifsc_code"      => $ifsc ,
-        									);
-                    $accounts[1]    = $accounts_llp;
-                }
-			}
-            else
-            {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
-                $account_number         = $vA->virtualAccountNumber;
-                $ifsc                   = $vA->ifsc;
 
-                $accounts_llp = array	(
-                                        "beneficiary_name"  => "HSEA LLP" ,
-                                        "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $account_number ,
-                                        "va_ifsc_code"      => $ifsc ,
-                                        );
-                $accounts[1]    = $accounts_llp;
-            }
-            // we have data for all accounts so print out the full row aith all data
-            ?>
-                    <tr>
-    					<td><?php echo htmlspecialchars($fullname); ?></td>
-                        <td><?php echo htmlspecialchars($employeenumber); ?></td>
 
-                        <td><?php echo htmlspecialchars($accounts[0]["va_id"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[0]["account_number"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[0]["va_ifsc_code"]); ?></td>
-
-                        <td><?php echo htmlspecialchars($accounts[1]["va_id"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[1]["account_number"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[1]["va_ifsc_code"]); ?></td>
-                    </tr>
-            <?php
-
-			// encode the data into a JSON string for storage to user profile field
-			if ($accounts)
-			{
-				$accounts_json	= json_encode($accounts);
-			}
-			// Get the Moodle profile_field_virtualaccounts for this user to update
-			// you may get error if this record has not been set before
-			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
-			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
-																					'userid'   =>  $moodleuserid,
-																					'fieldid'  =>  $field->id,
-																					)
-															);
-
-			$user_profile_virtualaccounts->data = $accounts_json;
 			// $DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
 
             // loop for next user, finished for this user

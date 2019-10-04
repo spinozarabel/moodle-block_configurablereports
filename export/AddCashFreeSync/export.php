@@ -171,7 +171,7 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_hset_created	+= 1; // increment count
-                    $accounts[] = array	(
+                    $accounts_hset = array	(
         									"beneficiary_name"  => "Head Start Educational Trust" ,
         									"va_id"             => $vAccountId ,
         									"account_number"    => $vA->accountNumber ,
@@ -181,13 +181,14 @@ function export_report($report)
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $accounts[] = array	(
+                $accounts_hset = array	(
                                         "beneficiary_name"  => "Head Start Educational Trust" ,
                                         "va_id"             => $vA->vAccountId ,
                                         "account_number"    => $vA->virtualAccountNumber ,
                                         "va_ifsc_code"      => $vA->ifsc ,
                                         );
             }
+            $accounts[0]    = $accounts_hset;
 
             // get details of this HSEA LLP account using user'smoodle id
 			$vA =  $pg_api_llp->getvAccountGivenId($vAccountId);
@@ -198,7 +199,7 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
-                    $accounts[] = array	(
+                    $accounts_llp = array	(
         									"beneficiary_name"  => "HSEA LLP" ,
         									"va_id"             => $vAccountId ,
         									"account_number"    => $vA->accountNumber ,
@@ -208,13 +209,14 @@ function export_report($report)
 			}
             else
             {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
-                $accounts[] = array	(
+                $accounts_llp = array	(
                                         "beneficiary_name"  => "HSEA LLP" ,
                                         "va_id"             => $vA->vAccountId ,
                                         "account_number"    => $vA->virtualAccountNumber ,
                                         "va_ifsc_code"      => $vA->ifsc ,
                                         );
             }
+            $accounts[1]    = $accounts_llp;
             // we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>

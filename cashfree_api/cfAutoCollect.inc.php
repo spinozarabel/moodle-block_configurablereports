@@ -98,6 +98,7 @@ class CfAutoCollect
            {
              $token = $curlResponse->data->token;
              return $token;
+             error_log($token);
            } else
            {
               throw new Exception("Authorization failed. Reason : ". $curlResponse->message);
@@ -132,6 +133,8 @@ class CfAutoCollect
             "email: $email"
         ];
         $curlResponse = $this->postCurl($endpoint, $headers, $params);
+        error_log("curl response of accountcreate");
+        error_log(print_r($curlResponse));
         if ($curlResponse->status == "SUCCESS")
         {
             return $curlResponse->data; // returns new account object
@@ -217,6 +220,8 @@ class CfAutoCollect
                     "Authorization: Bearer $authToken"
                    ];
         $curlResponse = $this->getCurl($endpoint, $headers);
+        error_log("curl response of accountcreate");
+        error_log(print_r($curlResponse));
         if ($curlResponse->status == "SUCCESS")
         {
           $vA = $curlResponse->data;    // return the account details object

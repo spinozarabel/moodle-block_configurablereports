@@ -45,6 +45,7 @@ function export_report($report)
     $table    = $report->table;
     $matrix   = array();
     $filename = 'report';
+    $accounts = array();
 
     if (!empty($table->head))
 	{

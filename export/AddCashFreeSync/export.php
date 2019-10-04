@@ -38,7 +38,6 @@ function export_report($report)
 	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
     $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
     // declare empty array used to populate moodle user profile field with account information
-    $accounts       = array();
 
 	//--------------------- end of section 1 -----------------------------------------------------
 
@@ -171,7 +170,7 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_hset_created	+= 1; // increment count
-                    $accounts[0] = array	(
+                    $accounts[] = array	(
         									"beneficiary_name"  => "Head Start Educational Trust" ,
         									"va_id"             => $vAccountId ,
         									"account_number"    => $vA->accountNumber ,
@@ -181,7 +180,7 @@ function export_report($report)
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $accounts[0] = array	(
+                $accounts[] = array	(
                                         "beneficiary_name"  => "Head Start Educational Trust" ,
                                         "va_id"             => $vA->vAccountId ,
                                         "account_number"    => $vA->virtualAccountNumber ,
@@ -198,7 +197,7 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
-                    $accounts[1] = array	(
+                    $accounts[] = array	(
         									"beneficiary_name"  => "HSEA LLP" ,
         									"va_id"             => $vAccountId ,
         									"account_number"    => $vA->accountNumber ,
@@ -208,7 +207,7 @@ function export_report($report)
 			}
             else
             {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
-                $accounts[1] = array	(
+                $accounts[] = array	(
                                         "beneficiary_name"  => "HSEA LLP" ,
                                         "va_id"             => $vA->vAccountId ,
                                         "account_number"    => $vA->virtualAccountNumber ,

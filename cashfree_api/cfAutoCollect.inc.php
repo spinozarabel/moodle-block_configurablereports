@@ -59,16 +59,14 @@ class CfAutoCollect
         // add these as properties of object
         $this->clientId		= $api_key;
 		$this->clientSecret	= $api_secret;
-        // these are legay variables so we keep them
-        $clientId           = $api_key;
-        $clientSecret       = $api_secret;
+
         $stage = self::TEST_PRODUCTION;
 
         if ($stage == "PROD")
         {
-          $this->baseUrl = "https://cac-api.gocashfree.com/cac/v1";
+          $this->baseUrl = "https://cac-api.cashfree.com/cac/v1";
         } else {
-          $this->baseUrl = "https://cac-gamma.gocashfree.com/cac/v1";
+          $this->baseUrl = "https://cac-gamma.cashfree.com/cac/v1";
         }
 
         $this->token     = $this->authorizeAndGetToken();

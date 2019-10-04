@@ -151,7 +151,7 @@ class CfAutoCollect
     * returns an object with all vAccounts created so far
     * The data is an array numerically indexed, of objects
     */
-    protected function listAllVirtualAccounts()
+    function listAllVirtualAccounts()
     {
         if ($this->token)
         {
@@ -176,7 +176,7 @@ class CfAutoCollect
     * @param vAccounts is the array containing list of all vAs
     * returns the boolean value of vA with this ID exists or not
     */
-    protected function vAExists($vAccountId, $vAccounts)
+    function vAExists($vAccountId, $vAccounts)
     {
         if (sizeof($vAccounts) == 0)
         {
@@ -202,7 +202,7 @@ class CfAutoCollect
     * returns null if not successfull
     * returns the fetched virtual account object if successfull
     */
-    protected function getvAccountGivenId($vAccountId)
+    function getvAccountGivenId($vAccountId)
     {
         if (!$this->token)
             {

@@ -123,13 +123,13 @@ class CfAutoCollect
             ];
         // pad moodleuserid with 0's from left for minimum length of 4
         // $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
-        $params     =
-        [
-            "vAccountId: {$vAccountId}",
-            "name: {$name}",
-            "phone: {$phone}",
-            "email: {$email}"
-        ];
+        $params     = array
+                            (
+                                "vAccountId" => $vAccountId,
+                                "name"       => $name,
+                                "phone"      => $phone,
+                                "email"      => $email,
+                            );
         $curlResponse = $this->postCurl($endpoint, $headers, $params);
         //error_log("curl response of accountcreate");
         //error_log(print_r($curlResponse));

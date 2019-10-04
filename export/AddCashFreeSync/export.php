@@ -35,8 +35,8 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
-	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree
-    $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree
+	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
+    $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
     // declare empty array used to populate moodle user profile field with account information
     $accounts       = array();
 
@@ -198,7 +198,7 @@ function export_report($report)
                 if(vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
-                    $accounts[0] = array	(
+                    $accounts[1] = array	(
         									"beneficiary_name"  => "HSEA LLP" ,
         									"va_id"             => $vAccountId ,
         									"account_number"    => $vA->accountNumber ,
@@ -208,7 +208,7 @@ function export_report($report)
 			}
             else
             {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
-                $accounts[0] = array	(
+                $accounts[1] = array	(
                                         "beneficiary_name"  => "HSEA LLP" ,
                                         "va_id"             => $vA->vAccountId ,
                                         "account_number"    => $vA->virtualAccountNumber ,

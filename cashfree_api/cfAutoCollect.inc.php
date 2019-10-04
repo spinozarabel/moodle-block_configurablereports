@@ -103,13 +103,13 @@ class CfAutoCollect
     }       // end of function authorizeAndGetToken
 
     /**
-    * @param moodleuserid is the user id as in moodle user table
+    * @param vAccountId is moodle id padded if needed for min 4 chars
     * @param name is the user's sritoni full name
     * @param phone is the user's principal phone number
     * @param email is the SriToni email of user
     * returns an object with keys "accountNumber" and "ifsc"
     */
-    public function createVirtualAccount($moodleuserid, $name, $phone, $email)
+    public function createVirtualAccount($vAccountId, $name, $phone, $email)
     {
       $response =["status" => "FAILED", "message" => "Authorization failed"];
       if ($this->token)
@@ -120,7 +120,7 @@ class CfAutoCollect
             "Authorization: Bearer $authToken"
             ];
         // pad moodleuserid with 0's from left for minimum length of 4
-        $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
+        // $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
         $params     =
         [
             "vAccountId: $vAccountId",
@@ -194,19 +194,20 @@ class CfAutoCollect
     }
 
     /**
-    *  Get Virtual Account Object given its ID and list of all Virtual Accounts
-    * @param id is the Moodle user table's id
-    * @param vAccounts is object of all virtual accounts
+    *  Get Virtual Account Object given its ID
+    * @param vAccountId is the vAccountId
+    * returns null if not successfull
+    * returns the fetched virtual account object if successfull
     */
-    protected function getvAccountGivenId($moodleuserid)
+    protected function getvAccountGivenId($vAccountId)
     {
         if (!$this->token)
-        {
-            return null;
-        }
+            {
+                return null;
+            }
         $vA = null;
         // pad the moodle user id with 0's on left side, if less than 4 digits
-        $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
+        // $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
         $endpoint = $this->baseUrl . "/va/" . $vAccountId;
         $authToken = $this->token;
         $headers = [

@@ -15,6 +15,9 @@ class CfAutoCollect
 {
     protected $token;
     protected $baseUrl;
+    protected $clientId;
+    protected $clientSecret;
+
     const TEST_PRODUCTION  = "TEST";
     const VERBOSE          = true;
 

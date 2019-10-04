@@ -40,16 +40,6 @@ function export_report($report)
     // declare empty array used to populate moodle user profile field with account information
     $accounts       = array();
 
-    // get moodle user profile field data for virtual accounts
-    $field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
-    $user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
-                                                                            'userid'   =>  $moodleuserid,
-                                                                            'fieldid'  =>  $field->id,
-                                                                            )
-                                                    );
-    $accounts       = json_decode($user_profile_virtualaccounts->data , true);  // array
-    $accounts_obj   = json_decode($user_profile_virtualaccounts->data , false); // object
-
 	//--------------------- end of section 1 -----------------------------------------------------
 
 	//--------------------- create the report table and the csv users matrix section 2--------------------->
@@ -169,6 +159,16 @@ function export_report($report)
                 $phone  = "1234567890";     // phone dummy number
             }
 
+            // get moodle user profile field data for virtual accounts
+            $field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+            $user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+                                                                                    'userid'   =>  $moodleuserid,
+                                                                                    'fieldid'  =>  $field->id,
+                                                                                    )
+                                                            );
+            $accounts       = json_decode($user_profile_virtualaccounts->data , true);  // array
+            $accounts_obj   = json_decode($user_profile_virtualaccounts->data , false); // object
+
             // pad moodleuserid with 0's to get vAccountId
             $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
 
@@ -179,9 +179,9 @@ function export_report($report)
             {	// VA for HSET does'nt exist, so get data from user profile field
                 $count_va_hset_created	+= 1; // increment count
 
-                $hset_va_id          = $accounts[0]->va_id;
-                $hset_account_number = $accounts[0]->account_number;
-                $hset_va_ifsc_code   = $accounts[0]->va_ifsc_code;
+                $hset_va_id          = $accounts_obj[0]->va_id;
+                $hset_account_number = $accounts_obj[0]->account_number;
+                $hset_va_ifsc_code   = $accounts_obj[0]->va_ifsc_code;
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above
@@ -196,10 +196,10 @@ function export_report($report)
             if (empty($vA))
             {	// VA for HSET does'nt exist, so get data from user profile field
                 $count_va_llp_created	+= 1; // increment count
-                
-                $llp_va_id          = $accounts[1]->va_id;
-                $llp_account_number = $accounts[1]->account_number;
-                $llp_va_ifsc_code   = $accounts[1]->va_ifsc_code;
+
+                $llp_va_id          = $accounts_obj[1]->va_id;
+                $llp_account_number = $accounts_obj[1]->account_number;
+                $llp_va_ifsc_code   = $accounts_obj[1]->va_ifsc_code;
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above

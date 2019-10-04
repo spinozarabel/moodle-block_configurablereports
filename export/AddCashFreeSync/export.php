@@ -168,11 +168,11 @@ function export_report($report)
             if (empty($vA))
             {	// VA for HSET does'nt exist, so create one
 				$vA 	= $pg_api_hset->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if($vA)
+                if ($vA)
                 {   // Account created is not null and so successfull
                     $count_va_hset_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber;
-                    $ifsc                   = $vA->ifsc;
+                    $account_number         = $vA->accountNumber ?? "notset";
+                    $ifsc                   = $vA->ifsc ?? "notset";
 
                     $accounts_hset = array	(
         									"beneficiary_name"  => "Head Start Educational Trust" ,
@@ -185,8 +185,8 @@ function export_report($report)
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $account_number         = $vA->virtualAccountNumber;
-                $ifsc                   = $vA->ifsc;
+                $account_number         = $vA->virtualAccountNumber ?? "notset";
+                $ifsc                   = $vA->ifsc ?? "notset";
 
                 $accounts_hset = array	(
                                         "beneficiary_name"  => "Head Start Educational Trust" ,
@@ -203,11 +203,11 @@ function export_report($report)
             if (empty($vA))
             {	// VA for HSEA LLP does'nt exist, so create one
 				$vA 	= $pg_api_llp->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if($vA)
+                if ($vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber;
-                    $ifsc                   = $vA->ifsc;
+                    $account_number         = $vA->accountNumber  ?? "notset";
+                    $ifsc                   = $vA->ifsc ?? "notset";
 
                     $accounts_llp = array	(
         									"beneficiary_name"  => "HSEA LLP" ,
@@ -220,8 +220,8 @@ function export_report($report)
 			}
             else
             {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
-                $account_number         = $vA->virtualAccountNumber;
-                $ifsc                   = $vA->ifsc;
+                $account_number         = $vA->virtualAccountNumber ?? "notset";
+                $ifsc                   = $vA->ifsc ?? "notset";
 
                 $accounts_llp = array	(
                                         "beneficiary_name"  => "HSEA LLP" ,

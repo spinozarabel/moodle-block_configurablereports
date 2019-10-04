@@ -171,24 +171,31 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_hset_created	+= 1; // increment count
+                    $account_number         = $vA->accountNumber;
+                    $ifsc                   = $vA->ifsc;
+
                     $accounts_hset = array	(
         									"beneficiary_name"  => "Head Start Educational Trust" ,
         									"va_id"             => $vAccountId ,
-        									"account_number"    => $vA->accountNumber ,
-        									"va_ifsc_code"      => $vA->ifsc ,
+        									"account_number"    => $account_number ,
+        									"va_ifsc_code"      => $ifsc ,
         									);
+                    $accounts[0]    = $accounts_hset;
                 }
 			}
             else
             {   // the account for HSET already exists, details got by function getvAccountGivenId above
+                $account_number         = $vA->virtualAccountNumber;
+                $ifsc                   = $vA->ifsc;
+
                 $accounts_hset = array	(
                                         "beneficiary_name"  => "Head Start Educational Trust" ,
                                         "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $vA->virtualAccountNumber ,
-                                        "va_ifsc_code"      => $vA->ifsc ,
+                                        "account_number"    => $account_number ,
+                                        "va_ifsc_code"      => $ifsc ,
                                         );
+                $accounts[0]    = $accounts_hset;
             }
-            $accounts[0]    = $accounts_hset;
 
             // get details of this HSEA LLP account using user'smoodle id
 			$vA =  $pg_api_llp->getvAccountGivenId($vAccountId);
@@ -199,24 +206,31 @@ function export_report($report)
                 if($vA)
                 {   // Account created is not null and so successfull
                     $count_va_llp_created	+= 1; // increment count
+                    $account_number         = $vA->accountNumber;
+                    $ifsc                   = $vA->ifsc;
+
                     $accounts_llp = array	(
         									"beneficiary_name"  => "HSEA LLP" ,
         									"va_id"             => $vAccountId ,
-        									"account_number"    => $vA->accountNumber ,
-        									"va_ifsc_code"      => $vA->ifsc ,
+        									"account_number"    => $account_number ,
+        									"va_ifsc_code"      => $ifsc ,
         									);
+                    $accounts[1]    = $accounts_llp;
                 }
 			}
             else
             {   // the account for HSEA LLP already exists, details got by function getvAccountGivenId above
+                $account_number         = $vA->virtualAccountNumber;
+                $ifsc                   = $vA->ifsc;
+
                 $accounts_llp = array	(
                                         "beneficiary_name"  => "HSEA LLP" ,
                                         "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $vA->virtualAccountNumber ,
-                                        "va_ifsc_code"      => $vA->ifsc ,
+                                        "account_number"    => $account_number ,
+                                        "va_ifsc_code"      => $ifsc ,
                                         );
+                $accounts[1]    = $accounts_llp;
             }
-            $accounts[1]    = $accounts_llp;
             // we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>

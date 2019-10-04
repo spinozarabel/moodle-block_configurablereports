@@ -262,7 +262,7 @@ function export_report($report)
 															);
 
 			$user_profile_virtualaccounts->data = $accounts_json;
-			// $DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
 
             // loop for next user, finished for this user
 		}

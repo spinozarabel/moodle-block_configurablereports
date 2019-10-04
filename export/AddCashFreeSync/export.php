@@ -160,7 +160,7 @@ function export_report($report)
             }
 
             // pad moodleuserid with 0's to get vAccountId
-            $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
+            $vAccountId = strval(str_pad($moodleuserid, 4, "0", STR_PAD_LEFT));
 
             // get details of this HSET account using user'smoodle id
 			$vA =  $pg_api_hset->getvAccountGivenId($vAccountId);

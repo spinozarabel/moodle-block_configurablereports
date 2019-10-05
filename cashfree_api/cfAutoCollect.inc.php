@@ -296,5 +296,13 @@ class CfAutoCollect
     {
       $this->token = NULL;
     }
+
+    /**
+    *  returns the client secret of the api
+    */
+    public function get_clientSecret()
+    {
+        return $this->clientSecret;
+    }
 }       // class definition ends
 ?>

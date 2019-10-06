@@ -1,6 +1,6 @@
 <?php
-/* Modified by Madhu Avasarala 09/29/2013
-* ver 1.1 add Moodle and WP compatibility and get settings appropriately
+/* Modified by Madhu Avasarala 10/06/2019
+* ver 1.2 add Moodle and WP compatibility and get settings appropriately
 *         all data returned as objects instead of arrays in json_decode
 */
 

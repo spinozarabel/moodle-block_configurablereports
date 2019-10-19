@@ -32,13 +32,13 @@ defined('MOODLE_INTERNAL') || die();
 function export_report($report)
 {
     global $DB, $CFG;
+
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
-	$vAupdate_hset  =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
-    $vAupdate_llp   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
+	$vAupdate_site1   =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
+    $vAupdate_site2   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
     // declare empty array used to populate moodle user profile field with account information
-    $accounts       = array();
 
 	//--------------------- end of section 1 -----------------------------------------------------
 
@@ -46,6 +46,7 @@ function export_report($report)
     $table    = $report->table;
     $matrix   = array();
     $filename = 'report';
+    $accounts = array();
 
     if (!empty($table->head))
 	{
@@ -83,31 +84,36 @@ function export_report($report)
 	//----------------------------------- end of section 2 --------------------------------------->
 
     //-------------------- create new API interfaces section 3-------------------------------->
-	$site_name			= "hset-payments";
+    // read in comma separated list of site names from config_settings of plugin
+    $site_names_arr     = explode( "," , get_config('block_configurable_reports', 'site_names') );
+    // read in beneficiary names into an array
+    $account_nammes_arr = explode( "," , get_config('block_configurable_reports', 'account_names') );
+    //
+    $site_name			= $site_names_arr[0];  // pick the 1st payment site name to create accounts for
     try
         {
           // creates a new API instance, autheticates using ID and secret and generates token
           // token is valid for only 5 minutes so make sure this API is done by then
-          $pg_api_hset = new CfAutoCollect($site_name);    // create a new API instance
+          $pg_api_site1 = new CfAutoCollect($site_name);    // create a new API instance
         }
     catch (Exception $e)
         {
           error_log( $e->getMessage() );
-          echo nl2br("Error creating cashfree_api instance for HSET: " . $e->getMessage() . "\n");
+          echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
           return;
         }
 
-    $site_name			= "hsea-llp-payments";
+    $site_name			= $site_names_arr[1];  // pick the 2nd payment site name to create accounts for
     try
         {
           // creates a new API instance, autheticates using ID and secret and generates token
           // token is valid for only 5 minutes so make sure this API is done by then
-          $pg_api_llp = new CfAutoCollect($site_name);    // create a new API instance
+          $pg_api_site2 = new CfAutoCollect($site_name);    // create a new API instance
         }
     catch (Exception $e)
         {
           error_log( $e->getMessage() );
-          echo nl2br("Error creating cashfree_api instance for HSEA LLP: " . $e->getMessage() . "\n");
+          echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
           return;
         }
 	//---------------------- end of section 2 dreating API instances ---------->
@@ -115,8 +121,8 @@ function export_report($report)
     // -----begin section 3 for each user in CSV table check if accounts exist->
 
 	// initialize counts of accounts to be added if missing
-	$count_va_hset_created	=	0;
-	$count_va_llp_created	=	0;
+	$count_va_site1_created	=	0;
+	$count_va_site2_created	=	0;
 
     // define table and heading
     ?>
@@ -134,12 +140,12 @@ function export_report($report)
     		<tr>
     			<th>Student Name</th>
     			<th>employeenumber</th>
-    			<th>HSET VA ID</th>
-                <th>HSET Account No</th>
-                <th>HSET IFSC</th>
-    			<th>HSEA LLP VA ID</th>
-                <th>HSEA LLP Account No</th>
-                <th>HSEA LLP IFSC</th>
+    			<th><?php echo htmlspecialchars($site_names_arr[0]); ?> VA ID</th>
+                <th><?php echo htmlspecialchars($site_names_arr[0]); ?> Account No</th>
+                <th><?php echo htmlspecialchars($site_names_arr[0]); ?> IFSC</th>
+    			<th><?php echo htmlspecialchars($site_names_arr[1]); ?> VA ID</th>
+                <th><?php echo htmlspecialchars($site_names_arr[1]); ?> Account No</th>
+                <th><?php echo htmlspecialchars($site_names_arr[1]); ?> IFSC</th>
     		</tr>
     <?php
 
@@ -159,90 +165,114 @@ function export_report($report)
                 $phone  = "1234567890";     // phone dummy number
             }
 
-            // get moodle user profile field data for virtual accounts
-            $field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
-            $user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
-                                                                                    'userid'   =>  $moodleuserid,
-                                                                                    'fieldid'  =>  $field->id,
-                                                                                    )
-                                                            );
-            $accounts       = json_decode($user_profile_virtualaccounts->data , true);  // array
-            $accounts_obj   = json_decode($user_profile_virtualaccounts->data , false); // object
-
             // pad moodleuserid with 0's to get vAccountId
             $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
 
-            // get details of this HSET account using user'smoodle id
-			$vA =  $pg_api_hset->getvAccountGivenId($vAccountId);
+            // get details of this Site1 account using user'smoodle id padded to 4 digits
+			$vA =  $pg_api_site1->getvAccountGivenId($vAccountId);
 
             if (empty($vA))
-            {	// VA for HSET does'nt exist, so get data from user profile field
-                $count_va_hset_created	+= 1; // increment count
+            {	// VA for Site1 does'nt exist, so create one
+				//$vA 	= $pg_api_site1->createVirtualAccount($vAccountId, $fullname, $phone, $email);
+                $count_va_site1_created	+= 1; // increment count
 
-                $hset_va_id          = $accounts_obj[0]->va_id;
-                $hset_account_number = $accounts_obj[0]->account_number;
-                $hset_va_ifsc_code   = $accounts_obj[0]->va_ifsc_code;
+
+                    $accounts_site1 = array	(
+        									"beneficiary_name"  => $account_nammes_arr[0] ,
+        									"va_id"             => "To be created" ,
+        									"account_number"    => "To be created" ,
+        									"va_ifsc_code"      => "To be created" ,
+        									);
+                    $accounts[$site_names_arr[0]]    = $accounts_site1;
+
 			}
             else
-            {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $hset_va_id          = $vA->vAccountId;
-                $hset_account_number = $vA->virtualAccountNumber;
-                $hset_va_ifsc_code   = $vA->ifsc;
+            {   // the account for Site1 already exists, details got by function getvAccountGivenId above
+                // this will refresh details pushed to Moodle profile field
+                $account_number         = $vA->virtualAccountNumber ?? "notset";
+                $ifsc                   = $vA->ifsc ?? "notset";
+
+                $accounts_site1 = array	(
+                                        "beneficiary_name"  => $account_nammes_arr[0] ,
+                                        "va_id"             => $vA->vAccountId ,
+                                        "account_number"    => $account_number ,
+                                        "va_ifsc_code"      => $ifsc ,
+                                        );
+                $accounts[$site_names_arr[0]]    = $accounts_site1;
             }
 
-            // get details of this HSEA LLP account using user'smoodle id
-			$vA =  $pg_api_llp->getvAccountGivenId($vAccountId);
+            // get details of Site2 account using user's moodle id padded to 4 digits
+			$vA =  $pg_api_site2->getvAccountGivenId($vAccountId);
 
             if (empty($vA))
-            {	// VA for HSET does'nt exist, so get data from user profile field
-                $count_va_llp_created	+= 1; // increment count
+            {	// VA for SIte2 does'nt exist, so create one
+				//$vA 	= $pg_api_site2->createVirtualAccount($vAccountId, $fullname, $phone, $email);
 
-                $llp_va_id          = $accounts_obj[1]->va_id;
-                $llp_account_number = $accounts_obj[1]->account_number;
-                $llp_va_ifsc_code   = $accounts_obj[1]->va_ifsc_code;
+                    $count_va_site2_created	+= 1; // increment count
+
+                    $accounts_site2 = array	(
+        									"beneficiary_name"  => $account_nammes_arr[1] ,
+        									"va_id"             => "To be created" ,
+        									"account_number"    => "To be created" ,
+        									"va_ifsc_code"      => "To be created" ,
+        									);
+                    $accounts[$site_names_arr[1]]    = $accounts_site2;
 			}
             else
-            {   // the account for HSET already exists, details got by function getvAccountGivenId above
-                $llp_va_id          = $vA->vAccountId;
-                $llp_account_number = $vA->virtualAccountNumber;
-                $llp_va_ifsc_code   = $vA->ifsc;
-            }
+            {   // the account for Site2 already exists, details got by function getvAccountGivenId above
+                $account_number         = $vA->virtualAccountNumber ?? "notset";
+                $ifsc                   = $vA->ifsc ?? "notset";
 
+                $accounts_site2 = array	(
+                                        "beneficiary_name"  => $account_nammes_arr[1] ,
+                                        "va_id"             => $vA->vAccountId ,
+                                        "account_number"    => $account_number ,
+                                        "va_ifsc_code"      => $ifsc ,
+                                        );
+                $accounts[$site_names_arr[1]]    = $accounts_site2;
+            }
             // we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>
     					<td><?php echo htmlspecialchars($fullname); ?></td>
                         <td><?php echo htmlspecialchars($employeenumber); ?></td>
 
-                        <td><?php echo htmlspecialchars($hset_va_id); ?></td>
-                        <td><?php echo htmlspecialchars($hset_account_number); ?></td>
-                        <td><?php echo htmlspecialchars($hset_va_ifsc_code); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["va_id"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["account_number"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["va_ifsc_code"]); ?></td>
 
-                        <td><?php echo htmlspecialchars($llp_va_id); ?></td>
-                        <td><?php echo htmlspecialchars($llp_account_number); ?></td>
-                        <td><?php echo htmlspecialchars($llp_va_ifsc_code); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["va_id"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["account_number"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["va_ifsc_code"]); ?></td>
                     </tr>
             <?php
 
 			/* encode the data into a JSON string for storage to user profile field
 			if ($accounts)
-    			{
-    				$accounts_json	= json_encode($accounts);
-    			}
-            */
+			{
+				$accounts_json	= json_encode($accounts);
+			}
 			// Get the Moodle profile_field_virtualaccounts for this user to update
 			// you may get error if this record has not been set before
-			//$user_profile_virtualaccounts->data = $accounts_json;
-			//$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+																					'userid'   =>  $moodleuserid,
+																					'fieldid'  =>  $field->id,
+																					)
+															);
+
+			$user_profile_virtualaccounts->data = $accounts_json;
+			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
 
             // loop for next user, finished for this user
+            */
 		}
 
 	unset($csvuser);  // break reference in foreach loop on exit
 
     echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
-	echo nl2br("Number of new Virtual Accounts created for HSET: " . $count_va_hset_created . "\n");
-	echo nl2br("Number of new Virtual Accounts created for HSEA LLP: " . $count_va_llp_created . "\n");
+	echo nl2br("Number of new Virtual Accounts to be created for Site1: " . $count_va_site1_created . "\n");
+	echo nl2br("Number of new Virtual Accounts to be created for Site2: " . $count_va_site2_created . "\n");
 
 	exit;
 }

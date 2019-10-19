@@ -52,6 +52,8 @@ if ($ADMIN->fulltree) {
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/site_names', 'Payment Site Names',
                     'Enter comma separated list of maximum of 2 payment site names: site1,site2', '', PARAM_RAW, 40));
+    $settings->add(new admin_setting_configtext('block_configurable_reports/account_names', 'Beneficiary or Account Names',
+                                    'Enter comma separated list of maximum of 2 account names', '', PARAM_RAW, 80));
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_site1', 'Payment gateway VAs API Key for Site1',
                     'Enter API Key of Payment Gateway for VAs for Site1', '', PARAM_RAW, 40));
 

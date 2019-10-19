@@ -51,7 +51,7 @@ class CfAutoCollect
                 $key_string 	= 'pg_api_key_site1';
                 $secret_string 	= 'pg_api_secret_site1';
             }
-            elseif ( length($sitenames_arr) > 1 )
+            elseif ( count($sitenames_arr) > 1 )
             {
                 if ($site_name == $sitenames_arr[1])
                 {

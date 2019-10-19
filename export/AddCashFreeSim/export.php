@@ -83,7 +83,7 @@ function export_report($report)
 	//----------------------------------- end of section 2 --------------------------------------->
 
     //-------------------- create new API interfaces section 3-------------------------------->
-	$site_name			= " contains hset once";
+	$site_name			= "hset-payments";
     try
         {
           // creates a new API instance, autheticates using ID and secret and generates token
@@ -97,7 +97,7 @@ function export_report($report)
           return;
         }
 
-    $site_name			= " contains llp once";
+    $site_name			= "hsea-llp-payments";
     try
         {
           // creates a new API instance, autheticates using ID and secret and generates token

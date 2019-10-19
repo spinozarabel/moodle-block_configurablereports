@@ -1,5 +1,6 @@
 <?php
 /* Modified by Madhu Avasarala 10/06/2019
+* ver 1.4 make the site settings generic instead of hset, etc.
 * ver 1.3 add Moodle and WP compatibility and get settings appropriately
 *         all data returned as objects instead of arrays in json_decode
 */
@@ -17,6 +18,7 @@ class CfAutoCollect
     protected $baseUrl;
     protected $clientId;
     protected $clientSecret;
+	protected $siteName;
 
     const TEST_PRODUCTION  = "TEST";
     const VERBOSE          = true;
@@ -40,16 +42,22 @@ class CfAutoCollect
 			// based on passed in $site_name change the strings for config select.
             // $site must be passed correctlt for this to work, no check is made
             // make sure these definitions are same as in configurable_reports plugin settings
-			if (stripos($site_name, 'hset') !== false)
-			{
-				$key_string 	= 'pg_api_key_hset';
-				$secret_string 	= 'pg_api_secret_hset';
-			}
+			// read in the site names defined in the settings as a comma separated string of 2 site names
+			// for example $sitenames_arr[0] = "hset-payments", [1] = "hsea-llp-payments"
+			$sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
+			// we will check the passed in $site_name variable to see which item in the array equals it
 
-			if (stripos($site_name, 'llp') !== false)
+			switch (true)
 			{
-				$key_string 	= 'pg_api_key_llp';
-				$secret_string 	= 'pg_api_secret_llp';
+				case ($site_name == $sitenames_arr[0]):
+					$key_string 	= 'pg_api_key_site1';
+					$secret_string 	= 'pg_api_secret_site1';
+				break;
+
+				case ($site_name == $sitenames_arr[1]):
+					$key_string 	= 'pg_api_key_site2';
+					$secret_string 	= 'pg_api_secret_site2';
+				break;
 			}
 
 			$api_key		= get_config('block_configurable_reports', $key_string);
@@ -59,6 +67,7 @@ class CfAutoCollect
         // add these as properties of object
         $this->clientId		= $api_key;
 		$this->clientSecret	= $api_secret;
+		$this->siteName		= $site_name;
 
         $stage = self::TEST_PRODUCTION;
 

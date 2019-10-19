@@ -46,19 +46,25 @@ class CfAutoCollect
 			// for example $sitenames_arr[0] = "hset-payments", [1] = "hsea-llp-payments"
 			$sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
 			// we will check the passed in $site_name variable to see which item in the array equals it
-
-			switch (true)
-			{
-				case ($site_name == $sitenames_arr[0]):
-					$key_string 	= 'pg_api_key_site1';
-					$secret_string 	= 'pg_api_secret_site1';
-				break;
-
-				case ($site_name == $sitenames_arr[1]):
-					$key_string 	= 'pg_api_key_site2';
+            if ($site_name == $sitenames_arr[0])
+            {
+                $key_string 	= 'pg_api_key_site1';
+                $secret_string 	= 'pg_api_secret_site1';
+            }
+            elseif ( length($sitenames_arr) > 1 )
+            {
+                if ($site_name == $sitenames_arr[1])
+                {
+                    $key_string 	= 'pg_api_key_site2';
 					$secret_string 	= 'pg_api_secret_site2';
-				break;
-			}
+                }
+            }
+            else
+            {
+                error_log('Site name passed: ' . $site_name . ' is not in list of sites from config settings');
+                error_log(print_r($sitenames_arr, true));
+                throw new Exception("Could not get API credentials since site name passed does not match values in settings");
+            }
 
 			$api_key		= get_config('block_configurable_reports', $key_string);
 			$api_secret		= get_config('block_configurable_reports', $secret_string);

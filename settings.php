@@ -48,19 +48,21 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('block_configurable_reports/reportlimit', get_string('reportlimit', 'block_configurable_reports'),
         get_string('reportlimitinfo', 'block_configurable_reports'), '5000', PARAM_INT, 6));
 
-// Following added by MA 04/29/2019
+// Following added by MA 04/29/2019, added site generalization 10/19/2019
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_hset', 'Payment gateway VAs API Key for HSET',
-                    'Enter API Key of Payment Gateway for VAs for HSET', '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/site_names', 'Payment Site Names',
+                    'Enter comma separated list of maximum of 2 payment site names: site1,site2', '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_site1', 'Payment gateway VAs API Key for Site1',
+                    'Enter API Key of Payment Gateway for VAs for Site1', '', PARAM_RAW, 40));
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_hset', 'Payment gateway VAs API Secret for HSET',
-                    'Enter API Secret of Payment Gateway for VAs for HSET', '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_site1', 'Payment gateway VAs API Secret for Site1',
+                    'Enter API Secret of Payment Gateway for VAs for Site1', '', PARAM_RAW, 40));
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_llp', 'Payment Gateway VAs API Key for HSEA-LLP',
-                    'Enter API Key of Payment Gateway for VAs for HSEA-LLP', '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_site2', 'Payment Gateway VAs API Key for Site2',
+                    'Enter API Key of Payment Gateway for VAs for Site2', '', PARAM_RAW, 40));
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_llp', 'Payment Gateway VAs API Secret for HSEA-LLP',
-                    'Enter API Secret of Payment Gateway for VAs for HSEA-LLP', '', PARAM_RAW, 40));
+	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_site2', 'Payment Gateway VAs API Secret for Site2',
+                    'Enter API Secret of Payment Gateway for VAs for Site2', '', PARAM_RAW, 40));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL',
                     'ldaps://example.com', '', PARAM_RAW, 40));

@@ -45,6 +45,8 @@ class CfAutoCollect
 			// read in the site names defined in the settings as a comma separated string of 2 site names
 			// for example $sitenames_arr[0] = "hset-payments", [1] = "hsea-llp-payments"
 			$sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
+            error_log("site names array:");
+            error_log(print_r($sitenames_arr, true));
 			// we will check the passed in $site_name variable to see which item in the array equals it
             if ($site_name == $sitenames_arr[0])
             {

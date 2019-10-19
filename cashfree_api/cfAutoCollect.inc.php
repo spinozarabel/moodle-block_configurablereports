@@ -1,6 +1,6 @@
 <?php
 /* Modified by Madhu Avasarala 10/06/2019
-* ver 1.2 add Moodle and WP compatibility and get settings appropriately
+* ver 1.3 add Moodle and WP compatibility and get settings appropriately
 *         all data returned as objects instead of arrays in json_decode
 */
 
@@ -71,6 +71,16 @@ class CfAutoCollect
 
         $this->token     = $this->authorizeAndGetToken();
     }       // end construct function
+
+	/**
+	*  @param optionGroup is the group for the settings
+	*  @param optionField is the serring field within the group
+	*  returns the value of the setting specified by the field in the settings group
+	*/
+	public function getoption($optionGroup, $optionField)
+	{
+		return get_option( $optionGroup)[$optionField];
+	}
 
     /**
     *  authenticates to pg server using key and secret

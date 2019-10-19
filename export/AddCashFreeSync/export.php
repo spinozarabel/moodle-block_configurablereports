@@ -186,7 +186,7 @@ function export_report($report)
         									"account_number"    => $account_number ,
         									"va_ifsc_code"      => $ifsc ,
         									);
-                    $accounts[$account_nammes_arr[0]]    = $accounts_site1;
+                    $accounts[$site_names_arr[0]]    = $accounts_site1;
                 }
 			}
             else
@@ -201,7 +201,7 @@ function export_report($report)
                                         "account_number"    => $account_number ,
                                         "va_ifsc_code"      => $ifsc ,
                                         );
-                $accounts[$account_nammes_arr[0]]    = $accounts_site1;
+                $accounts[$site_names_arr[0]]    = $accounts_site1;
             }
 
             // get details of Site2 account using user's moodle id padded to 4 digits
@@ -222,7 +222,7 @@ function export_report($report)
         									"account_number"    => $account_number ,
         									"va_ifsc_code"      => $ifsc ,
         									);
-                    $accounts[$account_nammes_arr[1]]    = $accounts_site2;
+                    $accounts[$site_names_arr[1]]    = $accounts_site2;
                 }
 			}
             else
@@ -236,7 +236,7 @@ function export_report($report)
                                         "account_number"    => $account_number ,
                                         "va_ifsc_code"      => $ifsc ,
                                         );
-                $accounts[$account_nammes_arr[1]]    = $accounts_site2;
+                $accounts[$site_names_arr[1]]    = $accounts_site2;
             }
             // we have data for all accounts so print out the full row aith all data
             ?>
@@ -244,13 +244,13 @@ function export_report($report)
     					<td><?php echo htmlspecialchars($fullname); ?></td>
                         <td><?php echo htmlspecialchars($employeenumber); ?></td>
 
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[0]]["va_id"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[0]]["account_number"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[0]]["va_ifsc_code"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["va_id"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["account_number"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[0]]["va_ifsc_code"]); ?></td>
 
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[1]]["va_id"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[1]]["account_number"]); ?></td>
-                        <td><?php echo htmlspecialchars($accounts[$account_nammes_arr[1]]["va_ifsc_code"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["va_id"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["account_number"]); ?></td>
+                        <td><?php echo htmlspecialchars($accounts[$site_names_arr[1]]["va_ifsc_code"]); ?></td>
                     </tr>
             <?php
 

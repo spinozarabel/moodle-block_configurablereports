@@ -56,16 +56,16 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('block_configurable_reports/account_names', 'Beneficiary or Account Names',
                                     'Enter comma separated list of maximum of 2 account names', '', PARAM_RAW, 80));
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_site1', 'Payment gateway VAs API Key for Site1',
-                    'Enter API Key of Payment Gateway for VAs for Site1', '', PARAM_RAW, 40));
+                    'Enter API Key of Payment Gateway for VAs for Site1', '', PARAM_RAW, 80));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_site1', 'Payment gateway VAs API Secret for Site1',
-                    'Enter API Secret of Payment Gateway for VAs for Site1', '', PARAM_RAW, 40));
+                    'Enter API Secret of Payment Gateway for VAs for Site1', '', PARAM_RAW, 80));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_key_site2', 'Payment Gateway VAs API Key for Site2',
-                    'Enter API Key of Payment Gateway for VAs for Site2', '', PARAM_RAW, 40));
+                    'Enter API Key of Payment Gateway for VAs for Site2', '', PARAM_RAW, 80));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_site2', 'Payment Gateway VAs API Secret for Site2',
-                    'Enter API Secret of Payment Gateway for VAs for Site2', '', PARAM_RAW, 40));
+                    'Enter API Secret of Payment Gateway for VAs for Site2', '', PARAM_RAW, 80));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL',
                     'ldaps://example.com', '', PARAM_RAW, 40));

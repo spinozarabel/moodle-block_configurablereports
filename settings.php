@@ -49,7 +49,8 @@ if ($ADMIN->fulltree) {
         get_string('reportlimitinfo', 'block_configurable_reports'), '5000', PARAM_INT, 6));
 
 // Following added by MA 04/29/2019, added site generalization 10/19/2019
-
+    $settings->add(new admin_setting_configcheckbox('block_configurable_reports/production', 'Check for Production, uncheck for TEST mode',
+        'Check for Production, leave unchecked for TEST', 1));
 	$settings->add(new admin_setting_configtext('block_configurable_reports/site_names', 'Payment Site Names',
                     'Enter comma separated list of maximum of 2 payment site names: site1,site2', '', PARAM_RAW, 40));
     $settings->add(new admin_setting_configtext('block_configurable_reports/account_names', 'Beneficiary or Account Names',

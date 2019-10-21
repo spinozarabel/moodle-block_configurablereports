@@ -1,5 +1,6 @@
 <?php
 /* Modified by Madhu Avasarala 10/06/2019
+* ver 1.5 added prod_cosnt as variable and not a constant
 * ver 1.4 make the site settings generic instead of hset, etc.
 * ver 1.3 add Moodle and WP compatibility and get settings appropriately
 *         all data returned as objects instead of arrays in json_decode
@@ -20,7 +21,7 @@ class CfAutoCollect
     protected $clientSecret;
 	protected $siteName;
 
-    const TEST_PRODUCTION  = "TEST";
+    //const TEST_PRODUCTION  = "TEST";
     const VERBOSE          = true;
 
     public function __construct($site_name = null)
@@ -34,6 +35,8 @@ class CfAutoCollect
             // Make sure these work for Virtual Account API
 			$api_key		= $this->getoption("sritoni_settings", "cashfree_key");
 			$api_secret		= $this->getoption("sritoni_settings", "cashfree_secret");
+
+            $stage          = $this->getoption("sritoni_settings", "production");
 		}
 
         if ( defined("MOODLE_INTERNAL") )
@@ -70,6 +73,8 @@ class CfAutoCollect
 
 			$api_key		= get_config('block_configurable_reports', $key_string);
 			$api_secret		= get_config('block_configurable_reports', $secret_string);
+
+            $stage = get_config('block_configurable_reports', 'production'); // get production or test flag from settings
 		}
 
         // add these as properties of object
@@ -77,12 +82,14 @@ class CfAutoCollect
 		$this->clientSecret	= $api_secret;
 		$this->siteName		= $site_name;
 
-        $stage = self::TEST_PRODUCTION;
-
-        if ($stage == "PROD")
+        if ($stage)
         {
+          // we are in production environment
           $this->baseUrl = "https://cac-api.cashfree.com/cac/v1";
-        } else {
+        }
+        else
+        {
+          // we are in test environment
           $this->baseUrl = "https://cac-gamma.cashfree.com/cac/v1";
         }
 

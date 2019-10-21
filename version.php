@@ -29,7 +29,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 // bumped version, changed settings names, replaced razorpay with pg for payment gateway
-$plugin->version = 2019101901;  // Plugin version updated Oct 19, 2019
+$plugin->version = 2019101902;  // Plugin version updated Oct 19, 2019
 $plugin->requires = 2015111600; // require Moodle version (3.0).
 $plugin->maturity = MATURITY_STABLE;
 $plugin->release = '3.7.0';

@@ -1,5 +1,6 @@
 <?php
 /* Modified by Madhu Avasarala 10/06/2019
+* ver 1.6 added params to getcurl
 * ver 1.5 added prod_cosnt as variable and not a constant
 * ver 1.4 make the site settings generic instead of hset, etc.
 * ver 1.3 add Moodle and WP compatibility and get settings appropriately
@@ -35,61 +36,59 @@ class CfAutoCollect
             // Make sure these work for Virtual Account API
 			$api_key		= $this->getoption("sritoni_settings", "cashfree_key");
 			$api_secret		= $this->getoption("sritoni_settings", "cashfree_secret");
-
-            $stage          = $this->getoption("sritoni_settings", "production");
+            $stage          = $this->getoption("sritoni_settings", "production") ?? 0;
 		}
 
         if ( defined("MOODLE_INTERNAL") )
-		{
-			// we are in MOODLE environment
-			// based on passed in $site_name change the strings for config select.
-            // $site must be passed correctlt for this to work, no check is made
-            // make sure these definitions are same as in configurable_reports plugin settings
-			// read in the site names defined in the settings as a comma separated string of 2 site names
-			// for example $sitenames_arr[0] = "hset-payments", [1] = "hsea-llp-payments"
-			$sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
-			// we will check the passed in $site_name variable to see which item in the array equals it
-            if ($site_name == $sitenames_arr[0])
-            {
-                $key_string 	= 'pg_api_key_site1';
-                $secret_string 	= 'pg_api_secret_site1';
-            }
-            elseif ( count($sitenames_arr) > 1 )
-            {
-                if ($site_name == $sitenames_arr[1])
+    		{
+    			// we are in MOODLE environment
+    			// based on passed in $site_name change the strings for config select.
+                // $site must be passed correctlt for this to work, no check is made
+                // make sure these definitions are same as in configurable_reports plugin settings
+    			// read in the site names defined in the settings as a comma separated string of 2 site names
+    			// for example $sitenames_arr[0] = "hset-payments", [1] = "hsea-llp-payments"
+    			$sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
+    			// we will check the passed in $site_name variable to see which item in the array equals it
+                if ($site_name == $sitenames_arr[0])
                 {
-                    $key_string 	= 'pg_api_key_site2';
-					$secret_string 	= 'pg_api_secret_site2';
+                    $key_string 	= 'pg_api_key_site1';
+                    $secret_string 	= 'pg_api_secret_site1';
                 }
-            }
-            else
-            {
-                error_log('Site name passed: ' . $site_name . ' is not in list of sites from config settings');
-                error_log(print_r($sitenames_arr, true));
-                throw new Exception("Could not get API credentials since site name passed does not match values in settings");
-            }
+                elseif ( count($sitenames_arr) > 1 )
+                {
+                    if ($site_name == $sitenames_arr[1])
+                    {
+                        $key_string 	= 'pg_api_key_site2';
+    					$secret_string 	= 'pg_api_secret_site2';
+                    }
+                }
+                else
+                {
+                    error_log('Site name passed: ' . $site_name . ' is not in list of sites from config settings');
+                    error_log(print_r($sitenames_arr, true));
+                    throw new Exception("Could not get API credentials since site name passed does not match values in settings");
+                }
 
-			$api_key		= get_config('block_configurable_reports', $key_string);
-			$api_secret		= get_config('block_configurable_reports', $secret_string);
-
-            $stage = get_config('block_configurable_reports', 'production'); // get production or test flag from settings
-		}
+    			$api_key		= get_config('block_configurable_reports', $key_string);
+    			$api_secret		= get_config('block_configurable_reports', $secret_string);
+                $stage          = get_config('block_configurable_reports', 'production'); // production or test
+    		}
 
         // add these as properties of object
         $this->clientId		= $api_key;
 		$this->clientSecret	= $api_secret;
 		$this->siteName		= $site_name;
 
-        if ($stage)
-        {
-          // we are in production environment
-          $this->baseUrl = "https://cac-api.cashfree.com/cac/v1";
-        }
+        if ($stage)     // set base URL or API based on if setting is production or test
+            {
+              // we are in production environment
+              $this->baseUrl = "https://cac-api.cashfree.com/cac/v1";
+            }
         else
-        {
-          // we are in test environment
-          $this->baseUrl = "https://cac-gamma.cashfree.com/cac/v1";
-        }
+            {
+              // we are in test environment
+              $this->baseUrl = "https://cac-gamma.cashfree.com/cac/v1";
+            }
 
         $this->token     = $this->authorizeAndGetToken();
     }       // end construct function
@@ -106,7 +105,7 @@ class CfAutoCollect
 
     /**
     *  authenticates to pg server using key and secret
-    *  returns the token
+    *  returns the token to be used for further authentication
     */
     protected function authorizeAndGetToken()
     {
@@ -141,13 +140,11 @@ class CfAutoCollect
     * @param name is the user's sritoni full name
     * @param phone is the user's principal phone number
     * @param email is the SriToni email of user
-    * returns an object with keys "accountNumber" and "ifsc"
+    * returns a valid object if successfull, otherwise null
     */
     public function createVirtualAccount($vAccountId, $name, $phone, $email)
     {
-      $response =["status" => "FAILED", "message" => "Authorization failed"];
-      if ($this->token)
-      {
+        // Not checkin for valid token, responsibility of programmer to ensure this
         $endpoint   = $this->baseUrl."/createVA";
         $authToken  = $this->token;
         $headers    = [
@@ -166,18 +163,17 @@ class CfAutoCollect
         //error_log("curl response of accountcreate");
         //error_log(print_r($curlResponse));
         if ($curlResponse->status == "SUCCESS")
-        {
-            return $curlResponse->data; // returns new account object
-        }
-        else
-        {
-            if ($this->verbose)
             {
-                error_log( "This is the error message while creating a new Virtual Account" . $curlResponse->message );
+                return $curlResponse->data; // returns new account object
             }
-            return null;
-        }
-      }
+        else
+            {
+                if ($this->verbose)
+                {
+                    error_log( "This is the error message while creating a new Virtual Account" . $curlResponse->message );
+                }
+                return null;
+            }
   }           // end of function createVirtualAccount
 
     /**
@@ -261,24 +257,37 @@ class CfAutoCollect
 
     /**
     *  @param vAccountId is self explanatory, is SriToni ID number limited to 8 chars
-    *  returns all payments made to this account as an array of payment objects
+    *  @param maxReturn is the maximum number of payments to be reurned
+    *  returns a total of <= maxReturn payments made to this account as an array of payment objects
     */
-    public function getPaymentsForVirtualAccount($vAccountId) {
-      if ($this->token) {
-        // Validate , sanitize $vAccountId
+    public function getPaymentsForVirtualAccount($vAccountId, $maxReturn = null)
+    {
+        $payments = NULL;   // return null if not successfull
+        $params   = NULL;
+
         $endpoint = $this->baseUrl."/payments/".$vAccountId;
         $authToken = $this->token;
         $headers = [
              "Authorization: Bearer $authToken"
               ];
-        $curlResponse = $this->getCurl($endpoint, $headers);
+
+        if ($maxReturn)
+            {
+                // check to see if max numoer of payments to be returned, is specified
+                // if so construct params array
+                $params = array(
+                                'maxReturn' =>  $maxReturn,
+                                );
+            }
+
+        $curlResponse = $this->getCurl($endpoint, $headers, $params);
+
         if ($curlResponse->status == "SUCCESS")
-        {
-          $payments = $curlResponse->data->payments;
-        }
-        else $payments = NULL;
-      }
-      return $payments;
+            {
+              $payments = $curlResponse->data->payments;
+            }
+
+        return $payments;
     }
 
 
@@ -308,8 +317,21 @@ class CfAutoCollect
       return NULL;
     }
 
-    protected function getCurl ($endpoint, $headers)
+    /**
+    *  @param endpoint is the full path url of endpoint, not including any parameters
+    *  @param headers is the array conatining a single item, the bearer token
+    *  @param params is the optional array containing the get parameters
+    */
+    protected function getCurl ($endpoint, $headers, $params = [])
     {
+        // check if anything exists in $params. If so make a query string out of it
+       if ($params)
+        {
+           if ( count($params) )
+           {
+               $endpoint = $endpoint . '?' . http_build_query($params);
+           }
+        }
        $ch = curl_init();
        curl_setopt($ch, CURLOPT_URL, $endpoint);
        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);

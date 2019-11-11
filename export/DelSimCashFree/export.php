@@ -271,8 +271,8 @@ function export_report($report)
 	unset($csvuser);  // break reference in foreach loop on exit
 
     echo nl2br("Number of SriToni users from report: " . $csvcount . "\n");
-	echo nl2br("Number of new Virtual Accounts to be created for Site1: " . $count_va_site1_deleted . "\n");
-	echo nl2br("Number of new Virtual Accounts to be created for Site2: " . $count_va_site2_deleted . "\n");
+	echo nl2br("Number of Virtual Accounts to be (SIM) Deleted for Site1: " . $count_va_site1_deleted . "\n");
+	echo nl2br("Number of Virtual Accounts to be (SIM) Deleted for Site2: " . $count_va_site2_deleted . "\n");
 
 	exit;
 }

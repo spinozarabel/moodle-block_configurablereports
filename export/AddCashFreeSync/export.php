@@ -22,10 +22,10 @@ defined('MOODLE_INTERNAL') || die();
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Madhu Avasarala
- * @date: 09/28/2019
- * This is the Cashfree account sync_add version 1.0
+ * @date: 01/08/2020
+ * This is the Cashfree account sync_add version 2.0
  * Adds Cashfree Virtual Account for all students if not already existing
- * Adds accounts for HSET and HSEA-LLP and updates profile_field_virtualaccounts with JSON encoding
+ * Adds accounts for a max of 2 payment sites and updates profile_field_virtualaccounts with JSON encoding
  *
  */
 
@@ -38,7 +38,8 @@ function export_report($report)
 
 	$vAupdate_site1   =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
     $vAupdate_site2   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
-    // declare empty array used to populate moodle user profile field with account information
+
+	$sim			  =   false;	   // Not a simulation, the real thing!
 
 	//--------------------- end of section 1 -----------------------------------------------------
 
@@ -85,37 +86,75 @@ function export_report($report)
 
     //-------------------- create new API interfaces section 3-------------------------------->
     // read in comma separated list of site names from config_settings of plugin
-    $site_names_arr     = explode( "," , get_config('block_configurable_reports', 'site_names') );
-    // read in beneficiary names into an array
-    $account_nammes_arr = explode( "," , get_config('block_configurable_reports', 'account_names') );
-    //
-    $site_name			= $site_names_arr[0];  // pick the 1st payment site name to create accounts for
-    try
-        {
-          // creates a new API instance, autheticates using ID and secret and generates token
-          // token is valid for only 5 minutes so make sure this API is done by then
-          $pg_api_site1 = new CfAutoCollect($site_name);    // create a new API instance
-        }
-    catch (Exception $e)
-        {
-          error_log( $e->getMessage() );
-          echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
-          return;
-        }
+    $site_names_config  = get_config('block_configurable_reports', 'site_names') ?? "";
+    // if empty exit with error message
+    if (empty($site_names_config))
+    {
+        echo nl2br("Empty config setting for site names, please set in config: "  . "\n");
+        return;
+    }
+    // read in the comma separated site names into an array.
+    $site_names_arr     = explode( "," , $site_names_config ) ?? [];
 
-    $site_name			= $site_names_arr[1];  // pick the 2nd payment site name to create accounts for
-    try
+    $num_sites          = count($site_names_arr) ?? 0;
+    // return if num_sites is 0
+    if (0 == $num_sites)
+    {
+        echo nl2br("Empty config setting for site names, please set correctly in config settings site names: "  . "\n");
+        return;
+    }
+	
+    // read in beneficiary names from config settings into an array
+    $account_names_config = get_config('block_configurable_reports', 'account_names') ?? "";
+    // if empty exit with error message
+    if (empty($account_names_config))
+    {
+        echo nl2br("Empty config setting for account names, please set in config: "  . "\n");
+        return;
+    }
+    // read in comma separated account names into an array
+    $account_nammes_arr = explode( "," , $account_names_config );
+	
+    // get the 1st payment site, we know it exists, because if we are here, $num_sites being not 0
+    $site_name			= $site_names_arr[0]; 
+	
+    // setup gateway api instance only if sutename is not blank
+    if (!empty($site_name))
+    {
+        try
+            {
+              // creates a new API instance, autheticates using ID and secret and generates token
+              // token is valid for only 5 minutes so make sure this API is done by then
+              $pg_api_site1 = new CfAutoCollect($site_name);    // create a new API instance
+            }
+        catch (Exception $e)
+            {
+              error_log( $e->getMessage() );
+              echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
+              return;
+            }
+    }
+
+    // do the 2nd site only if it exists
+    if ($num_sites > 1)
+    {
+        $site_name	= $site_names_arr[1] ?? "";
+        if (!empty($site_name))
         {
-          // creates a new API instance, autheticates using ID and secret and generates token
-          // token is valid for only 5 minutes so make sure this API is done by then
-          $pg_api_site2 = new CfAutoCollect($site_name);    // create a new API instance
+            try
+                {
+                  // creates a new API instance, autheticates using ID and secret and generates token
+                  // token is valid for only 5 minutes so make sure this API is done by then
+                  $pg_api_site2 = new CfAutoCollect($site_name);    // create a new API instance
+                }
+            catch (Exception $e)
+                {
+                  error_log( $e->getMessage() );
+                  echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
+                  return;
+                }
         }
-    catch (Exception $e)
-        {
-          error_log( $e->getMessage() );
-          echo nl2br("Error creating cashfree_api instance for: " . $site_name . " " . $e->getMessage() . "\n");
-          return;
-        }
+    }
 	//---------------------- end of section 2 dreating API instances ---------->
 
     // -----begin section 3 for each user in CSV table check if accounts exist->
@@ -153,7 +192,6 @@ function export_report($report)
 
 	foreach ($csv as $key => $csvuser)
 		{
-			// get student id number
 			$employeenumber = $csvuser["employeenumber"];	// this is the unique sritoni idnumber assigned by school
 			$fullname 		= $csvuser["displayname"];		// full name in SriToni
 			$moodleuserid   = $csvuser["id"];				// unique id used internally by Moodle in the user tables
@@ -171,14 +209,16 @@ function export_report($report)
             // get details of this Site1 account using user'smoodle id padded to 4 digits
 			$vA =  $pg_api_site1->getvAccountGivenId($vAccountId);
 
-            if (empty($vA))
-            {	// VA for Site1 does'nt exist, so create one
-				$vA 	= $pg_api_site1->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if ($vA)
-                {   // Account created is not null and so successfull
-                    $count_va_site1_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber ?? "notset";
-                    $ifsc                   = $vA->ifsc ?? "notset";
+			switch (true) 
+			{
+				
+				case (empty($vA) && !$sim):
+					// VA doesn't exist, this is not a Sim, so let's create a new VA
+					$vA 	= $pg_api_site1->createVirtualAccount($vAccountId, $fullname, $phone, $email);
+					// increment count
+					$count_va_site1_created	+= 1; 
+                    $account_number         = $vA->accountNumber ?? "Error in creation?";
+                    $ifsc                   = $vA->ifsc ?? "Error in creation?";
 
                     $accounts_site1 = array	(
         									"beneficiary_name"  => $account_nammes_arr[0] ,
@@ -187,34 +227,65 @@ function export_report($report)
         									"va_ifsc_code"      => $ifsc ,
         									);
                     $accounts[$site_names_arr[0]]    = $accounts_site1;
-                }
+				break;
+				
+				case (empty($vA) && $sim):
+					// Account doesn't exist so only created in simulation
+					// This is a Sim so new account only simulation created
+					$count_va_site1_created	+= 1; // increment count
+
+
+                    $accounts_site1 = array	(
+        									"beneficiary_name"  => $account_nammes_arr[0] ,
+        									"va_id"             => "To be created" ,
+        									"account_number"    => "To be created" ,
+        									"va_ifsc_code"      => "To be created" ,
+        									);
+                    $accounts[$site_names_arr[0]]    = $accounts_site1;
+				break;
+				
+				case ($vA):
+					// the account for Site1 already exists, details got by function getvAccountGivenId above
+					// this can also refresh details pushed to Moodle profile field
+					$account_number         = $vA->virtualAccountNumber ?? "Error in reading?";
+					$ifsc                   = $vA->ifsc ?? "Error in reading?";
+
+					$accounts_site1 = array	(
+											"beneficiary_name"  => $account_nammes_arr[0] ,
+											"va_id"             => $vA->vAccountId ,
+											"account_number"    => $account_number ,
+											"va_ifsc_code"      => $ifsc ,
+											);
+					$accounts[$site_names_arr[0]]    = $accounts_site1;
+				break;
 			}
-            else
-            {   // the account for Site1 already exists, details got by function getvAccountGivenId above
-                // this will refresh details pushed to Moodle profile field
-                $account_number         = $vA->virtualAccountNumber ?? "notset";
-                $ifsc                   = $vA->ifsc ?? "notset";
-
-                $accounts_site1 = array	(
-                                        "beneficiary_name"  => $account_nammes_arr[0] ,
-                                        "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $account_number ,
-                                        "va_ifsc_code"      => $ifsc ,
-                                        );
-                $accounts[$site_names_arr[0]]    = $accounts_site1;
+			
+			// get details of Site2 account for user only if pg_api_site2 instance exists
+			// this automatically implies that num_sites = 2
+            if (!empty($pg_api_site2))
+            {
+    			$vA =  $pg_api_site2->getvAccountGivenId($vAccountId);
             }
-
-            // get details of Site2 account using user's moodle id padded to 4 digits
-			$vA =  $pg_api_site2->getvAccountGivenId($vAccountId);
-
-            if (empty($vA))
-            {	// VA for SIte2 does'nt exist, so create one
-				$vA 	= $pg_api_site2->createVirtualAccount($vAccountId, $fullname, $phone, $email);
-                if ($vA)
-                {   // Account created is not null and so successfull
-                    $count_va_site2_created	+= 1; // increment count
-                    $account_number         = $vA->accountNumber  ?? "notset";
-                    $ifsc                   = $vA->ifsc ?? "notset";
+			
+			switch (true) 
+			{
+				case ($num_sites < 2)
+					// 2nd site is not specified so make all data NA for this site just for dummy display
+					$accounts_site2 = array	(
+                                        "beneficiary_name"  => 'NA' ,
+                                        "va_id"             => "NA" ,
+                                        "account_number"    => "NA" ,
+                                        "va_ifsc_code"      => "NA" ,
+                                        );
+				break;
+				
+				case (empty($vA) && !$sim):
+					// VA doesn't exist, this is not a Sim, so let's create a new VA
+					$vA 	= $pg_api_site2->createVirtualAccount($vAccountId, $fullname, $phone, $email);
+					// increment count
+					$count_va_site2_created	+= 1; 
+                    $account_number         = $vA->accountNumber ?? "Error in creation?";
+                    $ifsc                   = $vA->ifsc ?? "Error in creation?";
 
                     $accounts_site2 = array	(
         									"beneficiary_name"  => $account_nammes_arr[1] ,
@@ -223,21 +294,39 @@ function export_report($report)
         									"va_ifsc_code"      => $ifsc ,
         									);
                     $accounts[$site_names_arr[1]]    = $accounts_site2;
-                }
-			}
-            else
-            {   // the account for Site2 already exists, details got by function getvAccountGivenId above
-                $account_number         = $vA->virtualAccountNumber ?? "notset";
-                $ifsc                   = $vA->ifsc ?? "notset";
+				break;
+				
+				case (empty($vA) && $sim):
+					// Account doesn't exist so only created in simulation
+					// This is a Sim so new account only simulation created
+					$count_va_site2_created	+= 1; // increment count
 
-                $accounts_site2 = array	(
-                                        "beneficiary_name"  => $account_nammes_arr[1] ,
-                                        "va_id"             => $vA->vAccountId ,
-                                        "account_number"    => $account_number ,
-                                        "va_ifsc_code"      => $ifsc ,
-                                        );
-                $accounts[$site_names_arr[1]]    = $accounts_site2;
-            }
+
+                    $accounts_site2 = array	(
+        									"beneficiary_name"  => $account_nammes_arr[1] ,
+        									"va_id"             => "To be created" ,
+        									"account_number"    => "To be created" ,
+        									"va_ifsc_code"      => "To be created" ,
+        									);
+                    $accounts[$site_names_arr[1]]    = $accounts_site2;
+				break;
+				
+				case ($vA):
+					// the account for Site2 already exists, details got by function getvAccountGivenId above
+					// this can also refresh details pushed to Moodle profile field
+					$account_number         = $vA->virtualAccountNumber ?? "Error in reading?";
+					$ifsc                   = $vA->ifsc ?? "Error in reading?";
+
+					$accounts_site2 = array	(
+											"beneficiary_name"  => $account_nammes_arr[1] ,
+											"va_id"             => $vA->vAccountId ,
+											"account_number"    => $account_number ,
+											"va_ifsc_code"      => $ifsc ,
+											);
+					$accounts[$site_names_arr[1]]    = $accounts_site2;
+				break;
+			}
+            
             // we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>

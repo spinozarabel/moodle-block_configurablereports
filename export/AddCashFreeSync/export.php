@@ -36,8 +36,7 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
-	$vAupdate_site1   =   false;       // do not update Virtual account for HSET at Cashfree for existing accounts
-    $vAupdate_site2   =   false;       // do not update Virtual account for LLP at Cashfree for existing accounts
+	$vAupdate_sites   =   true;       // flag to update user profile filed or not, with possible new data
 
 	$sim			  =   false;	   // Not a simulation, the real thing!
 
@@ -100,10 +99,10 @@ function export_report($report)
     // return if num_sites is 0
     if (0 == $num_sites)
     {
-        echo nl2br("Empty config setting for site names, please set correctly in config settings site names: "  . "\n");
+        echo nl2br("number of sites evaluates to 0, please set correctly in config settings site names: "  . "\n");
         return;
     }
-	
+
     // read in beneficiary names from config settings into an array
     $account_names_config = get_config('block_configurable_reports', 'account_names') ?? "";
     // if empty exit with error message
@@ -114,10 +113,10 @@ function export_report($report)
     }
     // read in comma separated account names into an array
     $account_nammes_arr = explode( "," , $account_names_config );
-	
+
     // get the 1st payment site, we know it exists, because if we are here, $num_sites being not 0
-    $site_name			= $site_names_arr[0]; 
-	
+    $site_name			= $site_names_arr[0];
+
     // setup gateway api instance only if sutename is not blank
     if (!empty($site_name))
     {
@@ -209,14 +208,14 @@ function export_report($report)
             // get details of this Site1 account using user'smoodle id padded to 4 digits
 			$vA =  $pg_api_site1->getvAccountGivenId($vAccountId);
 
-			switch (true) 
+			switch (true)
 			{
-				
+
 				case (empty($vA) && !$sim):
 					// VA doesn't exist, this is not a Sim, so let's create a new VA
 					$vA 	= $pg_api_site1->createVirtualAccount($vAccountId, $fullname, $phone, $email);
 					// increment count
-					$count_va_site1_created	+= 1; 
+					$count_va_site1_created	+= 1;
                     $account_number         = $vA->accountNumber ?? "Error in creation?";
                     $ifsc                   = $vA->ifsc ?? "Error in creation?";
 
@@ -228,7 +227,7 @@ function export_report($report)
         									);
                     $accounts[$site_names_arr[0]]    = $accounts_site1;
 				break;
-				
+
 				case (empty($vA) && $sim):
 					// Account doesn't exist so only created in simulation
 					// This is a Sim so new account only simulation created
@@ -243,7 +242,7 @@ function export_report($report)
         									);
                     $accounts[$site_names_arr[0]]    = $accounts_site1;
 				break;
-				
+
 				case ($vA):
 					// the account for Site1 already exists, details got by function getvAccountGivenId above
 					// this can also refresh details pushed to Moodle profile field
@@ -259,17 +258,17 @@ function export_report($report)
 					$accounts[$site_names_arr[0]]    = $accounts_site1;
 				break;
 			}
-			
+
 			// get details of Site2 account for user only if pg_api_site2 instance exists
 			// this automatically implies that num_sites = 2
             if (!empty($pg_api_site2))
             {
     			$vA =  $pg_api_site2->getvAccountGivenId($vAccountId);
             }
-			
-			switch (true) 
+
+			switch (true)
 			{
-				case ($num_sites < 2)
+				case ($num_sites < 2):
 					// 2nd site is not specified so make all data NA for this site just for dummy display
 					$accounts_site2 = array	(
                                         "beneficiary_name"  => 'NA' ,
@@ -278,12 +277,12 @@ function export_report($report)
                                         "va_ifsc_code"      => "NA" ,
                                         );
 				break;
-				
+
 				case (empty($vA) && !$sim):
 					// VA doesn't exist, this is not a Sim, so let's create a new VA
 					$vA 	= $pg_api_site2->createVirtualAccount($vAccountId, $fullname, $phone, $email);
 					// increment count
-					$count_va_site2_created	+= 1; 
+					$count_va_site2_created	+= 1;
                     $account_number         = $vA->accountNumber ?? "Error in creation?";
                     $ifsc                   = $vA->ifsc ?? "Error in creation?";
 
@@ -295,7 +294,7 @@ function export_report($report)
         									);
                     $accounts[$site_names_arr[1]]    = $accounts_site2;
 				break;
-				
+
 				case (empty($vA) && $sim):
 					// Account doesn't exist so only created in simulation
 					// This is a Sim so new account only simulation created
@@ -310,7 +309,7 @@ function export_report($report)
         									);
                     $accounts[$site_names_arr[1]]    = $accounts_site2;
 				break;
-				
+
 				case ($vA):
 					// the account for Site2 already exists, details got by function getvAccountGivenId above
 					// this can also refresh details pushed to Moodle profile field
@@ -326,7 +325,7 @@ function export_report($report)
 					$accounts[$site_names_arr[1]]    = $accounts_site2;
 				break;
 			}
-            
+
             // we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>
@@ -348,17 +347,22 @@ function export_report($report)
 			{
 				$accounts_json	= json_encode($accounts);
 			}
-			// Get the Moodle profile_field_virtualaccounts for this user to update
-			// you may get error if this record has not been set before
-			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
-			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
-																					'userid'   =>  $moodleuserid,
-																					'fieldid'  =>  $field->id,
-																					)
-															);
 
-			$user_profile_virtualaccounts->data = $accounts_json;
-			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+            // only update user profile field with new data if not a simulation and update flag is TRUE
+            if ($vAupdate_sites && !$sim)
+            {
+    			// Get the Moodle profile_field_virtualaccounts for this user to update
+    			// you may get error if this record has not been set before
+    			$field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+    			$user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+    																					'userid'   =>  $moodleuserid,
+    																					'fieldid'  =>  $field->id,
+    																					)
+    															);
+
+    			$user_profile_virtualaccounts->data = $accounts_json;
+    			$DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+            }
 
             // loop for next user, finished for this user
 		}

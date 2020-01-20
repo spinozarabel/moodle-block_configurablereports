@@ -37,7 +37,7 @@ function export_report($report)
 	require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
     // flag to update user profile filed or not, with possible new data
-	$vAupdate_sites   =   false;     
+	$vAupdate_profile =   false;
     // Simulation only, do not change any user data absolutely!!!
 	$sim			  =   true;
 
@@ -350,7 +350,7 @@ function export_report($report)
 			}
 
             // only update user profile field with new data if not a simulation and update flag is TRUE
-            if ($vAupdate_sites && !$sim)
+            if ($vAupdate_profile)
             {
     			// Get the Moodle profile_field_virtualaccounts for this user to update
     			// you may get error if this record has not been set before

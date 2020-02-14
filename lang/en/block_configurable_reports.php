@@ -48,6 +48,12 @@ $string['enablejsordering'] = "Enable JavaScript ordering";
 $string['enablejspagination'] = "Enable JavaScript Pagination";
 $string['export_sync'] = "Sync LDAP";
 $string['export_sim'] = "Simulate LDAP Sync";
+
+$string['export_AddCashFreeSim'] = "Sim Add CashFree Accts";
+$string['export_AddCashFreeSync'] = "Sync Add CashFree Accts";
+
+$string['export_DelSimCashFree'] = "Sim Delete CashFree Accts";
+
 $string['export_csv'] = "Export in CSV format";
 $string['export_ods'] = "Export in ODS format";
 $string['export_xls'] = "Export in XLS format";

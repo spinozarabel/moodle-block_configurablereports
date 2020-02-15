@@ -134,9 +134,9 @@ function export_report($report)
 			$moodleuserid   = $csvuser["id"];				// unique id used internally by Moodle in the user tables
             $moodleusername = $csvuser["username"]; 		// sritoni username issued by school
 			$present_grade	= $csvuser["present_grade"];	// present grade of child around Feb just before paying fees
-			$fees_for_grade = $fees_csv[0][$present_grade];	// extract from table the grade to pay for based on present grade
-			$amount			= $fees_csv[1][$present_grade];	// extract from table the amount based on present grade
-			$ay				= $fees_csv[2][$present_grade];
+			$fees_for_grade = $fees_csv[0][$present_grade] ?? "not available";	// extract from table the grade to pay for based on present grade
+			$amount			= $fees_csv[1][$present_grade] ?? 0;	// extract from table the amount based on present grade
+			$ay				= $fees_csv[2][$present_grade] ?? "not available";
 
             // we have data for all accounts so print out the full row aith all data
             ?>

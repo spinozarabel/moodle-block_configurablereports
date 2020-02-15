@@ -34,12 +34,11 @@ function export_report($report)
     global $DB, $CFG;
 
     require_once($CFG->libdir . '/csvlib.class.php');
-	//require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
 
     // flag to update user profile field or not, with possible new data
-	$update_profile =   false;
-    // Simulation only, do not change any user data absolutely!!!
-	$sim			=   true;
+	$update_profile_fees   =   false;
+    // Overwrite even if array exists for concerned academic year
+	$overwrite_existing	   =   true;
 
 	//--------------------- end of section 1 Decalarations------------------------------------------------->
 
@@ -96,12 +95,6 @@ function export_report($report)
     $fees_csv = csv_to_associative_array($googlesheeturl);
 	error_log(print_r($fees_csv, true));
 
-
-
-	// initialize counts of accounts to be added if missing
-	$count_field_processed	=	0;
-
-
     // define table and heading
     ?>
         <style>
@@ -124,6 +117,7 @@ function export_report($report)
     			<th>Amount</th>
 				<th>For Academic Year</th>
 				<th>New JSON data for fees field</th>
+                <th>Payee</th>
     		</tr>
     <?php
 
@@ -138,6 +132,7 @@ function export_report($report)
 			$fees_for_grade = $fees_csv[0][$present_grade] ?? "not available";	// extract from table the grade to pay for based on present grade
 			$amount			= $fees_csv[1][$present_grade] ?? 0;	// extract from table the amount based on present grade
 			$ay				= $fees_csv[2][$present_grade] ?? "not available";
+            $payee          = $fees_csv[3][$present_grade] ?? "not available";
 			// make an array for insertion into user profile field fees
 			$new_fees_arr	= array(
 									"present_grade" 	=> $present_grade,
@@ -145,6 +140,7 @@ function export_report($report)
 									"amount"			=> $amount,
 									"ay"				=> $ay,
                                     "status"            => "not paid",
+                                    "payee"             => $payee,
 									);
 
 			// read in profile_field_fees
@@ -168,9 +164,14 @@ function export_report($report)
                 // check to see if data exists for this already
                 // check based on if ay is already present
                 $key = array_search($ay, array_column($a, "ay"));
-                if ($key)
+                // a value of 0 also means it exists so we test a bit differently
+                if (false !== $key)
                 {
                     // this already exists, we can rewrite this or ignore based on flag
+                    if ($overwrite_existing)
+                    {
+                        $fees_arr[$key] = $new_fees_arr;
+                    }
                 }
                 else
                 {
@@ -193,12 +194,17 @@ function export_report($report)
                         <td><?php echo htmlspecialchars($amount); ?></td>
 						<td><?php echo htmlspecialchars($ay); ?></td>
 						<td><?php echo htmlspecialchars(json_encode($fees_arr)); ?></td>
+                        <td><?php echo htmlspecialchars($payee); ?></td>
                     </tr>
             <?php
-			// convert the array to JSON and write it back to the user profile field
-			//$user_profile_fees->data = json_encode($fees_arr);
-			// update the database record for this user for this field
-			//$DB->update_record('user_info_data', $user_profile_fees, $bulk=false);
+
+            if ($update_profile_fees)
+            {
+    			// convert the array to JSON and write it back to the user profile field
+    			$user_profile_fees->data = json_encode($fees_arr);
+    			// update the database record for this user for this field
+    			$DB->update_record('user_info_data', $user_profile_fees, $bulk=false);
+            }
 
 		}
 

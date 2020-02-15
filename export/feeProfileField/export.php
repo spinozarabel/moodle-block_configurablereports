@@ -136,7 +136,7 @@ function export_report($report)
 			// make an array for insertion into user profile field fees
 			$new_fees_arr	= array(
 									"set_during" 	    => $present_grade,
-									"fees_for_grade"	=> $fees_for_grade,
+									"fees_for"	        => $fees_for_grade,
 									"amount"			=> $amount_hset,
 									"ay"				=> $ay,
                                     "status"            => "not paid",

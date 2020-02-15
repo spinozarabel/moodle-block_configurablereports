@@ -163,7 +163,7 @@ function export_report($report)
 			{
                 // check to see if data exists for this already
                 // check based on if ay is already present
-                $key = array_search($ay, array_column($a, "ay"));
+                $key = array_search($ay, array_column($fees_arr, "ay"));
                 // a value of 0 also means it exists so we test a bit differently
                 if (false !== $key)
                 {
@@ -176,8 +176,8 @@ function export_report($report)
                 else
                 {
                     // we don;t have fees data for desired academic year so we will add our data
-                    // add it as last element
-    				array_push($fees_arr, $new_fees_arr);
+                    // add it as 1st element
+                    array_unshift($fees_arr, $new_fees_arr);
                 }
 
 

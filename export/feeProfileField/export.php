@@ -94,6 +94,7 @@ function export_report($report)
     }
 	// read file and parse to associative array. To access this in a function, make this a global there
     $fees_csv = csv_to_associative_array($googlesheeturl);
+	error_log(print_r($fees_csv, true));
 	
 	
 

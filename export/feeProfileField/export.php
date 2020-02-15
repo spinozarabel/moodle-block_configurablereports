@@ -83,7 +83,7 @@ function export_report($report)
 	// find number of entries extracted from CSV into array
     $csvcount = count($csv);
 	//----------------------------------- end of section 2 --------------------------------------->
-	
+
 	// Read the CSv published Google Sheet, get its URL from config settings
 	$googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
 	if (empty($googlesheeturl))
@@ -95,8 +95,8 @@ function export_report($report)
 	// read file and parse to associative array. To access this in a function, make this a global there
     $fees_csv = csv_to_associative_array($googlesheeturl);
 	error_log(print_r($fees_csv, true));
-	
-	
+
+
 
 	// initialize counts of accounts to be added if missing
 	$count_field_processed	=	0;
@@ -123,6 +123,7 @@ function export_report($report)
                 <th>Pay Fees for</th>
     			<th>Amount</th>
 				<th>For Academic Year</th>
+				<th>New JSON data for fees field</th>
     		</tr>
     <?php
 
@@ -137,8 +138,38 @@ function export_report($report)
 			$fees_for_grade = $fees_csv[0][$present_grade] ?? "not available";	// extract from table the grade to pay for based on present grade
 			$amount			= $fees_csv[1][$present_grade] ?? 0;	// extract from table the amount based on present grade
 			$ay				= $fees_csv[2][$present_grade] ?? "not available";
+			// make an array for insertion into user profile field fees
+			$new_fees_arr	= array(
+									"present_grade" 	=> $present_grade,
+									"fees_for_grade"	=> $fees_for_grade,
+									"amount"			=> $amount,
+									"ay"				=> $ay,
+                                    "status"            => "not paid",
+									);
 
-            // we have data for all accounts so print out the full row aith all data
+			// read in profile_field_fees
+			$field = $DB->get_record('user_info_field', array('shortname' => "fees"));
+			$user_profile_fees = $DB->get_record('user_info_data', array(
+																			'userid'   =>  $moodleuserid,
+																			'fieldid'  =>  $field->id,
+																		)
+												);
+			$fees_json		= $user_profile_fees->data ?? "";
+			// decode json string. If fails decode to empty array
+			$fees_arr 		= json_decode($fees_json, true) ?? [];
+
+			if (empty($fees_arr))
+			{
+				// add it as first element
+				$fees_arr[0] = $new_fees_arr;
+			}
+			else
+			{
+				// add it as last element
+				array_push($fees_arr, $new_fees_arr);
+			}
+
+			// we have data for all accounts so print out the full row aith all data
             ?>
                     <tr>
                         <td><?php echo htmlspecialchars($idnumber); ?></td>
@@ -148,9 +179,14 @@ function export_report($report)
                         <td><?php echo htmlspecialchars($fees_for_grade); ?></td>
                         <td><?php echo htmlspecialchars($amount); ?></td>
 						<td><?php echo htmlspecialchars($ay); ?></td>
+						<td><?php echo htmlspecialchars(json_encode($fees_arr)); ?></td>
                     </tr>
             <?php
-			
+			// convert the array to JSON and write it back to the user profile field
+			//$user_profile_fees->data = json_encode($fees_arr);
+			// update the database record for this user for this field
+			//$DB->update_record('user_info_data', $user_profile_fees, $bulk=false);
+
 		}
 
 	exit;

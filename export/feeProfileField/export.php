@@ -165,8 +165,21 @@ function export_report($report)
 			}
 			else
 			{
-				// add it as last element
-				array_push($fees_arr, $new_fees_arr);
+                // check to see if data exists for this already
+                // check based on if ay is already present
+                $key = array_search($ay, array_column($a, "ay"));
+                if ($key)
+                {
+                    // this already exists, we can rewrite this or ignore based on flag
+                }
+                else
+                {
+                    // we don;t have fees data for desired academic year so we will add our data
+                    // add it as last element
+    				array_push($fees_arr, $new_fees_arr);
+                }
+
+
 			}
 
 			// we have data for all accounts so print out the full row aith all data

@@ -36,9 +36,9 @@ function export_report($report)
     require_once($CFG->libdir . '/csvlib.class.php');
 
     // flag to update user profile field or not, with possible new data
-	$update_profile_fees   =   false;
+	$update_profile_fees       =   get_config('block_configurable_reports', 'update_profile_fees') ?? false;
     // Overwrite even if array exists for concerned academic year
-	$overwrite_existing	   =   true;
+	$overwrite_existing_fees   =   get_config('block_configurable_reports', 'overwrite_existing_fees') ?? true;
 
 	//--------------------- end of section 1 Decalarations------------------------------------------------->
 
@@ -168,7 +168,7 @@ function export_report($report)
                 if (false !== $key)
                 {
                     // this already exists, we can rewrite this or ignore based on flag
-                    if ($overwrite_existing)
+                    if ($overwrite_existing_fees)
                     {
                         $fees_arr[$key] = $new_fees_arr;
                     }

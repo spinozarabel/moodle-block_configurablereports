@@ -118,6 +118,7 @@ function export_report($report)
     		<tr>
     			<th>idnumber</th>
     			<th>Moodle ID</th>
+				<th>username</th>
                 <th>Present Grade</th>
                 <th>Pay Fees for</th>
     			<th>Amount</th>
@@ -142,6 +143,7 @@ function export_report($report)
                     <tr>
                         <td><?php echo htmlspecialchars($idnumber); ?></td>
                         <td><?php echo htmlspecialchars($moodleuserid); ?></td>
+						<td><?php echo htmlspecialchars($moodleusername); ?></td>
                         <td><?php echo htmlspecialchars($present_grade); ?></td>
                         <td><?php echo htmlspecialchars($fees_for_grade); ?></td>
                         <td><?php echo htmlspecialchars($amount); ?></td>

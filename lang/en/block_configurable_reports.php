@@ -54,6 +54,9 @@ $string['export_AddCashFreeSync'] = "Sync Add CashFree Accts";
 
 $string['export_DelSimCashFree'] = "Sim Delete CashFree Accts";
 
+$string['export_feeProfileField'] = "Write Fee Details to Profile";
+
+
 $string['export_csv'] = "Export in CSV format";
 $string['export_ods'] = "Export in ODS format";
 $string['export_xls'] = "Export in XLS format";

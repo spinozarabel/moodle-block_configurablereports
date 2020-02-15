@@ -130,14 +130,14 @@ function export_report($report)
             $moodleusername = $csvuser["username"]; 		// sritoni username issued by school
 			$present_grade	= $csvuser["present_grade"];	// present grade of child around Feb just before paying fees
 			$fees_for_grade = $fees_csv[0][$present_grade] ?? "not available";	// extract from table the grade to pay for based on present grade
-			$amount			= $fees_csv[1][$present_grade] ?? 0;	// extract from table the amount based on present grade
+			$amount_hset	= $fees_csv[1][$present_grade] ?? 0;	// extract from table the amount based on present grade
 			$ay				= $fees_csv[2][$present_grade] ?? "not available";
             $payee          = $fees_csv[3][$present_grade] ?? "not available";
 			// make an array for insertion into user profile field fees
 			$new_fees_arr	= array(
 									"present_grade" 	=> $present_grade,
 									"fees_for_grade"	=> $fees_for_grade,
-									"amount"			=> $amount,
+									"amount"			=> $amount_hset,
 									"ay"				=> $ay,
                                     "status"            => "not paid",
                                     "payee"             => $payee,
@@ -191,7 +191,7 @@ function export_report($report)
 						<td><?php echo htmlspecialchars($moodleusername); ?></td>
                         <td><?php echo htmlspecialchars($present_grade); ?></td>
                         <td><?php echo htmlspecialchars($fees_for_grade); ?></td>
-                        <td><?php echo htmlspecialchars($amount); ?></td>
+                        <td><?php echo htmlspecialchars($amount_hset); ?></td>
 						<td><?php echo htmlspecialchars($ay); ?></td>
 						<td><?php echo htmlspecialchars(json_encode($fees_arr)); ?></td>
                         <td><?php echo htmlspecialchars($payee); ?></td>

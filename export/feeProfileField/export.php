@@ -112,7 +112,7 @@ function export_report($report)
     			<th>idnumber</th>
     			<th>Moodle ID</th>
 				<th>username</th>
-                <th>Present Grade</th>
+                <th>Set During Grade</th>
                 <th>Pay Fees for</th>
     			<th>Amount</th>
 				<th>For Academic Year</th>
@@ -135,7 +135,7 @@ function export_report($report)
             $payee          = $fees_csv[3][$present_grade] ?? "not available";
 			// make an array for insertion into user profile field fees
 			$new_fees_arr	= array(
-									"present_grade" 	=> $present_grade,
+									"set_during_grade" 	=> $present_grade,
 									"fees_for_grade"	=> $fees_for_grade,
 									"amount"			=> $amount_hset,
 									"ay"				=> $ay,

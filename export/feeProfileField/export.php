@@ -210,18 +210,24 @@ function export_report($report)
 }
 
 /**
-*  @param old is the array of fees payments read in from json decoded fees field
-*  @param new is the new fee payment array built from the report
+*  @param old is the array of fees payments arrays read in from json decoded fees field
+*  @param new_fees is the new fee payment array built from the report
 *  @return key index of old which matches new. If no match set key to -1
 *
 */
-function fees_payment_exists($old, $new)
+function fees_payment_exists(array $old, array $new_fees):int
 {
     // check to see if new fees payment already exists in the existing fees payments array
-    // it already exists if all elements match. If exists then return true, if not false.
+    // it already exists if desired elements match. If exists then return true, if not false.
+    // present grade d/c and status of old fees should be not paid
     foreach ($old AS $key => $fees)
     {
-        if ($fees == $new)
+        if ($fees['ay']             == $new_fees['ay']              &&
+            $fees['fees_for']       == $new_fees['fees_for']        &&
+        //  $fees['amount']         == $new_fees['amount']          &&
+        //  $fees['present_grade']  == $new_fees['present_grade']   &&
+            $fees['payee']          == $new_fees['payee']               &&
+            $fees['status']         == 'not paid'                               )
         {
             return $key;
         }

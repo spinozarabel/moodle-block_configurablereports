@@ -73,7 +73,7 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_admin', 'LDAP Admin',
                     'cn=admin,dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_password', 'LDAP Admin Password',
+	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_password', 'LDAP Admin Password',
                     'Enter password for LDAP Admin Account', '', PARAM_RAW, 40));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree',

@@ -79,7 +79,7 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree',
                     'dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
     // added setting for URL of published google CSV containing grade mapping and fees
-    $settings->add(new admin_setting_configtext('block_configurable_reports/googlesheeturl', 'URL of published CSV',
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/googlesheeturl', 'URL of published CSV',
                     'Enter full path of published Google CSV containing grades vs fees', '', PARAM_URL, 80));
     // setting to control if we want to update user profile field fees
     $settings->add(new admin_setting_configcheckbox('block_configurable_reports/update_profile_fees', 'Check for YES',

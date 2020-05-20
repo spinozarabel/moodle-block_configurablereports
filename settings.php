@@ -67,7 +67,7 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configtext('block_configurable_reports/pg_api_secret_site2', 'Payment Gateway VAs API Secret for Site2',
                     'Enter API Secret of Payment Gateway for VAs for Site2', '', PARAM_RAW, 80));
 
-	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_server', 'LDAP URL',
+	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_server', 'LDAP URL',
                     'ldaps://example.com', '', PARAM_RAW, 40));
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_admin', 'LDAP Admin',

@@ -26,7 +26,7 @@
 function export_report($report) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/csvlib.class.php');
-	
+
 
     $table    = $report->table;
     $matrix   = array();
@@ -60,7 +60,7 @@ $flag_del_simulate		=	  true;
 $flag_mod_users			= 	false;			# this allows users's LDAP attributes to be updated to that in the CSV file
 $flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
-$flag_pw_encrypt      	=   true;
+$flag_pw_encrypt      	=   false;
 // get the following data from the config settings of this block
 $ldapserver 			= 	get_config('block_configurable_reports', 'ldap_server'); 	// 'ldaps://example.com'
 $ldapuser   			= 	get_config('block_configurable_reports', 'ldap_admin');  	// 'cn=admin,dc=example,dc=edu,dc=in'

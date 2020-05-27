@@ -57,7 +57,7 @@ $flag_del_simulate		=	  false;
 // the following flags control actual (not simulated) operations
 $flag_mod_users			= 	true;			# this allows users's LDAP attributes to be updated to that in the CSV file
 $flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
-$flag_delete_users 		= 	true ;			# This allows the code to delete LDAP users that don't exist in the CSV file
+$flag_delete_users 		= 	false ;			# This allows the code to delete LDAP users that don't exist in the CSV file
 $flag_pw_encrypt      	=   false;
 // get the following data from the config settings of this block
 $ldapserver 			= 	get_config('block_configurable_reports', 'ldap_server'); 	// 'ldaps://example.com'

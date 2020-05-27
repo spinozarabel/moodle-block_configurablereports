@@ -24,10 +24,17 @@ Admin Report: Custom SQL queries
 http://moodle.org/mod/data/view.php?d=13&rid=2884
 By Tim Hunt
 
-Madhu's version history
+Madhu's version history:
 - Added Messaging capability (as opposed to just send email capability in stock)
-- Added Synchronization of accounts to my LDAP server using export csv code mods
-- Added Synchronization of accounts at Razorpay.com for virtual accounts using CSV export mods
+Following new plugins have been added as export options
+- sim: Added Simulation of Synchronization of accounts to LDAP server specified
+- sync: Added Actual full 2-way Synchronization of accounts to LDAP server specified
+- AddCashFreSim: Simulated Synchronization of accounts at cashfree.com for 2 VA's specified
+- AddCashFreeSync: Actual (Add Only) one-way Synchronization of accounts at Cashfree.com for 2 VS's specified.
+                   Accounts at cashfree.com are synchronized using SriToni directory as reference, Add only
+- feeProfileField: Reads data from a Google CSV and writes data to user's fee profile field
+- branch is 36_cashfree_fees
+- 36 stands for Moodle COnfig Reports master version. Cashfree referes to cashfree.com, fees refers to user profile field
 
 VERSIONS HISTORY
 

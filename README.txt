@@ -33,6 +33,7 @@ Following new plugins have been added as export options
 - AddCashFreeSync: Actual (Add Only) one-way Synchronization of accounts at Cashfree.com for 2 VS's specified.
                    Accounts at cashfree.com are synchronized using SriToni directory as reference, Add only
 - feeProfileField: Reads data from a Google CSV and writes data to user's fee profile field
+- Added config settings to control delete and mod LDPA users during Sync
 - branch is 36_cashfree_fees_txtpw
 - 36 stands for Moodle Config Reports master version. Cashfree referes to cashfree.com, fees refers to user profile field
   txtpw refers to LDAP userPassword is in plain text, not SHA1 64 encoded as before.

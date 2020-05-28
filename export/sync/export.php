@@ -54,11 +54,13 @@ function export_report($report) {
 // the following 3 flags control simulation or actual operation
 $flag_add_simulate 		=	  false;
 $flag_del_simulate		=	  false;
-// the following flags control actual (not simulated) operations
-$flag_mod_users			= 	true;			# this allows users's LDAP attributes to be updated to that in the CSV file
-$flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
-$flag_delete_users 		= 	false ;			# This allows the code to delete LDAP users that don't exist in the CSV file
+// Set LDAP userpassword encryption to plain text. TRUE will set it to SHA1 and base64 encode
 $flag_pw_encrypt      	=   false;
+// Flags to control Deletion and Modification of LDAP users' data during SYNC
+$flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
+$flag_mod_users			= 	get_config('block_configurable_reports', 'flag_mod_users');
+$flag_delete_users 		= 	get_config('block_configurable_reports', 'flag_delete_users');
+
 // get the following data from the config settings of this block
 $ldapserver 			= 	get_config('block_configurable_reports', 'ldap_server'); 	// 'ldaps://example.com'
 $ldapuser   			= 	get_config('block_configurable_reports', 'ldap_admin');  	// 'cn=admin,dc=example,dc=edu,dc=in'

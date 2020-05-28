@@ -48,7 +48,7 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtext('block_configurable_reports/reportlimit', get_string('reportlimit', 'block_configurable_reports'),
         get_string('reportlimitinfo', 'block_configurable_reports'), '5000', PARAM_INT, 6));
 
-// Following added by MA 04/29/2019, added site generalization 10/19/2019
+// Settings for Payment Sites
     $settings->add(new admin_setting_configcheckbox('block_configurable_reports/production', 'Check for Production, uncheck for TEST mode',
         'Check for Production, leave unchecked for TEST', 1));
 	$settings->add(new admin_setting_configtext('block_configurable_reports/site_names', 'Payment Site Names',
@@ -67,6 +67,7 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/pg_api_secret_site2', 'Payment Gateway VAs API Secret for Site2',
                     'Enter API Secret of Payment Gateway for VAs for Site2', '', PARAM_RAW, 80));
 
+    // LDAP settings
 	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_server', 'LDAP URL',
                     'ldaps://example.com', '', PARAM_RAW, 40));
 
@@ -78,6 +79,14 @@ if ($ADMIN->fulltree) {
 
 	$settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree',
                     'dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
+        // setting to control deletion of LDAP users doing LDAP Sync
+    $settings->add(new admin_setting_configcheckbox('block_configurable_reports/flag_delete_users', 'Check for YES',
+        'Check box to delete LDAP users during Sync, leave unchecked NOT to delete LDAP users during Sync', 1));
+        // setting to control Modification of LDAP users doing LDAP Sync
+    $settings->add(new admin_setting_configcheckbox('block_configurable_reports/flag_mod_users', 'Check for YES',
+        'Check box to Modify Existing LDAP users during Sync, leave unchecked to NOT Modify LDAP users during Sync', 1));
+
+
     // added setting for URL of published google CSV containing grade mapping and fees
     $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/googlesheeturl', 'URL of published CSV',
                     'Enter full path of published Google CSV containing grades vs fees', '', PARAM_URL, 80));

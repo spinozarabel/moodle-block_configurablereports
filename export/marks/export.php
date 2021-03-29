@@ -55,6 +55,11 @@ function export_report($report) {
     // for example Math Grade 8B will become Mathematics, etc.
     foreach ($matrix as $row_index => $row)
     {
+      // skip this for header row0
+      if ($row_index == 0)
+      {
+        continue;
+      }
       // get the subject name from key subject. Look up the mapping
       $subject = get_name_of_subject($matrix[$row_index]["subject"]);
 

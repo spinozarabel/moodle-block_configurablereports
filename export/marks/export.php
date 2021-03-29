@@ -48,15 +48,12 @@ function export_report($report) {
     }
     //---Start of additional code to process matrix array for marks CSV export->
     // 1st we add the new column header to the 0th header row
-    $matrix[0]["letter_grade"] = "letter_grade";
+    $matrix[0][7] = "letter_grade";
 
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string
     // for example Math Grade 8B will become Mathematics, etc.
 
-    error_log(print_r($matrix[1], true));
-    error_log(print_r($matrix[2], true));
-    return;
     foreach ($matrix as $row_index => $row)
     {
       // skip this for header row0
@@ -66,16 +63,17 @@ function export_report($report) {
       }
 
 
-      $subject_description = $matrix[$row_index]["subject"];
+      $subject_description = $matrix[$row_index][5];
 
       // get the subject name from key subject. Look up the mapping
       $subject = get_name_of_subject($subject_description);
 
+      $matrix[$row_index][5] = $subject;
 
-      $markspercentage = $row["markspercentage"];
+      $markspercentage = $row[6];
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
-      $matrix[$row_index]["letter_grade"] = get_lettergrade($subject, $markspercentage);
+      $matrix[$row_index][7] = get_lettergrade($subject, $markspercentage);
     }
 
 

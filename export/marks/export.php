@@ -55,6 +55,8 @@ function export_report($report) {
     // for example Math Grade 8B will become Mathematics, etc.
 
     error_log(print_r($matrix[1], true));
+    error_log(print_r($matrix[2], true));
+    return;
     foreach ($matrix as $row_index => $row)
     {
       // skip this for header row0

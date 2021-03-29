@@ -54,7 +54,7 @@ function export_report($report) {
     // while we are at it, let's replace the subject string with the required marks card string
     // for example Math Grade 8B will become Mathematics, etc.
 
-    error_log(print_r($matrix[1]), true);
+    error_log(print_r($matrix[1], true));
     foreach ($matrix as $row_index => $row)
     {
       // skip this for header row0

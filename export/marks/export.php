@@ -60,8 +60,13 @@ function export_report($report) {
       {
         continue;
       }
+
+      $subject_description = $matrix[$row_index]["subject"];
+
       // get the subject name from key subject. Look up the mapping
-      $subject = get_name_of_subject($matrix[$row_index]["subject"]);
+      $subject = get_name_of_subject($subject_description);
+      error_log("description: $subject_description, Changed to: $subject");
+
 
       $markspercentage = $matrix[$row_index]["markspercentage"];
 

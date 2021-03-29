@@ -150,6 +150,10 @@ function get_lettergrade($subject, $markspercentage)
             return "C";
           break;
 
+          case ($markspercentage < 70 && $markspercentage >= 30):
+            return "D";
+          break;
+
           default:
             return "F";
           break;
@@ -208,6 +212,14 @@ function get_name_of_subject($subject_description)
 
     case (stripos($subject_description, 'Psychology') !== false):
       return "Psychology";
+    break;
+
+    case (stripos($subject_description, 'Hindi') !== false):
+      return "Hindi";
+    break;
+
+    case (stripos($subject_description, 'French') !== false):
+      return "French";
     break;
 
     default:

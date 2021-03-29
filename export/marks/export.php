@@ -53,6 +53,8 @@ function export_report($report) {
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string
     // for example Math Grade 8B will become Mathematics, etc.
+
+    error_log(print_r($matrix[1]), true);
     foreach ($matrix as $row_index => $row)
     {
       // skip this for header row0
@@ -61,14 +63,14 @@ function export_report($report) {
         continue;
       }
 
+
       $subject_description = $matrix[$row_index]["subject"];
 
       // get the subject name from key subject. Look up the mapping
       $subject = get_name_of_subject($subject_description);
-      error_log("description: $subject_description, Changed to: $subject");
 
 
-      $markspercentage = $matrix[$row_index]["markspercentage"];
+      $markspercentage = $row["markspercentage"];
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
       $matrix[$row_index]["letter_grade"] = get_lettergrade($subject, $markspercentage);

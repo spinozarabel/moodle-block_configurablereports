@@ -66,16 +66,18 @@ function export_report($report) {
 
       $markspercentage      = $row[6];
 
-      // get the subject name and letter as it must appear in marks card
-      $subject_letter = get_subjectandletter($subject_description, $markspercentage);
+      $section              = $row[4];
 
-      error_log(print_r($subject_letter,true));
+      // get the subject name and letter as it must appear in marks card
+      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage, $section);
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
       $matrix[$row_index][5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
-      $matrix[$row_index][7] = $subject_letter[1]; // letter grade based on subject and custom letter grade ranges
+      $matrix[$row_index][7] = $subject_letter[1]; // dynamic letter grade, new column added
+      $matrix[$row_index][8] = $subject_letter[2]; // sort order for listing. New column added
     }
+
 
     //---end of additional code to process matrix array for marks CSV export--->
 
@@ -92,9 +94,10 @@ function export_report($report) {
 /**
 **  @param string:$subject_description - holds the full subject description derived from course title
 **  @param integer:$markspercentage - is the percentage marks for this siubject
+**  @param string:$section - this is the class and section, for example: 8B
 **  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
 */
-function get_subjectandletter($subject_description, $markspercentage):array
+function get_subjectname_letter_order($subject_description, $markspercentage, $section):array
 {
   switch (true)
   {
@@ -107,7 +110,10 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["English", get_letter($markspercentage, $a)];
+
+        $subject_listing  = "English";
+        $sort_order       = 1;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Kannada') !== false):
@@ -118,7 +124,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["2nd Language - Kannada", get_letter($markspercentage, $a)];
+        $subject_listing  = "2nd Language - Kannada";
+        $sort_order       = 2;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Math') !== false):
@@ -129,7 +137,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Mathematics", get_letter($markspercentage, $a)];
+        $subject_listing  = "Mathematics";
+        $sort_order       = 3;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Physics') !== false):
@@ -140,7 +150,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Physics", get_letter($markspercentage, $a)];
+        $subject_listing  = "Physics";
+        $sort_order       = 4;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Biology') !== false):
@@ -151,7 +163,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Biology", get_letter($markspercentage, $a)];
+        $subject_listing  = "Biology";
+        $sort_order       = 5;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Chemistry') !== false):
@@ -162,7 +176,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Chemistry", get_letter($markspercentage, $a)];
+        $subject_listing  = "Chemistry";
+        $sort_order       = 5;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Computer Science') !== false):
@@ -173,7 +189,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Computer Science", get_letter($markspercentage, $a)];
+            $subject_listing  = "Computer Science";
+            $sort_order       = 6;
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Computer Studies') !== false):
@@ -184,7 +202,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Computer Studies", get_letter($markspercentage, $a)];
+        $subject_listing  = "Computer Studies";
+        $sort_order       = 7;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Hindi') !== false):
@@ -195,7 +215,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Hindi", get_letter($markspercentage, $a)];
+            $subject_listing  = "Hindi";
+            $sort_order       = 8;
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'French') !== false):
@@ -206,7 +228,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["French", get_letter($markspercentage, $a)];
+            $subject_listing  = "French";
+            $sort_order       = 9;
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Economics') !== false):
@@ -217,7 +241,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Economics", get_letter($markspercentage, $a)];
+            $subject_listing  = "Economics";
+            $sort_order       = 10;
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Sociology') !== false):
@@ -228,7 +254,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Sociology", get_letter($markspercentage, $a)];
+        $subject_listing  = "Sociology";
+        $sort_order       = 11;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     case (stripos($subject_description, 'Psychology') !== false):
@@ -239,7 +267,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Psychology", get_letter($markspercentage, $a)];
+        $subject_listing  = "Psychology";
+        $sort_order       = 12;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
     case (stripos($subject_description, 'History') !== false):
         $a = [
@@ -249,7 +279,9 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["History", get_letter($markspercentage, $a)];
+        $subject_listing  = "History";
+        $sort_order       = 13;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
     case (stripos($subject_description, 'Geography') !== false):
         $a = [
@@ -259,12 +291,14 @@ function get_subjectandletter($subject_description, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Geography", get_letter($markspercentage, $a)];
+            $subject_listing  = "Geography";
+            $sort_order       = 14;
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     default:
         // for all unknown subject mappings. Don't bother with letter grade derivation
-        return [$subject_description, "Z"];
+        return [$subject_description, "Z", 100];
 
   }
 }

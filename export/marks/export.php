@@ -73,8 +73,8 @@ function export_report($report) {
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
-      $row[5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
-      $row[7] = $subject_letter[1]; // letter grade based on subject and custom letter grade ranges
+      $matrix[$row_index][5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
+      $matrix[$row_index][7] = $subject_letter[1]; // letter grade based on subject and custom letter grade ranges
     }
 
     //---end of additional code to process matrix array for marks CSV export--->

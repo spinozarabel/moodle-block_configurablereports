@@ -56,9 +56,9 @@ function export_report($report) {
 
     foreach ($matrix as $row_index => $row)
     {
-      // skip this for header row0
       if ($row_index == 0)
       {
+        // skip this loop for header row0
         continue;
       }
 
@@ -67,11 +67,11 @@ function export_report($report) {
       $markspercentage      = $row[6];
 
       // get the subject name and write it back to matrix data
-      $matrix[$row_index][5] = get_subjectandletter($subject_description, $markspercentage)[0];
+      $row[5] = get_subjectandletter($subject_description, $markspercentage)[0];
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
-      $matrix[$row_index][7] = get_subjectandletter($subject_description, $markspercentage)[1];
+      $row[7] = get_subjectandletter($subject_description, $markspercentage)[1];
     }
 
     //---end of additional code to process matrix array for marks CSV export--->
@@ -87,11 +87,11 @@ function export_report($report) {
 }
 
 /**
-**  @param string:$subject - holds the full subject description derived from course title
+**  @param string:$subject_description - holds the full subject description derived from course title
 **  @param integer:$markspercentage - is the percentage marks for this siubject
 **  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
 */
-function get_subjectandletter($subject, $markspercentage):array
+function get_subjectandletter($subject_description, $markspercentage):array
 {
   switch ($true)
   {
@@ -256,7 +256,7 @@ function get_subjectandletter($subject, $markspercentage):array
               ["D", 69,   60]    // D
             ];
 
-        return ["Geography", get_letter($markspercentage, $a)]; 
+        return ["Geography", get_letter($markspercentage, $a)];
 
 
     default:

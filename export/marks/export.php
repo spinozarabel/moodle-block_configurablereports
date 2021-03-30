@@ -69,6 +69,8 @@ function export_report($report) {
       // get the subject name and letter as it must appear in marks card
       $subject_letter = get_subjectandletter($subject_description, $markspercentage);
 
+      error_log(print_r($subject_letter,true));
+
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
       $row[5] = $subject_letter[0]; // subject name as in marks card based on course description mapping

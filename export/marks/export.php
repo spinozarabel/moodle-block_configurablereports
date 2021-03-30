@@ -62,20 +62,17 @@ function export_report($report) {
         continue;
       }
 
+      $subject_description  = $row[5];
 
-      $subject_description = $matrix[$row_index][5];
+      $markspercentage      = $row[6];
 
-      // get the subject name from key subject. Look up the mapping
-      $subject = get_name_of_subject($subject_description);
+      // get the subject name and write it back to matrix data
+      $matrix[$row_index][5] = get_subjectandletter($subject_description, $markspercentage)[0];
 
-      $matrix[$row_index][5] = $subject;
-
-      $markspercentage = $row[6];
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
-      $matrix[$row_index][7] = get_lettergrade($subject, $markspercentage);
+      $matrix[$row_index][7] = get_subjectandletter($subject_description, $markspercentage)[1];
     }
-
 
     //---end of additional code to process matrix array for marks CSV export--->
 
@@ -89,141 +86,209 @@ function export_report($report) {
     exit;
 }
 
-function get_lettergrade($subject, $markspercentage)
+/**
+**  @param string:$subject - holds the full subject description derived from course title
+**  @param integer:$markspercentage - is the percentage marks for this siubject
+**  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
+*/
+function get_subjectandletter($subject, $markspercentage):array
 {
-  switch ($subject)
+  switch ($true)
   {
-    case ("English"):
-      switch (true)
-        {
-          case ($markspercentage <= 100 && $markspercentage >= 90):
-            return "A";
-          break;
+    case (stripos($subject_description, 'English') !== false):
+        // subject description contains the word English. So return English, with the derived letter grade
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
 
-          case ($markspercentage < 90 && $markspercentage >= 80):
-            return "B";
-          break;
+        return ["English", get_letter($markspercentage, $a)];
 
-          case ($markspercentage < 80 && $markspercentage >= 70):
-            return "C";
-          break;
 
-          default:
-            return "F";
-          break;
-        }
-      break;
+    case (stripos($subject_description, 'Kannada') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
 
-      case ("2nd Language - Kannada"):
-        switch (true)
-          {
-            case ($markspercentage <= 100 && $markspercentage >= 90):
-              return "A";
-            break;
+        return ["2nd Language - Kannada", get_letter($markspercentage, $a)];
 
-            case ($markspercentage < 90 && $markspercentage >= 80):
-              return "B";
-            break;
 
-            case ($markspercentage < 80 && $markspercentage >= 70):
-              return "C";
-            break;
+    case (stripos($subject_description, 'Math') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
 
-            default:
-              return "F";
-            break;
-          }
-        break;
+        return ["Mathematics", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Physics') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Physics", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Biology') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Biology", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Chemistry') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Chemistry", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Computer Science') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Computer Science", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Computer Studies') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Computer Studies", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Hindi') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Hindi", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'French') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["French", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Economics') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Economics", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Sociology') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Sociology", get_letter($markspercentage, $a)];
+
+
+    case (stripos($subject_description, 'Psychology') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Psychology", get_letter($markspercentage, $a)];
+
+    case (stripos($subject_description, 'History') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["History", get_letter($markspercentage, $a)];
+
+    case (stripos($subject_description, 'Geography') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        return ["Geography", get_letter($markspercentage, $a)]; 
+
 
     default:
-      switch (true)
-        {
-          case ($markspercentage <= 100 && $markspercentage >= 90):
-            return "A";
-          break;
+        // for all unknown subject mappings. Don't bother with letter grade derivation
+        return [$subject_description, "Z"];
 
-          case ($markspercentage < 90 && $markspercentage >= 80):
-            return "B";
-          break;
-
-          case ($markspercentage < 80 && $markspercentage >= 70):
-            return "C";
-          break;
-
-          case ($markspercentage < 70 && $markspercentage >= 30):
-            return "D";
-          break;
-
-          default:
-            return "F";
-          break;
-        }
-    break;
   }
 }
 
-function get_name_of_subject($subject_description)
+
+/**
+**  @param integer:$markspercentage
+**  @param array:$a example:
+**      $a = [
+**            ["A", 100,  90],   // A
+**            ["B", 89,   80],   // B
+**            ["C", 79,   70],   // C
+**            ["D", 69,   60]    // D
+**          ];
+*/
+function get_letter($markspercentage, $a):string
 {
-  switch (true)
+  // llop through each range for the letter grade
+  foreach ($a as $i => $range)
   {
-    case (stripos($subject_description, 'Math') !== false):
-      return "Mathematics";
-    break;
+      // assign this range letter grade if falls in this range
+      if ($markspercentage <= $range[1] && $markspercentage >= $range[2])
+      {
+          return $range[0];
+      }
 
-    case (stripos($subject_description, 'English') !== false):
-      return "English";
-    break;
-
-    case (stripos($subject_description, 'Kannada') !== false):
-      return "2nd Language - Kannada";
-    break;
-
-    case (stripos($subject_description, 'Physics') !== false):
-      return "Physics";
-    break;
-
-    case (stripos($subject_description, 'Chemistry') !== false):
-      return "Chemistry";
-    break;
-
-    case (stripos($subject_description, 'Biology') !== false):
-      return "Biology";
-    break;
-
-    case (stripos($subject_description, 'computer') !== false):
-      return "Computer Studies";
-    break;
-
-    case (stripos($subject_description, 'History') !== false):
-      return "History";
-    break;
-
-    case (stripos($subject_description, 'Geography') !== false):
-      return "Geography";
-    break;
-
-    case (stripos($subject_description, 'Economics') !== false):
-      return "Economics";
-    break;
-
-    case (stripos($subject_description, 'Sociology') !== false):
-      return "Sociology";
-      break;
-
-    case (stripos($subject_description, 'Psychology') !== false):
-      return "Psychology";
-    break;
-
-    case (stripos($subject_description, 'Hindi') !== false):
-      return "Hindi";
-    break;
-
-    case (stripos($subject_description, 'French') !== false):
-      return "French";
-    break;
-
-    default:
-      return $subject_description;
-    break;
   }
+  // uncaught case so return exception letter grade
+  return "Z";
 }

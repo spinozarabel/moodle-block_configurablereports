@@ -49,6 +49,7 @@ function export_report($report) {
     //---Start of additional code to process matrix array for marks CSV export->
     // 1st we add the new column header to the 0th header row
     $matrix[0][7] = "letter_grade";
+    $matrix[0][8] = "sort_order";
 
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string

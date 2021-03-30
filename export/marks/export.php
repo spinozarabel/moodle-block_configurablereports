@@ -94,7 +94,7 @@ function export_report($report) {
 */
 function get_subjectandletter($subject_description, $markspercentage):array
 {
-  switch ($true)
+  switch (true)
   {
     case (stripos($subject_description, 'English') !== false):
         // subject description contains the word English. So return English, with the derived letter grade

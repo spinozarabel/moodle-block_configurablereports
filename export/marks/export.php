@@ -66,12 +66,13 @@ function export_report($report) {
 
       $markspercentage      = $row[6];
 
-      // get the subject name and write it back to matrix data
-      $row[5] = get_subjectandletter($subject_description, $markspercentage)[0];
+      // get the subject name and letter as it must appear in marks card
+      $subject_letter = get_subjectandletter($subject_description, $markspercentage);
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
-      $row[7] = get_subjectandletter($subject_description, $markspercentage)[1];
+      $row[5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
+      $row[7] = $subject_letter[1]; // letter grade based on subject and custom letter grade ranges
     }
 
     //---end of additional code to process matrix array for marks CSV export--->

@@ -375,7 +375,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
 
 
     // Economics
-    case (stripos($subject_description, 'Economics') !== false):
+    case (stripos($subject_description, 'Econom') !== false):
         $a = [
               ["A", 100,  90],   // A
               ["B", 89,   80],   // B
@@ -385,7 +385,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
 
         foreach ($subjects_official_list as $key => $subject)
         {
-          if (stripos($subject, 'Economics') !== false)
+          if (stripos($subject, 'Econom') !== false)
           {
             // we found our element.
             $subject_listing  = $subject;
@@ -466,12 +466,157 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Business
+    case (stripos($subject_description, 'Business') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Business') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Art and Design
+    case (stripos($subject_description, 'Art and Design') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Art and Design') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Music
+    case (stripos($subject_description, 'Music') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Music') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+
+    // Music
+    case (stripos($subject_description, 'Environment') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Environment') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+        // Physical Education
+        case (stripos($subject_description, 'Physical Education') !== false):
+            $a = [
+                  ["A", 100,  90],   // A
+                  ["B", 89,   80],   // B
+                  ["C", 79,   70],   // C
+                  ["D", 69,   60]    // D
+                ];
+
+            foreach ($subjects_official_list as $key => $subject)
+            {
+              if (stripos($subject, 'Physical Education') !== false)
+              {
+                // we found our element.
+                $subject_listing  = $subject;
+                $sort_order       = $key;
+                // get out of loop
+                break;
+              }
+            }
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+
+    // Accounts
+    case (stripos($subject_description, 'Account') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Account') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+        
+
+
     default:
-        // for all unknown subject mappings. Don't bother with letter grade derivation
+        // for all unknown subject mappings. Just return the original with a fixed grade letter and list at end
         return [$subject_description, "Z", 100];
 
-  }
-}
+  }     // switch end
+
+
+}       // function end
 
 
 /**
@@ -550,4 +695,4 @@ function csv_to_associative_array($file, $delimiter = ',', $enclosure = '"')
         fclose($handle);
         return $lines;
 	}
-}
+}      // function end

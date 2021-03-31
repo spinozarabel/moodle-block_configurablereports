@@ -47,6 +47,22 @@ function export_report($report) {
         }
     }
     //---Start of additional code to process matrix array for marks CSV export->
+
+    //1st we read in the google csv published file containing the subjects sort order
+    $googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
+  	if (empty($googlesheeturl))
+      {
+          echo nl2br("Empty config setting for Google Published CSV file URL, please set in config: "  . "\n");
+  		    error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
+          return;
+      }
+    // this lists the subjects columnwise, with header being classsection.
+    // Classsection is to be contained in every subject course name to be included in marks report
+    $subjects_sortorder = csv_to_associative_array($googlesheeturl);
+
+
+
+
     // 1st we add the new column header to the 0th header row
     $matrix[0][7] = "letter_grade";
     $matrix[0][8] = "sort_order";
@@ -69,8 +85,8 @@ function export_report($report) {
 
       $section              = $row[4];
 
-      // get the subject name and letter as it must appear in marks card
-      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage, $section);
+      // get the subject name and letter and order as it must appear in marks card
+      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage, $section, $subjects_sortorder);
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
@@ -98,12 +114,16 @@ function export_report($report) {
 **  @param string:$class_section - this is the class and section, for example: 8B
 **  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
 */
-function get_subjectname_letter_order($subject_description, $markspercentage, $class_section):array
+function get_subjectname_letter_order($subject_description, $markspercentage, $class_section, $subjects_sortorder):array
 {
+  // get the subject listed in order corresponding to our classsection from the $subjects_sortorder from google csv file
+  // this will have for example: ["8B", "English", "Hindi",...etc]
+  $subjects_official_list = arrray_column($subjects_sortorder, $class_section);
   switch (true)
   {
-    case (stripos($subject_description, 'English') !== false):
-        // subject description contains the word English. So return English, with the derived letter grade
+    case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):
+        // subject description contains the word English but not Literature
+        // lets look up the element in the sort order containing this word.
         $a = [
               ["A", 100,  90],
               ["B", 89,   80],
@@ -111,33 +131,23 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]
             ];
 
-        switch(true)
+        foreach ($subjects_official_list as $key => $subject)
         {
-          case(stripos($class_section, '8') !== false):
-            $subject_listing  = "English";
-          break;
-
-          case(stripos($class_section, '9B')  !== false):
-          case(stripos($class_section, '9W')  !== false):
-          case(stripos($class_section, '10B') !== false):
-          case(stripos($class_section, '11') !== false):
-          case(stripos($class_section, '12') !== false):
-            $subject_listing  = "English Language";
-          break;
-
-          case(stripos($class_section, '9Y') !== false):
-            $subject_listing  = "First Language English";
-          break;
-
-          default:
-            $subject_listing  = "English";
-          break;
+          if (stripos($subject, 'English') !== false && stripos($subject, 'Literature') === false)
+          {
+            // we found our subject: English, not literature in english
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
         }
 
-        $sort_order       = 10;
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-    case (stripos($subject_description, 'English Literature') !== false):
+
+    // Literature in English
+    case (stripos($subject_description, 'Literature') !== false  && stripos($subject_description, 'English') !== false):
         $a = [
               ["A", 100,  90],   // A
               ["B", 89,   80],   // B
@@ -145,19 +155,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Literature in English";
-        if (stripos($class_section, '9Y') !== false)
+        foreach ($subjects_official_list as $key => $subject)
         {
-          $sort_order       = 80;
-        }
-        else
-        {
-          $sort_order       = 20;
+          if (stripos($subject, 'Literature') !== false && stripos($subject, 'English') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
         }
 
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-
+    // Hindi
     case (stripos($subject_description, 'Hindi') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -166,20 +178,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        switch(true)
+        foreach ($subjects_official_list as $key => $subject)
         {
-          case(stripos($class_section, '9Y') !== false):
-            $subject_listing  = "Hindi as a Second Language";
-          break;
-
-          default:
-            $subject_listing  = "Hindi";
-          break;
+          if (stripos($subject, 'Hindi') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
         }
-        $sort_order       = 30;
+
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-
+    // Kannada
     case (stripos($subject_description, 'Kannada') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -188,11 +201,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Kannada";
-        $sort_order       = 40;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Kannada') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-
+    // French
     case (stripos($subject_description, 'French') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -201,11 +224,20 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "French";
-        $sort_order       = 50;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'French') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-
+    // History
     case (stripos($subject_description, 'History') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -214,11 +246,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "History";
-        $sort_order       = 70;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'History') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Mathematics
     case (stripos($subject_description, 'Math') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -227,11 +269,20 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Mathematics";
-        $sort_order       = 3;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Math') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-
+    // Physics
     case (stripos($subject_description, 'Physics') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -240,11 +291,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Physics";
-        $sort_order       = 4;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Physics') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Biology
     case (stripos($subject_description, 'Biology') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -253,11 +314,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Biology";
-        $sort_order       = 5;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Biology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Chemistry
     case (stripos($subject_description, 'Chemistry') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -266,12 +337,22 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Chemistry";
-        $sort_order       = 5;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Chemistry') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
-    case (stripos($subject_description, 'Computer Science') !== false):
+    // Computer Science / Computer Studies
+    case (stripos($subject_description, 'Computer') !== false):
         $a = [
               ["A", 100,  90],   // A
               ["B", 89,   80],   // B
@@ -279,24 +360,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-            $subject_listing  = "Computer Science";
-            $sort_order       = 6;
-            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
-
-
-    case (stripos($subject_description, 'Computer Studies') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
-
-        $subject_listing  = "Computer Studies";
-        $sort_order       = 7;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Computer') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Economics
     case (stripos($subject_description, 'Economics') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -305,11 +383,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-            $subject_listing  = "Economics";
-            $sort_order       = 10;
-            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Economics') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Sociology
     case (stripos($subject_description, 'Sociology') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -318,11 +406,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Sociology";
-        $sort_order       = 11;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Sociology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Psychology
     case (stripos($subject_description, 'Psychology') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -331,11 +429,21 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "Psychology";
-        $sort_order       = 12;
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Psychology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
+    // Geography
     case (stripos($subject_description, 'Geography') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -344,9 +452,18 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
               ["D", 69,   60]    // D
             ];
 
-            $subject_listing  = "Geography";
-            $sort_order       = 14;
-            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Geography') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
     default:
@@ -381,4 +498,56 @@ function get_letter($markspercentage, $a):string
   }
   // uncaught case so return exception letter grade
   return "Z";
+}
+
+
+/**
+ * This routine is attributed to https://github.com/rap2hpoutre/csv-to-associative-array
+  *
+ * The items in the 1st line (column headers) become the fields of the array
+ * each line of the CSV file is parsed into a sub-array using these fields
+ * The 1st index of the array is an integer pointing to these sub arrays
+ * The 1st row of the CSV file is ignored and index 0 points to 2nd line of CSV file
+ * This is the example data:
+ *
+ * grade1,grade2,grade3
+ * grade2,grade3,grade4
+ * 10000,20000,30000
+ *
+ * This is the associative array
+ * Array
+ *(
+ *  [0] => Array
+ *		(
+ *			[grade1] => grade2
+ *          [grade2] => grade3
+ *			[grade3] => grade4
+ *		)
+ *  [1] => Array
+ *      (
+ *          [grade1] => 10000
+ *          [grade2] => 20000
+ *          [grade3] => 30000
+ *      )
+ * )
+ */
+function csv_to_associative_array($file, $delimiter = ',', $enclosure = '"')
+{
+    if (($handle = fopen($file, "r")) !== false)
+    {
+        $headers = fgetcsv($handle, 0, $delimiter, $enclosure);
+        $lines = [];
+        while (($data = fgetcsv($handle, 0, $delimiter, $enclosure)) !== false)
+        {
+            $current = [];
+            $i = 0;
+            foreach ($headers as $header)
+            {
+                $current[$header] = $data[$i++];
+            }
+            $lines[] = $current;
+        }
+        fclose($handle);
+        return $lines;
+	}
 }

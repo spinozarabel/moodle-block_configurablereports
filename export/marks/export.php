@@ -118,7 +118,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
 {
   // get the subject listed in order corresponding to our classsection from the $subjects_sortorder from google csv file
   // this will have for example: ["8B", "English", "Hindi",...etc]
-  $subjects_official_list = arrray_column($subjects_sortorder, $class_section);
+  $subjects_official_list = array_column($subjects_sortorder, $class_section);
   switch (true)
   {
     case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):

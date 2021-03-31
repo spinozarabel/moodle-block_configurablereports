@@ -95,15 +95,49 @@ function export_report($report) {
 /**
 **  @param string:$subject_description - holds the full subject description derived from course title
 **  @param integer:$markspercentage - is the percentage marks for this siubject
-**  @param string:$section - this is the class and section, for example: 8B
+**  @param string:$class_section - this is the class and section, for example: 8B
 **  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
 */
-function get_subjectname_letter_order($subject_description, $markspercentage, $section):array
+function get_subjectname_letter_order($subject_description, $markspercentage, $class_section):array
 {
   switch (true)
   {
     case (stripos($subject_description, 'English') !== false):
         // subject description contains the word English. So return English, with the derived letter grade
+        $a = [
+              ["A", 100,  90],
+              ["B", 89,   80],
+              ["C", 79,   70],
+              ["D", 69,   60]
+            ];
+
+        switch(true)
+        {
+          case(stripos($class_section, '8') !== false):
+            $subject_listing  = "English";
+          break;
+
+          case(stripos($class_section, '9B')  !== false):
+          case(stripos($class_section, '9W')  !== false):
+          case(stripos($class_section, '10B') !== false):
+          case(stripos($class_section, '11') !== false):
+          case(stripos($class_section, '12') !== false):
+            $subject_listing  = "English Language";
+          break;
+
+          case(stripos($class_section, '9Y') !== false):
+            $subject_listing  = "First Language English";
+          break;
+
+          default:
+            $subject_listing  = "English";
+          break;
+        }
+
+        $sort_order       = 10;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    case (stripos($subject_description, 'English Literature') !== false):
         $a = [
               ["A", 100,  90],   // A
               ["B", 89,   80],   // B
@@ -111,9 +145,38 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $s
               ["D", 69,   60]    // D
             ];
 
+        $subject_listing  = "Literature in English";
+        if (stripos($class_section, '9Y') !== false)
+        {
+          $sort_order       = 80;
+        }
+        else
+        {
+          $sort_order       = 20;
+        }
 
-        $subject_listing  = "English";
-        $sort_order       = 1;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    case (stripos($subject_description, 'Hindi') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        switch(true)
+        {
+          case(stripos($class_section, '9Y') !== false):
+            $subject_listing  = "Hindi as a Second Language";
+          break;
+
+          default:
+            $subject_listing  = "Hindi";
+          break;
+        }
+        $sort_order       = 30;
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
@@ -125,8 +188,34 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $s
               ["D", 69,   60]    // D
             ];
 
-        $subject_listing  = "2nd Language - Kannada";
-        $sort_order       = 2;
+        $subject_listing  = "Kannada";
+        $sort_order       = 40;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    case (stripos($subject_description, 'French') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        $subject_listing  = "French";
+        $sort_order       = 50;
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    case (stripos($subject_description, 'History') !== false):
+        $a = [
+              ["A", 100,  90],   // A
+              ["B", 89,   80],   // B
+              ["C", 79,   70],   // C
+              ["D", 69,   60]    // D
+            ];
+
+        $subject_listing  = "History";
+        $sort_order       = 70;
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
@@ -208,32 +297,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $s
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
-    case (stripos($subject_description, 'Hindi') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
-
-            $subject_listing  = "Hindi";
-            $sort_order       = 8;
-            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
-
-
-    case (stripos($subject_description, 'French') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
-
-            $subject_listing  = "French";
-            $sort_order       = 9;
-            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
-
-
     case (stripos($subject_description, 'Economics') !== false):
         $a = [
               ["A", 100,  90],   // A
@@ -272,17 +335,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $s
         $sort_order       = 12;
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
-    case (stripos($subject_description, 'History') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
-
-        $subject_listing  = "History";
-        $sort_order       = 13;
-        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
     case (stripos($subject_description, 'Geography') !== false):
         $a = [

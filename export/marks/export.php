@@ -110,7 +110,18 @@ function export_report($report)
       {
         // we have not yet attempted to get possibly overridden letter grades for this $subject_courseid
         // so get the array if it exists. If not ause the sitewide default deletters array
-        $subject_letters_array_courseid[$subject_courseid] = get_subject_letter_array($subject_courseid) ?? $default_letters_array;
+        $temp_array = get_subject_letter_array($subject_courseid);
+
+        if (!empty($temp_array))
+        {
+          $subject_letters_array_courseid[$subject_courseid] = $temp_array;
+        }
+        else
+        {
+          $subject_letters_array_courseid[$subject_courseid] = $default_letters_array;
+        }
+
+
       }
 
       // get the subject name and letter and order as it must appear in marks card
@@ -144,16 +155,16 @@ function export_report($report)
 **  @param integer:$markspercentage - is the percentage marks for this siubject
 **  @param string:$class_section - this is the class and section, for example: 8B
 **  @param array:$subjects_sortorder derived from google sheet published as CSV
-**  @param array:$subject_letter_array_courseid is the letter_range_array indexed by courseid.
+**  @param array:$subject_letters_array_courseid is the letter_range_array indexed by courseid.
 **  @return array subject description as desired on marks card and letter grade and sort order for marks card ex: ["English", "A", 3]
 */
 function get_subjectname_letter_order($subject_description, $markspercentage,
                                       $class_section, $subjects_sortorder,
-                                      $subject_courseid, $subject_letter_array_courseid):array
+                                      $subject_courseid, $subject_letters_array_courseid):array
 {
 
   // get the overridden/default letter ranges for this course based on course id.
-  $a   = $subject_letter_array_courseid[$subject_courseid];
+  $a   = $subject_letters_array_courseid[$subject_courseid];
 
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
   $subjects_official_list = array_column($subjects_sortorder, $class_section);
@@ -549,7 +560,7 @@ function get_letter($markspercentage, $a):string
   foreach ($a as $i => $range)
   {
       // assign this range letter grade if falls in this range
-      if ($markspercentage <= ($range[1] - 0.01) && $markspercentage >= $range[2])
+      if ($markspercentage <= $range[1]  && $markspercentage >= $range[2])
       {
           return $range[0];
       }

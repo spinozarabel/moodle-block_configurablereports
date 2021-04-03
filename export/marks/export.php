@@ -549,7 +549,7 @@ function get_letter($markspercentage, $a):string
   foreach ($a as $i => $range)
   {
       // assign this range letter grade if falls in this range
-      if ($markspercentage <= $range[1] && $markspercentage >= $range[2])
+      if ($markspercentage <= ($range[1] - 0.01) && $markspercentage >= $range[2])
       {
           return $range[0];
       }

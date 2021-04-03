@@ -766,7 +766,7 @@ function get_subject_letter_array($subject_courseid):array
       }
       else
       {
-        $letter_range_array[$index][1] = $letter_range_array[$index+1][2];
+        $letter_range_array[$index][1] = $letter_range_array[$index-1][2];
       }
     }
 

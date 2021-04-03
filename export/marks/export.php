@@ -665,5 +665,5 @@ function get_subject_letter_array($subject_courseid):array
     return $letter_range_array;
   }
   error_log("using default letter array for courseid: $subject_courseid");
-  return null;
+  return [];
 }

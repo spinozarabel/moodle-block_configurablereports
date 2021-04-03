@@ -22,9 +22,10 @@
  * @date: 2009
  */
 
-function export_report($report) {
-    global $DB, $CFG;
+function export_report($report)
+{
     require_once($CFG->libdir . '/csvlib.class.php');
+
 
     $table = $report->table;
     $matrix = array();
@@ -47,6 +48,20 @@ function export_report($report) {
         }
     }
     //---Start of additional code to process matrix array for marks CSV export->
+    // define default grade array from site-wide letter ranges from SriToni
+    $default_letters = [
+                          ["A",   100,    93],
+                          ["A-",  92.99,  90],
+                          ["B+",  89.99,  87],
+                          ["B",   86.99,  83],
+                          ["B-",  82.99,  80],
+                          ["C+",  79.99,  77],
+                          ["C",   76.99,  73],
+                          ["C-",  72.99,  70],
+                          ["D+",  69.99,  67],
+                          ["D",   66.99,  60],
+                          ["F",   59.99,   0],
+                       ];
 
     //1st we read in the google csv published file containing the subjects sort order
     $googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
@@ -64,8 +79,8 @@ function export_report($report) {
 
 
     // 1st we add the new column header to the 0th header row
-    $matrix[0][7] = "letter_grade";
-    $matrix[0][8] = "sort_order";
+    $matrix[0][8] = "letter_grade";
+    $matrix[0][9] = "sort_order";
 
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string
@@ -79,20 +94,25 @@ function export_report($report) {
         continue;
       }
 
+      $subject_courseid     = $row[7];
+
       $subject_description  = $row[5];
 
       $markspercentage      = $row[6];
 
-      $section              = $row[4];
+      $class_section        = $row[4];
 
       // get the subject name and letter and order as it must appear in marks card
-      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage, $section, $subjects_sortorder);
+      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage,
+                                                     $class_section, $subjects_sortorder,
+                                                     $subject_courseid, $default_letters);
+
 
 
       // look up the dynamic letter_grade and put this value in the matrix data for export
       $matrix[$row_index][5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
-      $matrix[$row_index][7] = $subject_letter[1]; // dynamic letter grade, new column added
-      $matrix[$row_index][8] = $subject_letter[2]; // sort order for listing. New column added
+      $matrix[$row_index][8] = $subject_letter[1]; // dynamic letter grade, new column added
+      $matrix[$row_index][9] = $subject_letter[2]; // sort order for listing. New column added
     }
 
 
@@ -114,22 +134,31 @@ function export_report($report) {
 **  @param string:$class_section - this is the class and section, for example: 8B
 **  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
 */
-function get_subjectname_letter_order($subject_description, $markspercentage, $class_section, $subjects_sortorder):array
+function get_subjectname_letter_order($subject_description, $markspercentage,
+                                      $class_section, $subjects_sortorder,
+                                      $subject_courseid, $default_letters):array
 {
   // get the subject listed in order corresponding to our classsection from the $subjects_sortorder from google csv file
   // this will have for example: ["8B", "English", "Hindi",...etc]
+
+  // get the overridden letter ranges for this course based on course id
+  $subject_letter_array   = (array) get_subject_letter_array($subject_courseid);
+
+  if (empty($subject_letter_array))
+    {
+      error_log("using default letter array for courseid: $subject_courseid");
+      $a = $default_letters;
+    }
+
+  // based on the class cection, extract the column of subjects' officila list in their desired listing order
   $subjects_official_list = array_column($subjects_sortorder, $class_section);
+
+  // this row pertains to which subject? try to match to each subject and see the match
   switch (true)
   {
     case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):
-        // subject description contains the word English but not Literature
-        // lets look up the element in the sort order containing this word.
-        $a = [
-              ["A", 100,  90],
-              ["B", 89,   80],
-              ["C", 79,   70],
-              ["D", 69,   60]
-            ];
+        // subject description contains the word English but not Literature so this is the English subject course
+        // we need to determine the subject dependent letter grade if not alreay done and also its sort order
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -606,7 +635,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
         return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
 
 
-        
+
 
 
     default:
@@ -631,6 +660,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage, $c
 */
 function get_letter($markspercentage, $a):string
 {
+  return "XXX";
   // llop through each range for the letter grade
   foreach ($a as $i => $range)
   {
@@ -695,4 +725,37 @@ function csv_to_associative_array($file, $delimiter = ',', $enclosure = '"')
         fclose($handle);
         return $lines;
 	}
-}      // function end
+}      // function
+
+
+
+/**
+**    @param string:$subject_courseid is the course id of the subject which belongs to this row for this student
+**    @return array:$letter_range_array which consists of record id, followed by letter followed by lower boundary
+*/
+function get_subject_letter_array($subject_courseid):array
+{
+  global $DB, $CFG;
+
+  $letter_range_array = [];
+
+  $sql = "SELECT gl.*
+          FROM {grade_letters} gl
+            JOIN {context} ctx ON ctx.id = gl.contextid
+            JOIN {course} c ON c.id = ctx.instanceid
+                     WHERE c.id = {$subject_courseid}";
+  if ($letter_records = $DB->get_records_sql($sql))
+  {
+    // these overridden grade letter records do exist
+    foreach ($letter_records as $letter)
+    {
+      $letter_range_array[] = [$letter->id, $letter->letter, "upper boundary", $letter->lowerboundary];
+    }
+    unset($letter_records);
+  }
+  error_log("Letter range array for course id: $subject_courseid");
+  error_log(print_r($letter_range_array, true));
+
+  // lets massage this array to fill in the upper bound from previous record
+  return $letter_range_array;
+}

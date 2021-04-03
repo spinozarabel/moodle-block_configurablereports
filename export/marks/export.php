@@ -84,7 +84,7 @@ function export_report($report)
     $matrix[0][8] = "letter_grade";
     $matrix[0][9] = "sort_order";
 
-    $subject_letter_array_courseid = [];
+    $subject_letters_array_courseid = [];
 
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string
@@ -545,7 +545,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 */
 function get_letter($markspercentage, $a):string
 {
-  return "XXX";
   // llop through each range for the letter grade
   foreach ($a as $i => $range)
   {

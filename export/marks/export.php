@@ -755,7 +755,7 @@ function get_subject_letter_array($subject_courseid):array
         $letter_range_array[$index] = [$letter_record->letter, "upper bound", $letter_record->lowerboundary];
 
     }
-    unset($letter_records);
+
 
     // fill in the upper bound place holder
     foreach ($letter_records AS $index => $letter_record)
@@ -773,6 +773,7 @@ function get_subject_letter_array($subject_courseid):array
     error_log("overridden Letter range array for course id: $subject_courseid");
     error_log(print_r($letter_range_array, true));
 
+    unset($letter_records);
   }
 
   return $letter_range_array;

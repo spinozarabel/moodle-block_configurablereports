@@ -51,19 +51,19 @@ function export_report($report)
     }
     //---Start of additional code to process matrix array for marks CSV export->
     // define default grade array from site-wide letter ranges from SriToni
-    $default_letters = [
-                          ["A",   100,    93],
-                          ["A-",  92.99,  90],
-                          ["B+",  89.99,  87],
-                          ["B",   86.99,  83],
-                          ["B-",  82.99,  80],
-                          ["C+",  79.99,  77],
-                          ["C",   76.99,  73],
-                          ["C-",  72.99,  70],
-                          ["D+",  69.99,  67],
-                          ["D",   66.99,  60],
-                          ["F",   59.99,   0],
-                       ];
+    $default_letters_array = [
+                                ["A",   100,    93],
+                                ["A-",  92.99,  90],
+                                ["B+",  89.99,  87],
+                                ["B",   86.99,  83],
+                                ["B-",  82.99,  80],
+                                ["C+",  79.99,  77],
+                                ["C",   76.99,  73],
+                                ["C-",  72.99,  70],
+                                ["D+",  69.99,  67],
+                                ["D",   66.99,  60],
+                                ["F",   59.99,   0],
+                             ];
 
     //1st we read in the google csv published file containing the subjects sort order
     $googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
@@ -83,6 +83,8 @@ function export_report($report)
     // 1st we add the new column header to the 0th header row
     $matrix[0][8] = "letter_grade";
     $matrix[0][9] = "sort_order";
+
+    $subject_letter_array_courseid = [];
 
     // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
     // while we are at it, let's replace the subject string with the required marks card string
@@ -104,10 +106,17 @@ function export_report($report)
 
       $class_section        = $row[4];
 
+      if (empty($subject_letters_array_courseid[$subject_courseid]))
+      {
+        // we have not yet attempted to get possibly overridden letter grades for this $subject_courseid
+        // so get the array if it exists. If not ause the sitewide default deletters array
+        $subject_letters_array_courseid[$subject_courseid] = get_subject_letter_array($subject_courseid) ?? $default_letters_array;
+      }
+
       // get the subject name and letter and order as it must appear in marks card
       $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage,
                                                      $class_section, $subjects_sortorder,
-                                                     $subject_courseid, $default_letters);
+                                                     $subject_courseid, $subject_letters_array_courseid);
 
 
 
@@ -134,23 +143,17 @@ function export_report($report)
 **  @param string:$subject_description - holds the full subject description derived from course title
 **  @param integer:$markspercentage - is the percentage marks for this siubject
 **  @param string:$class_section - this is the class and section, for example: 8B
-**  @return array subject description as desired on marks card and letter grade for marks card ex: ["English", "A"]
+**  @param array:$subjects_sortorder derived from google sheet published as CSV
+**  @param array:$subject_letter_array_courseid is the letter_range_array indexed by courseid.
+**  @return array subject description as desired on marks card and letter grade and sort order for marks card ex: ["English", "A", 3]
 */
 function get_subjectname_letter_order($subject_description, $markspercentage,
                                       $class_section, $subjects_sortorder,
-                                      $subject_courseid, $default_letters):array
+                                      $subject_courseid, $subject_letter_array_courseid):array
 {
-  // get the subject listed in order corresponding to our classsection from the $subjects_sortorder from google csv file
-  // this will have for example: ["8B", "English", "Hindi",...etc]
 
-  // get the overridden letter ranges for this course based on course id
-  $subject_letter_array   = (array) get_subject_letter_array($subject_courseid);
-
-  if (empty($subject_letter_array))
-    {
-      error_log("using default letter array for courseid: $subject_courseid");
-      $a = $default_letters;
-    }
+  // get the overridden/default letter ranges for this course based on course id.
+  $a   = $subject_letter_array_courseid[$subject_courseid];
 
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
   $subjects_official_list = array_column($subjects_sortorder, $class_section);
@@ -179,12 +182,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Literature in English
     case (stripos($subject_description, 'Literature') !== false  && stripos($subject_description, 'English') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -202,12 +199,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Hindi
     case (stripos($subject_description, 'Hindi') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -225,12 +216,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Kannada
     case (stripos($subject_description, 'Kannada') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -248,12 +233,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // French
     case (stripos($subject_description, 'French') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -270,12 +249,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // History
     case (stripos($subject_description, 'History') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -293,12 +266,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Mathematics
     case (stripos($subject_description, 'Math') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -315,12 +282,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Physics
     case (stripos($subject_description, 'Physics') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -338,12 +299,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Biology
     case (stripos($subject_description, 'Biology') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -361,12 +316,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Chemistry
     case (stripos($subject_description, 'Chemistry') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -384,12 +333,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Computer Science / Computer Studies
     case (stripos($subject_description, 'Computer') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -407,12 +350,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Economics
     case (stripos($subject_description, 'Econom') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -430,12 +367,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Sociology
     case (stripos($subject_description, 'Sociology') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -453,12 +384,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Psychology
     case (stripos($subject_description, 'Psychology') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -476,12 +401,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Geography
     case (stripos($subject_description, 'Geography') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -499,12 +418,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Business
     case (stripos($subject_description, 'Business') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -522,12 +435,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Art and Design
     case (stripos($subject_description, 'Art and Design') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -545,12 +452,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Music
     case (stripos($subject_description, 'Music') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -569,12 +470,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Music
     case (stripos($subject_description, 'Environment') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -592,12 +487,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
         // Physical Education
         case (stripos($subject_description, 'Physical Education') !== false):
-            $a = [
-                  ["A", 100,  90],   // A
-                  ["B", 89,   80],   // B
-                  ["C", 79,   70],   // C
-                  ["D", 69,   60]    // D
-                ];
 
             foreach ($subjects_official_list as $key => $subject)
             {
@@ -616,12 +505,6 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
     // Accounts
     case (stripos($subject_description, 'Account') !== false):
-        $a = [
-              ["A", 100,  90],   // A
-              ["B", 89,   80],   // B
-              ["C", 79,   70],   // C
-              ["D", 69,   60]    // D
-            ];
 
         foreach ($subjects_official_list as $key => $subject)
         {
@@ -775,7 +658,12 @@ function get_subject_letter_array($subject_courseid):array
     //error_log(print_r($letter_range_array, true));
 
     unset($letter_records);
-  }
 
-  return $letter_range_array;
+    error_log("using override letter array for courseid: $subject_courseid");
+    error_log(print_r($letter_range_array, true));
+
+    return $letter_range_array;
+  }
+  error_log("using default letter array for courseid: $subject_courseid");
+  return null;
 }

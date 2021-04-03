@@ -766,12 +766,13 @@ function get_subject_letter_array($subject_courseid):array
       }
       else
       {
-        $letter_range_array[$index][1] = $letter_range_array[$index-1][2];
+        // get the lower range from the previous grade and subtract 0.01 to prevent overlap
+        $letter_range_array[$index][1] = $letter_range_array[$index-1][2] - 0.01;
       }
     }
 
-    error_log("overridden Letter range array for course id: $subject_courseid");
-    error_log(print_r($letter_range_array, true));
+    //error_log("overridden Letter range array for course id: $subject_courseid");
+    //error_log(print_r($letter_range_array, true));
 
     unset($letter_records);
   }

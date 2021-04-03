@@ -24,6 +24,8 @@
 
 function export_report($report)
 {
+    global $DB, $CFG;
+    
     require_once($CFG->libdir . '/csvlib.class.php');
 
 

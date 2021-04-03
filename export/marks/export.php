@@ -25,7 +25,7 @@
 function export_report($report)
 {
     global $DB, $CFG;
-    
+
     require_once($CFG->libdir . '/csvlib.class.php');
 
 
@@ -748,16 +748,32 @@ function get_subject_letter_array($subject_courseid):array
                      WHERE c.id = {$subject_courseid}";
   if ($letter_records = $DB->get_records_sql($sql))
   {
-    // these overridden grade letter records do exist
-    foreach ($letter_records as $letter)
+    // these overridden grade letter records do exist. They list F at index 0
+    foreach ($letter_records AS $index => $letter_record)
     {
-      $letter_range_array[] = [$letter->id, $letter->letter, "upper boundary", $letter->lowerboundary];
+
+        $letter_range_array[$index] = [$letter_record->letter, "upper bound", $letter_record->lowerboundary];
+
     }
     unset($letter_records);
-  }
-  error_log("Letter range array for course id: $subject_courseid");
-  error_log(print_r($letter_range_array, true));
 
-  // lets massage this array to fill in the upper bound from previous record
+    // fill in the upper bound place holder
+    foreach ($letter_records AS $index => $letter_record)
+    {
+      if ($letter_record->letter == "A")
+      {
+        $letter_range_array[$index][1] = 100;
+      }
+      else
+      {
+        $letter_range_array[$index][1] = $letter_range_array[$index+1][2];
+      }
+    }
+
+    error_log("overridden Letter range array for course id: $subject_courseid");
+    error_log(print_r($letter_range_array, true));
+
+  }
+
   return $letter_range_array;
 }

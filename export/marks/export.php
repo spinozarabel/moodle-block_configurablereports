@@ -98,13 +98,13 @@ function export_report($report)
         continue;
       }
 
-      $subject_courseid     = $row[7];
+      $subject_courseid     = $matrix[$row_index][7];
 
-      $subject_description  = $row[5];
+      $subject_description  = $matrix[$row_index][5];
 
-      $markspercentage      = $row[6];
+      $markspercentage      = $matrix[$row_index][6];
 
-      $class_section        = $row[4];
+      $class_section        = $matrix[$row_index][4];
 
       if (empty($subject_letters_array_courseid[$subject_courseid]))
       {
@@ -663,7 +663,7 @@ function get_subject_letter_array($subject_courseid):array
 
     return $letter_range_array;
   }
-  
+
   error_log("using default letter array for courseid: $subject_courseid");
   return [];
 }

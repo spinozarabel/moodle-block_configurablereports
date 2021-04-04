@@ -669,12 +669,12 @@ function get_subject_letter_array($subject_courseid):array
 
     unset($letter_records);
 
-    error_log("using override letter array for courseid: $subject_courseid");
-    error_log(print_r($letter_range_array, true));
+    //error_log("using override letter array for courseid: $subject_courseid");
+    //error_log(print_r($letter_range_array, true));
 
     return $letter_range_array;
   }
 
-  error_log("using default letter array for courseid: $subject_courseid");
+  //error_log("using default letter array for courseid: $subject_courseid");
   return [];
 }

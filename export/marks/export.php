@@ -655,7 +655,7 @@ function get_subject_letter_array($subject_courseid):array
     foreach ($letter_records AS $index => $letter_record)
     {
 
-      if (end($letter_records->letter) == $letter_record->letter)
+      if (end($letter_records)->letter == $letter_record->letter)
       {
         // this is the highest letter grade and so its upper bound is 100
         $letter_range_array[$index][1] = 100;

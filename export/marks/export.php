@@ -660,6 +660,7 @@ function get_subject_letter_array($subject_courseid):array
       if ($counter == 0)
       {
         $final_index = $index - $num_letters;
+
       }
 
       if ($index == $final_index)
@@ -672,6 +673,7 @@ function get_subject_letter_array($subject_courseid):array
         // get the upper range from the previous grade lower range and subtract 0.01 to prevent overlap
         $letter_range_array[$index][1] = floatval($letter_range_array[$index-1][2]) - 0.01;
       }
+      $counter = $counter +1;
     }
 
     error_log("overridden Letter range array for course id: $subject_courseid");

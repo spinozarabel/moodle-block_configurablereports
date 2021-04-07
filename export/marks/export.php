@@ -665,13 +665,10 @@ function get_subject_letter_array($subject_courseid):array
       }
     }
 
-    //error_log("overridden Letter range array for course id: $subject_courseid");
-    //error_log(print_r($letter_range_array, true));
+    error_log("overridden Letter range array for course id: $subject_courseid");
+    error_log(print_r($letter_range_array, true));
 
     unset($letter_records);
-
-    //error_log("using override letter array for courseid: $subject_courseid");
-    //error_log(print_r($letter_range_array, true));
 
     return $letter_range_array;
   }

@@ -670,7 +670,7 @@ function get_subject_letter_array($subject_courseid):array
       else
       {
         // get the upper range from the previous grade lower range and subtract 0.01 to prevent overlap
-        $letter_range_array[$index][1] = floatval($letter_range_array[$index-1][2]) - 0.01;
+        $letter_range_array[$index][1] = floatval(next($letter_records)->lowerboundary) - 0.01;
       }
 
     }

@@ -668,7 +668,7 @@ function get_subject_letter_array($subject_courseid):array
         // get the upper range from the previous grade lower range and subtract 0.01 to prevent overlap
         error_log(print_r(next($letter_range_array), true));
         error_log(print_r($letter_range_array, true));
-        $letter_range_array[$index][1] = floatval(next($$letter_range_array[$index])[2]) - 0.01;
+        $letter_range_array[$index][1] = floatval(next($letter_range_array[$index])[2]) - 0.01;
       }
 
     }

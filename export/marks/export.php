@@ -650,18 +650,10 @@ function get_subject_letter_array($subject_courseid):array
     }
 
     // fill in the upper bound place holder
-    $already_assigned_100 = false;
-
     foreach ($letter_records AS $index => $letter_record)
     {
-
-      if ($letter_record->letter == "A+" || $letter_record->letter == "A*" || $letter_record->letter == "a+" || $letter_record->letter == "a*")
-      {
-        // this is the highest letter grade and so its upper bound is 100
-        $letter_range_array[$index][1] = 100;
-        $already_assigned_100 = true;
-      }
-      elseif (($letter_record->letter == "A" || $letter_record->letter == "a") && !$already_assigned_100)
+      // ($letter_record->letter == "A+" || $letter_record->letter == "A*" || $letter_record->letter == "a+" || $letter_record->letter == "a*")
+      if ($letter_record == end($letter_records))
       {
         // this is the highest letter grade and so its upper bound is 100
         $letter_range_array[$index][1] = 100;

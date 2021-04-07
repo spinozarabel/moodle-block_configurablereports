@@ -649,11 +649,20 @@ function get_subject_letter_array($subject_courseid):array
 
     }
 
+    // calculate the number of records
+    $num_letters = sizeof($letter_range_array);
+
+    $counter = 0;
 
     // fill in the upper bound place holder
     foreach ($letter_records AS $index => $letter_record)
     {
-      if (empty($index-1))
+      if ($counter == 0)
+      {
+        $final_index = $index - $num_letters;
+      }
+
+      if ($index == $final_index)
       {
         // this is the highest letter grade and so its upper bound is 100
         $letter_range_array[$index][1] = 100;

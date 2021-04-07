@@ -649,14 +649,20 @@ function get_subject_letter_array($subject_courseid):array
 
     }
 
+    $keys = array_keys($letter_range_array);
     // fill in the upper bound place holder
-    foreach ($letter_range_array AS $index => $letter_vector)
+    foreach(array_keys($keys) as $index )
     {
+      $current_key = $keys[$index];
+      $current_letter = $letter_range_array[$current_key][0];
 
-      if (end($letter_range_array)[0] == $letter_vector[0])
+      $end_key = end($keys);
+      $end_letter = $letter_range_array[$end_key][0];
+
+      if ($current_letter == $end_letter)
       {
         // this is the highest letter grade and so its upper bound is 100
-        $letter_range_array[$index][1] = 100;
+        $letter_range_array[$current_key][1] = 100;
 
         error_log("overridden Letter range array for course id: $letter_record->letter");
         error_log("overridden Letter range array for course id: $subject_courseid");
@@ -664,14 +670,12 @@ function get_subject_letter_array($subject_courseid):array
       }
       else
       {
-
-        // get the upper range from the previous grade lower range and subtract 0.01 to prevent overlap
-        error_log(print_r(next($letter_range_array), true));
-        error_log(print_r($letter_range_array, true));
-        $letter_range_array[$index][1] = floatval(next($letter_range_array[$index])[2]) - 0.01;
+        $next_key = $keys[$index + 1];
+        $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][1]) - 0.01;
       }
 
     }
+    error_log(print_r($letter_range_array, true));
 
     unset($letter_records);
 

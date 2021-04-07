@@ -671,7 +671,7 @@ function get_subject_letter_array($subject_courseid):array
       else
       {
         $next_key = $keys[$index + 1];
-        $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][1]) - 0.01;
+        $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][2]) - 0.01;
       }
 
     }

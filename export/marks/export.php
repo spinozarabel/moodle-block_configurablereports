@@ -653,13 +653,14 @@ function get_subject_letter_array($subject_courseid):array
     // fill in the upper bound place holder
     foreach ($letter_records AS $index => $letter_record)
     {
-      if ($letter_record->letter == "A" || $letter_record->letter == "a")
+      if (empty($index-1))
       {
+        // this is the highest letter grade and so its upper bound is 100
         $letter_range_array[$index][1] = 100;
       }
       else
       {
-        // get the lower range from the previous grade and subtract 0.01 to prevent overlap
+        // get the upper range from the previous grade lower range and subtract 0.01 to prevent overlap
         $letter_range_array[$index][1] = floatval($letter_range_array[$index-1][2]) - 0.01;
       }
     }

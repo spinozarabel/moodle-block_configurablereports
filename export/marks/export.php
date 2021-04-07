@@ -653,7 +653,7 @@ function get_subject_letter_array($subject_courseid):array
     // fill in the upper bound place holder
     foreach ($letter_records AS $index => $letter_record)
     {
-      if ($letter_record->letter == "A" || $letter_record->letter == "a")
+      if ($index == 0)
       {
         $letter_range_array[$index][1] = 100;
       }

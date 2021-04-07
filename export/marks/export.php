@@ -650,7 +650,7 @@ function get_subject_letter_array($subject_courseid):array
     }
 
     // calculate the number of records
-    $num_letters = sizeof($letter_range_array);
+    $num_letters = sizeof($letter_records);
 
     $counter = 0;
 

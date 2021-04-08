@@ -670,7 +670,7 @@ function get_subject_letter_array($subject_courseid):array
 
         // print for debug
         error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
-                  "Upper: " . $letter_range_array[$current_key][1] . "Lower: " . $letter_range_array[$current_key][2]);
+                  " Upper: " . $letter_range_array[$current_key][1] . " Lower: " . $letter_range_array[$current_key][2]);
       }
       else
       {
@@ -679,7 +679,7 @@ function get_subject_letter_array($subject_courseid):array
         $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][2]) - 0.01;
         // we subtract 0.01 so there is no overlap between letter ranges
         error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
-                  "Upper: " . $letter_range_array[$current_key][1] . "Lower: " . $letter_range_array[$current_key][2]);
+                  " Upper: " . $letter_range_array[$current_key][1] . " Lower: " . $letter_range_array[$current_key][2]);
       }
 
     }

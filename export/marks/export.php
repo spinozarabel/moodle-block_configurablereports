@@ -641,41 +641,48 @@ function get_subject_letter_array($subject_courseid):array
                      WHERE c.id = {$subject_courseid}";
   if ($letter_records = $DB->get_records_sql($sql))
   {
-    // these overridden grade letter records do exist. They list F at index 0
+    // these overridden grade letter records do exist. They list lowest letter 1st
+    // fill in the letter and corresponding lowerbound from records.
     foreach ($letter_records AS $index => $letter_record)
     {
-
         $letter_range_array[$index] = [$letter_record->letter, "upper bound", $letter_record->lowerboundary];
-
     }
 
+    // fill in upperbound for letter from lowerbound of upper letter in next record
+    // 1st get the keys of letter sub-arrays as they are the same as table ids
     $keys = array_keys($letter_range_array);
-    // fill in the upper bound place holder
+
+    // The loop $index is now from 0-> ++
     foreach(array_keys($keys) as $index )
     {
-      $current_key = $keys[$index];
-      $current_letter = $letter_range_array[$current_key][0];
+      // 1st look for highest letter sub-array
+      $current_key = $keys[$index];             // this is the original tabl ID of letter record
+      $current_letter = $letter_range_array[$current_key][0];   // get the current letter
 
-      $end_key = end($keys);
+      $end_key = end($keys);                                    // get the last letter from the just filled loop prior to this
       $end_letter = $letter_range_array[$end_key][0];
 
+      // if current letter is same as last letter, we set the upperbound to 100 as highest percentage
       if ($current_letter == $end_letter)
       {
         // this is the highest letter grade and so its upper bound is 100
         $letter_range_array[$current_key][1] = 100;
 
-        error_log("overridden Letter range array for course id: $letter_record->letter");
-        error_log("overridden Letter range array for course id: $subject_courseid");
-        error_log(print_r($letter_range_array[$index], true));
+        // print for debug
+        error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
+                  "Upper: " . $letter_range_array[$current_key][1] . "Lower: " . $letter_range_array[$current_key][2]);
       }
       else
       {
+        // for all letters other than highest, its upperbound is lowerbound of next higher letter coming after it in array
         $next_key = $keys[$index + 1];
         $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][2]) - 0.01;
+        // we subtract 0.01 so there is no overlap between letter ranges
+        error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
+                  "Upper: " . $letter_range_array[$current_key][1] . "Lower: " . $letter_range_array[$current_key][2]);
       }
 
     }
-    error_log(print_r($letter_range_array, true));
 
     unset($letter_records);
 

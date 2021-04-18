@@ -134,6 +134,7 @@ function display_doclinks($record, $matrix)
                 </tr>
         <?php
       }
+    }
 }
 
 

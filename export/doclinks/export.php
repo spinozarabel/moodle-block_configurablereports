@@ -123,6 +123,11 @@ function display_doclinks($record, $csv)
 
       foreach ($doclinks_arr as $docindex => $doc)
       {
+        $docid        = $doc["fileId"];
+        $documentName = format_string($doc["fileId"]);
+        $docurl       = 'https://drive.google.com/open?id=' . $docid;
+        $attrs        = ['alt' => $documentName];
+
         // print out multiple row for same user but with different doclinks info in the table
         ?>
                 <tr>
@@ -131,7 +136,7 @@ function display_doclinks($record, $csv)
                     <td><?php echo htmlspecialchars($userid); ?></td>
                     <td><?php echo htmlspecialchars($idnumber); ?></td>
                     <td><?php echo htmlspecialchars($doc["documentName"]); ?></td>
-                    <td><?php echo htmlspecialchars($doc["fileId"]); ?></td>
+                    <td><?php \html_writer::link($docurl, $documentName, $attrs); ?></td>
                 </tr>
         <?php
       }

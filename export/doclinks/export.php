@@ -68,7 +68,7 @@ function export_report($report)
 **  @param object:$record
 **  @param array:$matrix
 */
-function display_doclinks($record, $matrix)
+function display_doclinks($record, $csv)
 {
   // define table and heading
   ?>

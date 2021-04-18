@@ -136,7 +136,7 @@ function display_doclinks($record, $csv)
                     <td><?php echo htmlspecialchars($userid); ?></td>
                     <td><?php echo htmlspecialchars($idnumber); ?></td>
                     <td><?php echo htmlspecialchars($doc["documentName"]); ?></td>
-                    <td><?php \html_writer::link($docurl, $documentName, $attrs); ?></td>
+                    <td><?php echo \html_writer::link($docurl, $documentName, $attrs); ?></td>
                 </tr>
         <?php
       }

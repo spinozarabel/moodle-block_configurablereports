@@ -27,12 +27,16 @@ By Tim Hunt
 Madhu's version history:
 - Added Messaging capability (as opposed to just send email capability in stock)
 Following new plugins have been added as export options
+- doclinks: This shows report documents of students in the class course.
+- marks: This exports a CSV file containing subjects, percentage, and letter for students
+         in that course. Subject order is read from a Google CSV and letter grades from concerned subject course
 - sim: Added Simulation of Synchronization of accounts to LDAP server specified
 - sync: Added Actual full 2-way Synchronization of accounts to LDAP server specified
 - AddCashFreSim: Simulated Synchronization of accounts at cashfree.com for 2 VA's specified
 - AddCashFreeSync: Actual (Add Only) one-way Synchronization of accounts at Cashfree.com for 2 VS's specified.
-                   Accounts at cashfree.com are synchronized using SriToni directory as reference, Add only
-- feeProfileField: Reads data from a Google CSV and writes data to user's fee profile field
+                   Accounts at cashfree.com are synchronized using Moodle directory as reference, Add only
+- feeProfileField: Reads data from a Google CSV and writes data to user's fee profile field.
+                  This data is used by a plugin to show fees due to student on Dashboard
 - Added config settings to control delete and mod LDPA users during Sync
 - branch is 36_cashfree_fees_txtpw
 - 36 stands for Moodle Config Reports master version. Cashfree referes to cashfree.com, fees refers to user profile field

@@ -53,7 +53,7 @@ function export_report($report)
     display_doclinks($record, $matrix);
     //--- end of additional code to process matrix array for documentlinks----->
 
-    $csvexport = new csv_export_writer();
+  /*  $csvexport = new csv_export_writer();
     $csvexport->set_filename($filename);
 
     foreach ($matrix as $ri => $col) {
@@ -61,6 +61,7 @@ function export_report($report)
     }
     $csvexport->download_file();
     exit;
+  */
 }
 
 /**

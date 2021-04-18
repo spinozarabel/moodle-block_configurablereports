@@ -121,7 +121,7 @@ function display_doclinks($record, $csv)
       // decode json string into an associative array
       $doclinks_arr  = json_decode($json_documentlinks, true);
 
-      foreach ($doclinks_arr as $docname => $doclink)
+      foreach ($doclinks_arr as $docindex => $doc)
       {
         // print out multiple row for same user but with different doclinks info in the table
         ?>
@@ -130,8 +130,8 @@ function display_doclinks($record, $csv)
                     <td><?php echo htmlspecialchars($fullname); ?></td>
                     <td><?php echo htmlspecialchars($userid); ?></td>
                     <td><?php echo htmlspecialchars($idnumber); ?></td>
-                    <td><?php echo htmlspecialchars($docname); ?></td>
-                    <td><?php echo htmlspecialchars($doclink); ?></td>
+                    <td><?php echo htmlspecialchars($doc["documentName"]); ?></td>
+                    <td><?php echo htmlspecialchars($doc["fileId"]); ?></td>
                 </tr>
         <?php
       }

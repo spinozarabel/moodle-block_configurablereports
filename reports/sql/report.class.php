@@ -160,7 +160,7 @@ class report_sql extends report_base {
                       if (!empty($vals_row[$json_col_index]))
                       {
                         // we have found non-empty JSON encoded value, derive the headings from the keys
-                        $json_array 	= json_decode($$vals_row[$json_col_index], true);
+                        $json_array 	= json_decode($vals_row[$json_col_index], true);
                         $json_headings	= array_keys($json_array);
                       }
                       else
@@ -183,7 +183,7 @@ class report_sql extends report_base {
 
                 unset ($row);
                 unset ($json_array);
-                
+
                 error_log("JSON column index is: $json_col_index");
                 error_log(print_r($json_headings, true));
 

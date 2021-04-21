@@ -129,7 +129,64 @@ class report_sql extends report_base {
 
             $sql = $this->prepare_sql($sql);
 
-            if ($rs = $this->execute_query($sql)) {
+            if ($rs = $this->execute_query($sql))
+            {
+                // we need information about new number of columns and their headings from non-empty JSON entries
+                $json_col_index 	= null;
+
+                foreach ($rs as $row)
+                {
+                    // see if there is any json encoded column at all in the 1st place
+                    $keys_row = array_keys((array) $row);
+                    $vals_row = array_values((array) $row);
+
+                    foreach($keys_row as $ii => $colname)
+                    {
+                      if ($json_col_index)
+                      {
+                        // not 1st time, already found index, no need to search for index
+                        break;
+                      }
+                      if (stripos($colname, 'json') !== false)
+                      {
+                        // this column is a JSON encoded column, get its index
+                        $json_col_index 	= $ii;
+                        break;
+                      }
+                    }
+                    if ($json_col_index)
+                    {
+                      // see if thie row's json encoded value exists
+                      if (!empty($vals_row[$json_col_index]))
+                      {
+                        // we have found non-empty JSON encoded value, derive the headings from the keys
+                        $json_array 	= json_decode($$vals_row[$json_col_index], true);
+                        $json_headings	= array_keys($json_array);
+                      }
+                      else
+                      {
+                        // empty json values for this row, look in next row
+                        continue;
+                      }
+                    }
+                    else
+                    {
+                      // no json in headings so no need to look in subsequent rows
+                      break;
+                    }
+                }
+                // if json_headings are empty, no valid json data for all rows so no need to expand new json columns
+                if (empty($json_headings))
+                {
+                $json_col_index 	= null;
+                }
+
+                unset ($row);
+                unset ($json_array);
+                
+                error_log("JSON column index is: $json_col_index");
+                error_log(print_r($json_headings, true));
+
                 foreach ($rs as $row) {
                     if (empty($finaltable)) {
                         foreach ($row as $colname => $value) {
@@ -175,4 +232,3 @@ class report_sql extends report_base {
     }
 
 }
-

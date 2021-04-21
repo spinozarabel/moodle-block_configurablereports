@@ -27,6 +27,7 @@ By Tim Hunt
 Madhu's version history:
 - Added Messaging capability (as opposed to just send email capability in stock)
 Following new plugins have been added as export options
+- Added a new type of report to handle JSON fields. Facility for deleting JSON items
 - doclinks: This shows report documents of students in the class course.
 - marks: This exports a CSV file containing subjects, percentage, and letter for students
          in that course. Subject order is read from a Google CSV and letter grades from concerned subject course

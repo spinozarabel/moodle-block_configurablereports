@@ -154,6 +154,9 @@ class report_sql extends report_base {
                         break;
                       }
                     }
+                    // finished with json_col_index finding.
+
+                    // now check if we have valid json columns to be added
                     if ($json_col_index)
                     {
                       // see if thie row's json encoded value exists
@@ -162,6 +165,9 @@ class report_sql extends report_base {
                         // we have found non-empty JSON encoded value, derive the headings from the keys
                         $json_array 	= json_decode($vals_row[$json_col_index], true);
                         $json_headings	= array_keys($json_array);
+
+                        // we have what we need, get out of immediate foreach loop
+                        break;
                       }
                       else
                       {
@@ -171,20 +177,21 @@ class report_sql extends report_base {
                     }
                     else
                     {
-                      // no json in headings so no need to look in subsequent rows
+                      // no json encoded string at all in headings so no need to look further
                       break;
                     }
                 }
+
                 // if json_headings are empty, no valid json data for all rows so no need to expand new json columns
                 if (empty($json_headings))
                 {
-                $json_col_index 	= null;
+                    $json_col_index 	= null;
                 }
 
                 unset ($row);
                 unset ($json_array);
 
-                error_log("JSON column index is: $json_col_index");
+                error_log("JSON column index found, is: $json_col_index");
                 error_log(print_r($json_headings, true));
 
                 foreach ($rs as $row) {

@@ -130,15 +130,14 @@ class report_sql extends report_base {
             $sql = $this->prepare_sql($sql);
 
             if ($rs = $this->execute_query($sql))
-            {
+            {   // make sure records exist if not don't bother
                 // we need information about new number of columns and their headings from non-empty JSON entries
                 $json_col_index 	= null;
 
-                foreach ($rs as $row)
-                {
-                    // see if there is any json encoded column at all in the 1st place
-                    $keys_row = array_keys((array) $row);
-                    $vals_row = array_values((array) $row);
+                foreach ($rs as $row)                                       // see if there is any json. Get its values
+                {                   
+                    $keys_row = array_keys((array)      $row);
+                    $vals_row = array_values((array)    $row);
 
                     foreach($keys_row as $ii => $colname)
                     {
@@ -151,6 +150,7 @@ class report_sql extends report_base {
                       {
                         // this column is a JSON encoded column, get its index
                         $json_col_index 	= $ii;
+                        
                         break;
                       }
                     }
@@ -159,19 +159,29 @@ class report_sql extends report_base {
                     // now check if we have valid json columns to be added
                     if ($json_col_index)
                     {
-                      // see if thie row's json encoded value exists
+                      // see if this row's json encoded value exists
                       if (!empty($vals_row[$json_col_index]))
                       {
                         // we have found non-empty JSON encoded value, derive the headings from the keys
-                        $json_array 	= json_decode($vals_row[$json_col_index], true);
-                        $json_headings	= array_keys($json_array);
+                        $json_val_html  = $vals_row[$json_col_index]; // possible html tags
+                        // remove tags etc.
+                        $json_notags    = strip_tags(html_entity_decode($json_val_html));
+                        $json_array 	= json_decode($json_notags, true);
 
-                        // we have what we need, get out of immediate foreach loop
+                        // lets get the JSON headings from the 0th row
+                        $num_json_cols  = count($json_array[0]);
+
+                        $json_headings  = array_keys($json_array[0]);
+
+                        $this->json_headings = $json_headings;
+                        $this->num_json_cols = $num_json_cols;
+
+                        // we have what we need, get out of foreach loop searching for json headings
                         break;
                       }
                       else
                       {
-                        // empty json values for this row, look in next row
+                        // empty json values found for this row, look in next row
                         continue;
                       }
                     }
@@ -186,30 +196,96 @@ class report_sql extends report_base {
                 if (empty($json_headings))
                 {
                     $json_col_index 	= null;
+
+                    $this->json_col_index = null;
+                }
+                else 
+                {
+                    $this->json_col_index = $json_col_index;
                 }
 
                 unset ($row);
                 unset ($json_array);
 
-                error_log("JSON column index found, is: $json_col_index");
-                error_log(print_r($json_headings, true));
+                // finally we come to section where we build the table
+                // we add additional columns and rows due to JSON only if json data exists i.e $json_col_index != null
+                foreach ($rs as $row) 
+                {
+                    if (empty($finaltable))                                 // set the report's table headings                           
+                    {
+                        // we reset an index for column loop
+                        $i = 0;
+                        foreach ($row as $colname => $value) 
+                        {
+                            if ($json_col_index == $i)                     // Is the column heading a JSON encoded one?
+                            {
+                                foreach ($json_headings as $json_heading)
+                                {                                           // add as many new columns as json headings
+                                    $tablehead[] = $json_heading;
+                                }
+                            }
+                            else                                            // not a json_encoded column so use as is
+                            {
+                                $tablehead[] = $colname;
+                            }
+                            $i +=1;                            
+                        }
+                    }
+                    // now we are printing table row
+                    $arrayrow = array_values((array) $row);                 // get the values for this row as non-assoc array
+                    
+                    if (!empty($json_col_index))                            // get the json array for this row if exists
+                    {
+                        $json_val_html  = $arrayrow[$json_col_index];       // possible html tags present
+                        // remove tags etc.
+                        $json_notags    = strip_tags(html_entity_decode($json_val_html));
+                        // decode json string into associative array
+                        $json_array 	= json_decode($json_notags, true);
+                        // how many entries for this user in the json array?
+                        $num_extra_rows = count($json_array) ?? 0;
+                        //
+                        if ($num_extra_rows == 0)
+                        {
+                            $num_extra_rows = 1;
+                        }
+                    }
 
-                foreach ($rs as $row) {
-                    if (empty($finaltable)) {
-                        foreach ($row as $colname => $value) {
-                            $tablehead[] = $colname;
+                    for ($i=0; $i <$num_extra_rows ; $i++)                  // addd extra rows for json if needed
+                    { 
+                        // merge the extra json data with original array row
+                        $tmp_array_row = [];
+                        foreach ($arrayrow as $ii => $cell)
+                        {
+                            if ($ii == $json_col_index)
+                            {
+                                foreach ($json_array[$i] as $key => $value) 
+                                {         
+                                    $tmp_array_row[] = $value;
+                                }
+                            }
+                            else 
+                            {
+                                $tmp_array_row[] = $cell;
+                            }
                         }
-                    }
-                    $arrayrow = array_values((array) $row);
-                    foreach ($arrayrow as $ii => $cell) {
-                        if (!$this->isForExport()) {
-                            $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
+                        unset($cell);
+
+                        foreach ($tmp_array_row as $ii => $cell)                 // build a row of the table
+                        {
+                            
+                                if (!$this->isForExport()) 
+                                {
+                                    $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
+                                }
+                                $tmp_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
+                            
                         }
-                        $arrayrow[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
+                        $totalrecords++;
+                        $finaltable[] = $tmp_array_row;
                     }
-                    $totalrecords++;
-                    $finaltable[] = $arrayrow;
-                }
+                    
+                    
+                }                                                           // loop to print next table row
             }
         }
         $this->sql = $sql;

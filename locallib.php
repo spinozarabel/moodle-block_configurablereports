@@ -378,8 +378,8 @@ function cr_print_table($table, $return = false) {
     if ($formaction == "fileId")
     {
         // form an associative array of object table, serialize it and encode it.
-        $serialized_encoded_ids = base64_encode(serialize((array) $table));
-        $output .= '<input type="hidden" name="serialized_ids" value="'.$serialized_encoded_ids.'">';
+        $encoded_serialized_table = base64_encode(serialize((array) $table));
+        $output .= '<input type="hidden" name="encoded_serialized_table" value="'.$encoded_serialized_table.'">';
     }
     if ($isuserid != -1) 
     {

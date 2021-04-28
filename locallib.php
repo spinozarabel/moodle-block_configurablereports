@@ -211,7 +211,12 @@ function cr_get_export_plugins() {
     }
     return $pluginoptions;
 }
-
+/**
+ *  Modified by Madhu Avasarala
+ *  Added options for formaction to delete selected items for json based entries
+ *  A POST variable called serialized_ids is created using the entire table using a hidden input in form.
+ *  Selected table rows are output as an array called fileids which are to be deleted from user profile.
+ */
 function cr_print_table($table, $return = false) {
     global $COURSE;
 
@@ -266,7 +271,16 @@ function cr_print_table($table, $return = false) {
     }
 
     $tableid = empty($table->id) ? '' : 'id="'.$table->id.'"';
-    $output .= '<form action="send_emails.php" method="post" id="sendemail">';
+
+    if ($table->formaction == "delete_items")
+    {
+        $output .= '<form action="delete_json_items.php" method="post" id="sendemail">';
+    }
+    else 
+    {
+        $output .= '<form action="send_emails.php" method="post" id="sendemail">';
+    }
+    
     $output .= '<table width="'.$table->width.'" ';
     if (!empty($table->summary)) {
         $output .= " summary=\"$table->summary\"";
@@ -282,8 +296,14 @@ function cr_print_table($table, $return = false) {
         $keys = array_keys($table->head);
         $lastkey = end($keys);
         foreach ($table->head as $key => $heading) {
-            if ($heading == 'sendemail') {
+            if ($heading == 'sendemail' || $heading == "fileId") 
+            {
                 $isuserid = $key;
+                $formaction = $heading;
+            }
+            if ($heading == 'id') 
+            {
+                $id_usermoodle = $key;
             }
             if (!isset($size[$key])) {
                 $size[$key] = '';
@@ -335,12 +355,17 @@ function cr_print_table($table, $return = false) {
                     } else {
                         $extraclass = '';
                     }
-                    if ($key == $isuserid) {
+                    if ($isuserid == $key && $formaction == "fileId") {
+                        $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="fileids[]" type="checkbox" value="'.$item.'" ></td>';
+                    } 
+                    elseif ($isuserid == $key && $formaction == "sendemail")
+                    {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
-                    } else {
+                    }
+                    else 
+                    {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'">'. $item .'</td>';
                     }
-
                 }
             }
             $output .= '</tr>'."\n";
@@ -348,8 +373,25 @@ function cr_print_table($table, $return = false) {
     }
     $output .= '</table>'."\n";
     $output .= '<input type="hidden" name="courseid" value="'.$COURSE->id.'">';
-    if ($isuserid != -1) {
-        $output .= '<input type="submit" value="send notifications">';
+
+    // we serialize the entire table to be sent in the form for processing
+    if ($formaction == "fileId")
+    {
+        // form an associative array of object table, serialize it and encode it.
+        $serialized_encoded_ids = base64_encode(serialize((array) $table));
+        $output .= '<input type="hidden" name="serialized_ids" value="'.$serialized_encoded_ids.'">';
+    }
+    if ($isuserid != -1) 
+    {
+        if ($table->formaction == "delete_items") 
+        {
+            $output .= '<input type="submit" value="delete selected items">';
+        }
+        else 
+        {
+            $output .= '<input type="submit" value="send notifications">';
+        }
+        
     }
     $output .= '</form>';
 

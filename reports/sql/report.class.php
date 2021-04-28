@@ -253,35 +253,35 @@ class report_sql extends report_base {
                     for ($i=0; $i <$num_extra_rows ; $i++)                  // addd extra rows for json if needed
                     { 
                         // merge the extra json data with original array row
-                        $tmp_array_row = [];
+                        $merged_array_row = [];
                         foreach ($arrayrow as $ii => $cell)
                         {
                             if ($ii == $json_col_index)
                             {
                                 foreach ($json_array[$i] as $key => $value) 
                                 {         
-                                    $tmp_array_row[] = $value;
+                                    $merged_array_row[] = $value;
                                 }
                             }
                             else 
                             {
-                                $tmp_array_row[] = $cell;
+                                $merged_array_row[] = $cell;
                             }
                         }
                         unset($cell);
 
-                        foreach ($tmp_array_row as $ii => $cell)                 // build a row of the table
+                        foreach ($merged_array_row as $ii => $cell)         // build a row of the table
                         {
                             
                                 if (!$this->isForExport()) 
                                 {
                                     $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
                                 }
-                                $tmp_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
+                                $merged_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
                             
                         }
                         $totalrecords++;
-                        $finaltable[] = $tmp_array_row;
+                        $finaltable[] = $merged_array_row;
                     }
                     
                     
@@ -299,6 +299,14 @@ class report_sql extends report_base {
         $table->id = 'reporttable';
         $table->data = $finaltable;
         $table->head = $tablehead;
+        if ($json_col_index)
+        {
+            $table->formaction = "delete_items";
+        }
+        else
+        {
+            $table->formaction = "sendemail";
+        }
 
         $calcs = new \html_table();
         $calcs->id = 'calcstable';

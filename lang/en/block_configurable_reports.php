@@ -69,6 +69,9 @@ $string['export_AddCashFreeSync'] = "Sync Add CashFree Accts";
 $string['export_DelSimCashFree'] = "Sim Delete CashFree Accts";
 
 $string['export_feeProfileField'] = "Write Fee Details to Profile";
+$string['export_marks'] = "CSV export of marks for subjects in this course";
+$string['export_doclinks'] = "list table view of documents of users";
+$string['delete_json_items'] = "delete JSON items";
 
 
 $string['export_csv'] = "Export in CSV format";
@@ -472,6 +475,8 @@ $string['reporttableuiinfo'] = 'Display the report table as: Simple scrollable H
 $string['email_subject'] = 'Subject';
 $string['email_message'] = 'Message';
 $string['email_send'] = 'Send';
+
+$string['confirmation'] = 'Confirmation';
 
 $string['sqlsecurity'] = 'SQL Security';
 $string['sqlsecurityinfo'] = 'Disable for executing SQL queries with statements for inserting data';

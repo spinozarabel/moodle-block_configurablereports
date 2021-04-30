@@ -373,11 +373,13 @@ function cr_print_table($table, $return = false) {
     }
     $output .= '</table>'."\n";
     $output .= '<input type="hidden" name="courseid" value="'.$COURSE->id.'">';
+    $output .= '<input type="hidden" name="reportid" value="'.$table->reportid.'">';
 
     // we serialize the entire table to be sent in the form for processing
     if ($formaction == "fileId")
     {
         // form an associative array of object table, serialize it and encode it.
+        // error_log(print_r((array) $table, true));
         $encoded_serialized_table = base64_encode(serialize((array) $table));
         $output .= '<input type="hidden" name="encoded_serialized_table" value="'.$encoded_serialized_table.'">';
     }

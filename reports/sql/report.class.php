@@ -135,7 +135,7 @@ class report_sql extends report_base {
                 $json_col_index 	= null;
 
                 foreach ($rs as $row)                                       // see if there is any json. Get its values
-                {                   
+                {               
                     $keys_row = array_keys((array)      $row);
                     $vals_row = array_values((array)    $row);
 
@@ -150,7 +150,6 @@ class report_sql extends report_base {
                       {
                         // this column is a JSON encoded column, get its index
                         $json_col_index 	= $ii;
-                        
                         break;
                       }
                     }
@@ -162,26 +161,33 @@ class report_sql extends report_base {
                       // see if this row's json encoded value exists
                       if (!empty($vals_row[$json_col_index]))
                       {
-                        // we have found non-empty JSON encoded value, derive the headings from the keys
+                        // we have found non-empty string, still may not be valid json data
                         $json_val_html  = $vals_row[$json_col_index]; // possible html tags
                         // remove tags etc.
                         $json_notags    = strip_tags(html_entity_decode($json_val_html));
                         $json_array 	= json_decode($json_notags, true);
 
                         // lets get the JSON headings from the 0th row
-                        $num_json_cols  = count($json_array[0]);
+                        if (!empty($json_array))
+                        {
+                            $num_json_cols  = count($json_array[0]);
 
-                        $json_headings  = array_keys($json_array[0]);
+                            $json_headings  = array_keys($json_array[0]);
 
-                        $this->json_headings = $json_headings;
-                        $this->num_json_cols = $num_json_cols;
-
-                        // we have what we need, get out of foreach loop searching for json headings
-                        break;
+                            $this->json_headings = $json_headings;
+                            $this->num_json_cols = $num_json_cols;
+                            break;
+                            // we have json column headings and index so out of loop.
+                        }
+                        else
+                        {
+                            // this row does not have valid json data, look in next row
+                            continue;
+                        }
                       }
                       else
                       {
-                        // empty json values found for this row, look in next row
+                        // empty string found for this row, look in next row
                         continue;
                       }
                     }
@@ -211,6 +217,7 @@ class report_sql extends report_base {
                 // we add additional columns and rows due to JSON only if json data exists i.e $json_col_index != null
                 foreach ($rs as $row) 
                 {
+                    error_log(print_r($row, true));
                     if (empty($finaltable))                                 // set the report's table headings                           
                     {
                         // we reset an index for column loop
@@ -299,6 +306,8 @@ class report_sql extends report_base {
         $table->id = 'reporttable';
         $table->data = $finaltable;
         $table->head = $tablehead;
+        $table->reportid = $this->config->id;
+
         if ($json_col_index)
         {
             $table->formaction = "delete_items";

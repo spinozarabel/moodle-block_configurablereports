@@ -70,17 +70,22 @@ if ($form->is_cancelled())
     // get data of the full table as an array from submitted form. This is turn is derived from POST cr_print_table()
     $rawtable      = unserialize(base64_decode($data->encoded_serialized_table));
     $table_array   = $rawtable["data"];
+    error_log(print_r($table_array, true));
+    error_log(print_r($fileids_array, true));
     // get heading array
     $heading_array = $rawtable["head"];
+    error_log(print_r($heading_array, true));
     // findout the colindex containing "fileId" in heading array
     $col_index  = array_search('fileId', $heading_array);
+    error_log("fileid index: $col_index");
     // findout index conatining 'id' in heading array
     $id_index   = array_search('id', $heading_array);
-
+    error_log("id index: $id_index");
     foreach ($fileids_array as $fileid) 
     {
         // get array containing all records from table with this fileid. Can be multiple records.
         $keys = searchForKeysInArray($fileid, $table_array, $col_index);
+        error_log(print_r($keys, true));
 
         if (empty($keys)) continue;
 
@@ -98,10 +103,13 @@ if ($form->is_cancelled())
                                                                                         'fieldid'  =>  $field->id,
                                                                                       )
 												          );
-            // read in the JSON encoded data or set it to blank if empty
-			$documentlinks_json		= $user_profile_documentlinks->data ?? "";
+            // read in the JSON encoded data or set it to blank if empty. Strip tags
+			$documentlinks_json		= strip_tags(html_entity_decode($user_profile_documentlinks->data));
 			// decode json string into array. Each sub-array stands for one document record. If fails decode to empty array
 			$documentlinks_arr 		= json_decode($documentlinks_json, true) ?? [];
+
+            if (empty($documentlinks_arr)) continue;
+
             // find index in this array that matches with fileid of loop. 1st one if multiple values
             $doc_index = array_search($fileid, $documentlinks_arr);
             // delete this entry in the array
@@ -120,7 +128,7 @@ if ($form->is_cancelled())
 
 $PAGE->set_title(get_string('confirmation', 'block_configurable_reports'));
 $PAGE->set_heading(format_string($COURSE->fullname));
-$PAGE->navbar->add(get_string('confirm or cancel'));
+$PAGE->navbar->add('confirm or cancel');
 
 echo $OUTPUT->header();
 

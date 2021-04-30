@@ -305,6 +305,11 @@ function cr_print_table($table, $return = false) {
             {
                 $id_usermoodle = $key;
             }
+            if ($heading == 'documentName') 
+            {
+                $id_documentName = $key;
+            }
+
             if (!isset($size[$key])) {
                 $size[$key] = '';
             }
@@ -361,6 +366,15 @@ function cr_print_table($table, $return = false) {
                     elseif ($isuserid == $key && $formaction == "sendemail")
                     {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
+                    }
+                    elseif ($id_documentName == $key)
+                    {
+                        $docid        = $row[$key + 1];
+                        $documentName = $item;
+                        $docurl       = 'https://drive.google.com/open?id=' . $docid;
+                        $attrs        = ['alt' => $documentName];
+                        $link         = \html_writer::link($docurl, $documentName, $attrs);
+                        $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'">'.$link.'</td>';
                     }
                     else 
                     {

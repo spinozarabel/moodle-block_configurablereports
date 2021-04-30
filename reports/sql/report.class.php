@@ -171,13 +171,13 @@ class report_sql extends report_base {
                         if (!empty($json_array))
                         {
                             $num_json_cols  = count($json_array[0]);
-
                             $json_headings  = array_keys($json_array[0]);
 
                             $this->json_headings = $json_headings;
                             $this->num_json_cols = $num_json_cols;
+
                             break;
-                            // we have json column headings and index so out of loop.
+                            // we have json column headings and index so get out of loop.
                         }
                         else
                         {
@@ -198,18 +198,6 @@ class report_sql extends report_base {
                     }
                 }
 
-                // if json_headings are empty, no valid json data for all rows so no need to expand new json columns
-                if (empty($json_headings))
-                {
-                    $json_col_index 	= null;
-
-                    $this->json_col_index = null;
-                }
-                else 
-                {
-                    $this->json_col_index = $json_col_index;
-                }
-
                 unset ($row);
                 unset ($json_array);
 
@@ -217,7 +205,6 @@ class report_sql extends report_base {
                 // we add additional columns and rows due to JSON only if json data exists i.e $json_col_index != null
                 foreach ($rs as $row) 
                 {
-                    error_log(print_r($row, true));
                     if (empty($finaltable))                                 // set the report's table headings                           
                     {
                         // we reset an index for column loop
@@ -241,19 +228,22 @@ class report_sql extends report_base {
                     // now we are printing table row
                     $arrayrow = array_values((array) $row);                 // get the values for this row as non-assoc array
                     
-                    if (!empty($json_col_index))                            // get the json array for this row if exists
+                    if (isset($json_col_index))                            // get the json array for this row if exists
                     {
-                        $json_val_html  = $arrayrow[$json_col_index];       // possible html tags present
+                        $json_val_html  = $arrayrow[$json_col_index] ?? [];       // possible html tags present
                         // remove tags etc.
                         $json_notags    = strip_tags(html_entity_decode($json_val_html));
                         // decode json string into associative array
                         $json_array 	= json_decode($json_notags, true);
-                        // how many entries for this user in the json array?
-                        $num_extra_rows = count($json_array) ?? 0;
-                        //
-                        if ($num_extra_rows == 0)
+
+                        // if array is empty we still need one row to display blank json data
+                        if (empty($json_array))
                         {
                             $num_extra_rows = 1;
+                        }
+                        else 
+                        {
+                            $num_extra_rows = count($json_array);
                         }
                     }
 

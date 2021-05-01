@@ -295,6 +295,8 @@ function cr_print_table($table, $return = false) {
         $output .= '<thead><tr>';
         $keys = array_keys($table->head);
         $lastkey = end($keys);
+        // form table headings numerically indexed array for use with delete items form
+        $table_headings = array_values((array) $table->head);
         foreach ($table->head as $key => $heading) {
             if ($heading == 'sendemail' || $heading == "fileId") 
             {
@@ -332,6 +334,12 @@ function cr_print_table($table, $return = false) {
         $keys = array_keys($table->data);
         $lastrowkey = end($keys);
         foreach ($table->data as $key => $row) {
+            // cpature each row as an array
+            $row_array = (array) $row;
+            // form an associative array with headings extracted above
+            $row_assoc_array = array_combine($table_headings, $row_array);
+            $row_serialized = base64_encode(json_encode($row_assoc_array));
+
             $oddeven = $oddeven ? 0 : 1;
             if (!isset($table->rowclass[$key])) {
                 $table->rowclass[$key] = '';
@@ -346,6 +354,7 @@ function cr_print_table($table, $return = false) {
                 $keys2 = array_keys($row);
                 $lastkey = end($keys2);
                 foreach ($row as $key => $item) {
+
                     if (!isset($size[$key])) {
                         $size[$key] = '';
                     }
@@ -361,7 +370,7 @@ function cr_print_table($table, $return = false) {
                         $extraclass = '';
                     }
                     if ($isuserid == $key && $formaction == "fileId") {
-                        $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="fileids[]" type="checkbox" value="'.$item.'" ></td>';
+                        $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" ></td>';
                     } 
                     elseif ($isuserid == $key && $formaction == "sendemail")
                     {
@@ -385,6 +394,7 @@ function cr_print_table($table, $return = false) {
             $output .= '</tr>'."\n";
         }
     }
+    
     $output .= '</table>'."\n";
     $output .= '<input type="hidden" name="courseid" value="'.$COURSE->id.'">';
     $output .= '<input type="hidden" name="reportid" value="'.$table->reportid.'">';

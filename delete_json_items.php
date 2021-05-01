@@ -150,6 +150,8 @@ else if ($formdata = $form->get_data())
 
     foreach ($rows as $row_array)
     {
+        $doc_index = null;
+
         // get user's id
         $moodleuserid = $row_array["id"];
         $fileId       = $row_array["fileId"];
@@ -175,9 +177,9 @@ else if ($formdata = $form->get_data())
         //error_log("This is the json array index to be deleted: $doc_index");
         //error_log("This is the corresponding fileID to be deleted:" . $documentlinks_arr[$doc_index]['fileId']);
 
-        // delete this entry in the array only if search value is not null
-        if ($doc_index)
+        if ($a !== false)
         {
+            // delete this entry in the array only as search was successfull.
             unset($documentlinks_arr[$doc_index]);
 
             // form new json string of modified array. reindex so indices are not missing due to unset operation
@@ -191,7 +193,7 @@ else if ($formdata = $form->get_data())
         }
         else 
         {
-            // did not find a match to delete, log and continue with next item
+            // did not find a match to delete, log and continue with next item.
             error_log("Did mot find a match to delete for user id: $moodleuserid and fileId: $fileId");
         }   
     }

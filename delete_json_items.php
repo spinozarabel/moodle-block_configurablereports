@@ -180,6 +180,7 @@ else if ($formdata = $form->get_data())
         if ($a !== false)
         {
             // delete this entry in the array only as search was successfull.
+            // if we did not make the check for false, we might unset the wrong item
             unset($documentlinks_arr[$doc_index]);
 
             // form new json string of modified array. reindex so indices are not missing due to unset operation

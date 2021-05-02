@@ -298,10 +298,9 @@ function cr_print_table($table, $return = false) {
         // form table headings numerically indexed array for use with delete items form
         $table_headings = array_values((array) $table->head);
         foreach ($table->head as $key => $heading) {
-            if ($heading == 'sendemail' || $heading == "fileId") 
+            if ($heading == 'sendemail' ) 
             {
                 $isuserid = $key;
-                $formaction = $heading;
             }
             if ($heading == 'id') 
             {
@@ -334,8 +333,18 @@ function cr_print_table($table, $return = false) {
         $keys = array_keys($table->data);
         $lastrowkey = end($keys);
         foreach ($table->data as $key => $row) {
+
             // cpature each row as an array
             $row_array = (array) $row;
+
+            /*
+            if (count($row_array) < count($table_headings))
+            {
+                // this row is not a JSON row since items of row are less than items in headings that include JSON extras
+                // so do not list this row
+                continue;
+            }
+            */
             // form an associative array with headings extracted above
             $row_assoc_array = array_combine($table_headings, $row_array);
             $row_serialized = base64_encode(json_encode($row_assoc_array));
@@ -369,10 +378,11 @@ function cr_print_table($table, $return = false) {
                     } else {
                         $extraclass = '';
                     }
-                    if ($isuserid == $key && $formaction == "fileId") {
+                    if ($id_usermoodle == $key && $table->formaction == "delete_items") 
+                    {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" ></td>';
                     } 
-                    elseif ($isuserid == $key && $formaction == "sendemail")
+                    elseif ($isuserid == $key && $table->formaction == "sendemail")
                     {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
                     }
@@ -396,29 +406,31 @@ function cr_print_table($table, $return = false) {
     }
     
     $output .= '</table>'."\n";
-    $output .= '<input type="hidden" name="courseid" value="'.$COURSE->id.'">';
-    $output .= '<input type="hidden" name="reportid" value="'.$table->reportid.'">';
+    $output .= '<input type="hidden" name="courseid" value="' . $COURSE->id .'">';
+    $output .= '<input type="hidden" name="reportid" value="' . $table->reportid .'">';
+    $output .= '<input type="hidden" name="shortname_profile_field" value="' . $table->shortname_profile_field .'">';
+    $output .= '<input type="hidden" name="tablehead" value="' . base64_encode(serialize($table->head)) .'">';
 
-    // we serialize the entire table to be sent in the form for processing
-    if ($formaction == "fileId")
+    /* we serialize the entire table to be sent in the form for processing
+    if ($table->formaction == "delete_items")
     {
         // form an associative array of object table, serialize it and encode it.
         // error_log(print_r((array) $table, true));
         $encoded_serialized_table = base64_encode(serialize((array) $table));
         $output .= '<input type="hidden" name="encoded_serialized_table" value="'.$encoded_serialized_table.'">';
     }
-    if ($isuserid != -1) 
+    */
+    // Add the submit button with button text dependent on action type
+    
+    if ($table->formaction == "delete_items") 
     {
-        if ($table->formaction == "delete_items") 
-        {
-            $output .= '<input type="submit" value="delete selected items">';
-        }
-        else 
-        {
-            $output .= '<input type="submit" value="send notifications">';
-        }
-        
+        $output .= '<input type="submit" value="delete selected items">';
     }
+    else 
+    {
+        $output .= '<input type="submit" value="send notifications">';
+    }
+        
     $output .= '</form>';
 
     if ($return) {

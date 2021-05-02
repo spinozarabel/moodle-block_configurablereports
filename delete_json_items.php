@@ -1,20 +1,9 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
-// OK form added to delete selected JSON items.
+/*
+* Added by Madhu 2021
+* This lets you delete JSON records from user's profile field.
+* OK form added to delete selected JSON items.
+*/
 require_once('../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 
@@ -36,8 +25,14 @@ $PAGE->navbar->add('Delete selected JSON data from User profile');
 
 echo $OUTPUT->header();
 
-// this POST variable is an array of JSON encoded row which in then base64 encoded.
+// this POST variable is an array of JSON encoded rows each of which is base64 encoded.
 $encoded_rows = $_POST['rowsserialized'];
+
+// this POST variable is the shortname of user profile field corresponding to the JSON table in the table
+$shortname_profile_field    = $_POST['shortname_profile_field'];
+
+//
+$tablehead_arr = unserialize(base64_decode($_POST['tablehead']));
 
 echo "The following items will be deleted from the corresponding users' profile field";
 
@@ -56,14 +51,22 @@ echo "The following items will be deleted from the corresponding users' profile 
     </style>
     <table style="width:100%">
         <tr>
-            <th>username</th>
-            <th>fullname</th>
-            <th>id</th>
-            <th>idnumber</th>
-            <th>documentName</th>
-            <th>documentlink</th>
-        </tr>
 <?php
+
+// print the headings by looping through headings array
+foreach ($tablehead_arr as $key => $value) 
+{
+    ?>
+    <th><?php echo htmlspecialchars($value); ?></td>
+    <?php
+}
+
+?>         
+        </tr>
+        <tr>
+<?php
+
+// print the table data rows
 
 $row_for_form = [];
 
@@ -72,23 +75,38 @@ foreach ($encoded_rows as $encoded_row)
     // each item has to base64 decoded to get the JSON encoded array.
     $json_row = base64_decode($encoded_row);
 
-    // This now has to be json decoded into the final associative row array containing associative row data to be deleted
+    // This now has to be json decoded into the final associative row array
     $row          = json_decode($json_row, true);
+
+    // prepare array for POSTing to form
     $row_for_form[] = $row;
 
-    $docid        = $row["fileId"];
-    $documentName = format_string($row["fileId"]);
-    $docurl       = 'https://drive.google.com/open?id=' . $docid;
-    $attrs        = ['alt' => $documentName];
+    if ($shortname_profile_field == 'documentlinks')
+    {
+        $docid        = $row["fileId"];
+        $documentName = format_string($row["documentName"]);
+        $docurl       = 'https://drive.google.com/open?id=' . $docid;
+        $attrs        = ['alt' => $documentName];
+    }
+
+    foreach ($tablehead_arr as $key => $heading) 
+    {
+        if ($heading == "documentName")
+        {
+            ?>
+                <td><?php echo \html_writer::link($docurl, $documentName, $attrs); ?></td>
+            <?php
+        }
+        else 
+        {
+            ?>
+                <td><?php echo htmlspecialchars($row[$heading]); ?></td>
+            <?php
+        }
+        
+    }
     
     ?>
-        <tr>
-            <td><?php echo htmlspecialchars($row['username']); ?></td>
-            <td><?php echo htmlspecialchars($row['fullname']); ?></td>
-            <td><?php echo htmlspecialchars($row['id']); ?></td>
-            <td><?php echo htmlspecialchars($row['idnumber']); ?></td>
-            <td><?php echo htmlspecialchars($row['documentName']); ?></td>
-            <td><?php echo \html_writer::link($docurl, $documentName, $attrs); ?></td>
         </tr>
     <?php
 }
@@ -115,10 +133,11 @@ class delete_json_items_form extends moodleform
             'context' => $context
         ];
 
-        $mform->addElement('hidden', 'serialize_array',           $this->_customdata['serialize_array']);
+        $mform->addElement('hidden', 'serialize_array',          $this->_customdata['serialize_array']);
         $mform->addElement('hidden', 'courseid',                 $this->_customdata['courseid']);
         $mform->addElement('hidden', 'encoded_serialized_table', $this->_customdata['encoded_serialized_table']);
         $mform->addElement('hidden', 'reportid',                 $this->_customdata['reportid']);
+        $mform->addElement('hidden', 'shortname_profile_field',  $this->_customdata['shortname_profile_field']);
 
         $buttons = array();
         $buttons[] =& $mform->createElement('submit', 'delete', 'Delete above items');
@@ -133,6 +152,7 @@ $form = new \delete_json_items_form(null, [
                                             'encoded_serialized_table'     => $_POST['encoded_serialized_table'],
                                             'courseid'                     => $_POST['courseid'],
                                             'reportid'                     => $_POST['reportid'],
+                                            'shortname_profile_field'      => $shortname_profile_field
                                           ]
                                     );
 
@@ -143,51 +163,53 @@ if ($form->is_cancelled())
 } 
 else if ($formdata = $form->get_data()) 
 {
-    $data = $formdata->serialize_array;
+    $rows_serialized         = $formdata->serialize_array;
+
+    $shortname_profile_field = $formdata->shortname_profile_field;
 
     // unserialize to get the array of deletable rows
-    $rows = unserialize($data);
+    $rows = unserialize($rows_serialized);
 
     foreach ($rows as $row_array)
     {
-        $doc_index = null;
+        // this is the index of searched item in the array. We initialize it.
+        $index = null;
 
-        // get user's id
+        // get user's id. This must exist. If not exit
         $moodleuserid = $row_array["id"];
-        $fileId       = $row_array["fileId"];
 
         // get this user's profile data
         // read in existing data in profile_field documentlinks
-        $field                      = $DB->get_record('user_info_field',    array('shortname' => "documentlinks"));
-        $user_profile_documentlinks = $DB->get_record('user_info_data',     array(
-                                                                                    'userid'   =>  $moodleuserid,
-                                                                                    'fieldid'  =>  $field->id,
+        $field                      = $DB->get_record('user_info_field',    array('shortname'  => $shortname_profile_field));
+        $user_profile_db            = $DB->get_record('user_info_data',     array(
+                                                                                    'userid'   => $moodleuserid,
+                                                                                    'fieldid'  => $field->id,
                                                                                     )
                                                         );
         // read in the JSON encoded data or set it to blank if empty. Strip tags
-        $documentlinks_json		= strip_tags(html_entity_decode($user_profile_documentlinks->data));
+        $userdata_json		= strip_tags(html_entity_decode($user_profile_db->data));
         // decode json string into array. Each sub-array stands for one document record. If fails decode to empty array
-        $documentlinks_arr 		= json_decode($documentlinks_json, true) ?? [];
+        $userdata_arr 		= json_decode($userdata_json, true) ?? [];
 
-        if (empty($documentlinks_arr)) continue;
+        if (empty($userdata_arr)) continue;
 
-        // find index in this array that matches with fileid of loop. returns 1stmatch if multiple
-        $doc_index = array_search($fileId, array_column($documentlinks_arr, 'fileId'));
+        // find index of sub-array in this array that matches with $row
+        $index = mysubarray_search($row_array, $userdata_arr);
 
         //error_log("This is the json array index to be deleted: $doc_index");
         //error_log("This is the corresponding fileID to be deleted:" . $documentlinks_arr[$doc_index]['fileId']);
 
-        if ($a !== false)
+        if ($index !== false)
         {
             // delete this entry in the array only as search was successfull.
             // if we did not make the check for false, we might unset the wrong item
-            unset($documentlinks_arr[$doc_index]);
+            unset($userdata_arr[$index]);
 
             // form new json string of modified array. reindex so indices are not missing due to unset operation
-            $user_profile_documentlinks->data = json_encode(array_values($documentlinks_arr));
+            $user_profile_db->data = json_encode(array_values($userdata_arr));
 
             // write this back to the user's profile field
-            $DB->update_record('user_info_data', $user_profile_documentlinks, $bulk=false);
+            $DB->update_record('user_info_data', $user_profile_db, $bulk=false);
 
             // finished with this loop iteration, move on to next one
             continue;
@@ -195,7 +217,7 @@ else if ($formdata = $form->get_data())
         else 
         {
             // did not find a match to delete, log and continue with next item.
-            error_log("Did mot find a match to delete for user id: $moodleuserid and fileId: $fileId");
+            error_log("Did mot find a match to delete");
         }   
     }
     // After deleting json items... go back to where you came from.
@@ -210,3 +232,33 @@ echo \html_writer::end_tag('div');
 
 
 echo $OUTPUT->footer();
+
+/**
+ * @param array:$row_array is the json record as an associative array, that is to be deleted
+ * @param array:$userdata_arr is the array of json records, each record being an associative sub-array.
+ * @return mixed:$index is the matching array index of the userdata_arr containing the JSON record to be deleted
+ * A boolean false is returned if no match is found.
+ * We loop through each of the sub-arrays in the userdata_arr. At each loop we convert the sub-array to a JSON string.
+ * We check to see if this string is a sub-set of the JSON string of the reocrd to be deleted.
+ * Remember that the record to be deleted has extra user information such as name, id, etc. That is why we seek the subset
+ * A final trick is that we need to get rid of the "{ start in the JSON sub-array since it won't be there in the target.
+*/
+function mysubarray_search($row_array, $userdata_arr)
+{
+    $json_row_arr = json_encode($row_array);
+
+    foreach ($userdata_arr as $index => $sub_array) 
+    {
+        // remove the 1st 2 characters: "{ from the JSON string that will not have a correspondence in the target
+        $json_sub_array = substr(json_encode($sub_array),2);
+
+        // check to see if the JSON sub-array is a sub-set of the JSON record of item to be deleted.
+        if (strpos($json_row_arr, $json_sub_array) !== false)
+        {
+            // found match, so we return this index.
+            return $index;
+        }
+    }
+    // did'nt find match
+    return false;
+}

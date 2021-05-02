@@ -212,10 +212,12 @@ function cr_get_export_plugins() {
     return $pluginoptions;
 }
 /**
- *  Modified by Madhu Avasarala
- *  Added options for formaction to delete selected items for json based entries
- *  A POST variable called serialized_ids is created using the entire table using a hidden input in form.
- *  Selected table rows are output as an array called fileids which are to be deleted from user profile.
+ *  Modified by Madhu Avasarala: 36_ver3
+ *  Added options for formaction to delete selected items of json records
+ *  The table is printed out inside a form whose action depends on the $table->formaction set in the sql report class.
+ *  Each selected row is made into an associated array, JSON encoded and then base64 encoded and put into an array
+ *  This array is sent as a POST variable to be picked up by the action php code.
+ *  SOme other information such as reportid, courseid and table headings array are also sent as hidden inputs of the form.
  */
 function cr_print_table($table, $return = false) {
     global $COURSE;
@@ -272,11 +274,11 @@ function cr_print_table($table, $return = false) {
 
     $tableid = empty($table->id) ? '' : 'id="'.$table->id.'"';
 
-    if ($table->formaction == "delete_items")
+    if ($table->formaction == "delete_items")       // newly added action by Madhu
     {
         $output .= '<form action="delete_json_items.php" method="post" id="sendemail">';
     }
-    else 
+    else                                            //  action of original code
     {
         $output .= '<form action="send_emails.php" method="post" id="sendemail">';
     }
@@ -295,9 +297,12 @@ function cr_print_table($table, $return = false) {
         $output .= '<thead><tr>';
         $keys = array_keys($table->head);
         $lastkey = end($keys);
+
         // form table headings numerically indexed array for use with delete items form
         $table_headings = array_values((array) $table->head);
-        foreach ($table->head as $key => $heading) {
+
+        foreach ($table->head as $key => $heading) 
+        {                                               // print the table heading. Save indices of some column headings
             if ($heading == 'sendemail' ) 
             {
                 $isuserid = $key;
@@ -337,15 +342,7 @@ function cr_print_table($table, $return = false) {
             // cpature each row as an array
             $row_array = (array) $row;
 
-            /*
-            if (count($row_array) < count($table_headings))
-            {
-                // this row is not a JSON row since items of row are less than items in headings that include JSON extras
-                // so do not list this row
-                continue;
-            }
-            */
-            // form an associative array with headings extracted above
+            // form an associative array with headings, serialize and encode it keep ready for use further down
             $row_assoc_array = array_combine($table_headings, $row_array);
             $row_serialized = base64_encode(json_encode($row_assoc_array));
 
@@ -379,15 +376,16 @@ function cr_print_table($table, $return = false) {
                         $extraclass = '';
                     }
                     if ($id_usermoodle == $key && $table->formaction == "delete_items") 
-                    {
+                    {   // we use the id column to insert the checkbox to select rows so as not to obscure data
+                        // If selected we add item to POST array variable, $_POST['rowsserialized']
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" ></td>';
                     } 
                     elseif ($isuserid == $key && $table->formaction == "sendemail")
-                    {
+                    {   // original code
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
                     }
                     elseif ($id_documentName == $key)
-                    {
+                    {   // if dealing with documents, we print link instead of raw data for ease of use
                         $docid        = $row[$key + 1];
                         $documentName = $item;
                         $docurl       = 'https://drive.google.com/open?id=' . $docid;
@@ -396,7 +394,7 @@ function cr_print_table($table, $return = false) {
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'">'.$link.'</td>';
                     }
                     else 
-                    {
+                    {   // original code for regular table item
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'">'. $item .'</td>';
                     }
                 }
@@ -408,26 +406,18 @@ function cr_print_table($table, $return = false) {
     $output .= '</table>'."\n";
     $output .= '<input type="hidden" name="courseid" value="' . $COURSE->id .'">';
     $output .= '<input type="hidden" name="reportid" value="' . $table->reportid .'">';
+
+    // Madhu added the following for use in form action code
     $output .= '<input type="hidden" name="shortname_profile_field" value="' . $table->shortname_profile_field .'">';
     $output .= '<input type="hidden" name="tablehead" value="' . base64_encode(serialize($table->head)) .'">';
 
-    /* we serialize the entire table to be sent in the form for processing
-    if ($table->formaction == "delete_items")
-    {
-        // form an associative array of object table, serialize it and encode it.
-        // error_log(print_r((array) $table, true));
-        $encoded_serialized_table = base64_encode(serialize((array) $table));
-        $output .= '<input type="hidden" name="encoded_serialized_table" value="'.$encoded_serialized_table.'">';
-    }
-    */
     // Add the submit button with button text dependent on action type
-    
     if ($table->formaction == "delete_items") 
-    {
+    {   // Madhu added submit button for custom form action of delete_items
         $output .= '<input type="submit" value="delete selected items">';
     }
     else 
-    {
+    {   // original code for submit button
         $output .= '<input type="submit" value="send notifications">';
     }
         

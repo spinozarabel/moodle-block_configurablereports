@@ -1,7 +1,7 @@
 <?php
 /*
-* Added by Madhu 2021
-* This lets you delete JSON records from user's profile field.
+* Added by Madhu 2021 36_ver3
+* This lets you delete selected JSON records from user's profile field.
 * OK form added to delete selected JSON items.
 */
 require_once('../../config.php');
@@ -28,10 +28,10 @@ echo $OUTPUT->header();
 // this POST variable is an array of JSON encoded rows each of which is base64 encoded.
 $encoded_rows = $_POST['rowsserialized'];
 
-// this POST variable is the shortname of user profile field corresponding to the JSON table in the table
+// this POST variable is the shortname of user profile field corresponding to the JSON column in the SQL records
 $shortname_profile_field    = $_POST['shortname_profile_field'];
 
-//
+// This POST variable is the array of original SQL table headings expanded with JSON  ones.
 $tablehead_arr = unserialize(base64_decode($_POST['tablehead']));
 
 echo "The following items will be deleted from the corresponding users' profile field";

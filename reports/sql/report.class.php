@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports ver :3.0
+ * Configurable Reports ver :36_ver3
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Juan leyva <http://www.twitter.com/jleyvadelgado> Madhu Avasarala modified for JSON records expansion
@@ -131,34 +131,37 @@ class report_sql extends report_base {
 
             if ($rs = $this->execute_query($sql))
             {   // make sure records exist if not don't bother
-                // we need information about presence of JSON strings and if so, the added headings.
+                // we need to detect possible presence of a JSON column in the extracted SQL records.
+                // Only 1st json_shortname column is expected and treated. Others are ignored.
                 $json_col_index 	= null;                                 // null this out to begin with
 
-                foreach ($rs as $row)                      
+                foreach ($rs as $row)                                       // loop 1 to look for JSON column                
                 {               
                     $keys_row = array_keys((array)      $row);              // cast to array and get the keys
                     $vals_row = array_values((array)    $row);              // cast to array and get the values
 
-                    foreach($keys_row as $ii => $colname)                   // check this row for JSON presence
+                    foreach($keys_row as $ii => $colname)        // check this row for JSON presence. Loop 2
                     {
                       if ($json_col_index)
                       {
-                        // not 1st time here, already found index, exit loop
+                        // not 1st time here, already found index, exit loop 2
                         break;
                       }
                       if (stripos($colname, 'json') !== false)
                       {
-                        // this column is a JSON encoded column, get its index
+                        // this column is a JSON encoded column, store its column index
                         $json_col_index 	= $ii;
 
                         // all JSON columns have to be named as json_shortname (of profile field)
+                        // extract user profile field's shortname by looking after the "_" character
                         $shortname_profile_field = substr($colname, strpos($colname, "_") + 1); 
-                        // we have our json column index as well as the shortname, exit loop
+                        // we have our json column index as well as the shortname, exit loop 2
                         break;
                       }
                     }
                     // finished with json_col_index finding.
                     // now check if we have valid json data to extract json column headings from
+                    // A row can contain blank JSON data so may have to loop to find row with non-empty JSON data
                     if ($json_col_index)
                     {
                       // see if this row has valid json data at column just found
@@ -174,25 +177,22 @@ class report_sql extends report_base {
                         if (!empty($json_array))
                         {
                             $num_json_cols  = count($json_array[0]);        // since array is not empty check 0th element
-                            $json_headings  = array_keys($json_array[0]);   // get the new columns from JSON Keys
+                            $json_headings  = array_keys($json_array[0]);   // get the new column headers from JSON Keys
 
-                            break;                                          // get out of this loop of rows
+                            break;                                          // get out of this loop 1 over rows
                         }
                         else
-                        {
-                            // this row does not have valid json data, look in next row
+                        {   // this row does not have valid json data, look in next row in loop 1
                             continue;
                         }
                       }
                       else
-                      {
-                        // empty string found for this row, look in next row
+                      {   // empty string found for this row, look in next row in loop 1
                         continue;
                       }
                     }
                     else
-                    {
-                      // no json encoded column extracted in SQL records so get out of loop
+                    {   // no json encoded column extracted in SQL records so get out of loop 1
                       break;
                     }
                 }
@@ -200,15 +200,18 @@ class report_sql extends report_base {
                 unset ($row);
                 unset ($json_array);
 
-                // finally we come to section where we build the table
-                // we add additional columns and rows due to JSON if json data exists i.e $json_col_index != null
-                foreach ($rs as $row) 
+                // finally we come to section where we build the table array. (The HTML print out done in locallib)
+                // we add additional columns rows due to JSON if json data exists i.e $json_col_index != null
+                // we also add additional rows, 1 row for each JSON record, for same user.
+                // so for every (all) users we expand SQL columns by JSON headings. We remove the JSON column.
+                // for each user, we add extra rows if there are multiple JSON records.
+                foreach ($rs as $row)                                       // loop 3 row loop
                 {
                     if (empty($finaltable))                                 // set the report's table headings                           
                     {
                         // we reset an index for counting in column loop of 1st row
                         $i = 0;
-                        foreach ($row as $colname => $value) 
+                        foreach ($row as $colname => $value)                // loop 4 column loop
                         {
                             if ($json_col_index == $i)                     // Is the column heading a JSON encoded one?
                             {
@@ -227,14 +230,14 @@ class report_sql extends report_base {
                     // now we are building table data row
                     $arrayrow = array_values((array) $row);                // cast to numeric array
                     
-                    if (isset($json_col_index))                            
+                    if (isset($json_col_index))                           // extract JSON array in this row 
                     {
-                        $json_val_html  = $arrayrow[$json_col_index] ?? []; // get the json array for this row if exists
+                        $json_val_html  = $arrayrow[$json_col_index] ?? []; // get the json string in this row if exists
 
                         // remove tags etc.
                         $json_notags    = strip_tags(html_entity_decode($json_val_html));
 
-                        // decode json string into associative array
+                        // decode json string into associative array. Main array is numeric indexed though.
                         $json_array 	= json_decode($json_notags, true);
 
                         // if array is empty we still need one row to display blank json data
@@ -249,27 +252,27 @@ class report_sql extends report_base {
                     }
 
                     // outer loop is for possibly extra rows due to JSON. If not loop is executed just once
-                    for ($i=0; $i <$num_extra_rows ; $i++)
+                    for ($i=0; $i <$num_extra_rows ; $i++)          // loop 5 for expanding rows
                     { 
                         // merge the extra json data with original array row
                         $merged_array_row = [];
-                        foreach ($arrayrow as $ii => $cell)
+                        foreach ($arrayrow as $ii => $cell)         // loop 6 for stuffing columns
                         {
                             if ($ii == $json_col_index)
                             {
-                                foreach ($json_array[$i] as $key => $value) // each array element is one JSON record
+                                foreach ($json_array[$i] as $key => $value) // loop 7 for expanding columns for json added
                                 {         
                                     $merged_array_row[] = $value;
                                 }
                             }
-                            else                                            // non JSON data, use data as is.
+                            else                                            // non JSON data, use data as is. original code
                             {
                                 $merged_array_row[] = $cell;
                             }
                         }
                         unset($cell);
 
-                        foreach ($merged_array_row as $ii => $cell)         // some formatting, existing code
+                        foreach ($merged_array_row as $ii => $cell)         // some formatting, original code
                         {
                             
                                 if (!$this->isForExport()) 
@@ -279,12 +282,12 @@ class report_sql extends report_base {
                                 $merged_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
                             
                         }
-                        $totalrecords++;
-                        $finaltable[] = $merged_array_row;
+                        $totalrecords++;                                    // increment table row count
+                        $finaltable[] = $merged_array_row;                  // add just formed row to array of rows
                     }
                     
                     
-                }                                                           // end of loop to build next table row
+                }                                                           // end of loop to build next table rows
             }
         }
         $this->sql = $sql;
@@ -301,10 +304,10 @@ class report_sql extends report_base {
         $table->reportid = $this->config->id;
 
         // added by  Madhu: Store JSON information in $table class for later use ------------------>
-        if ($json_col_index)
+        if ($json_col_index)                                        // Store JSON information in $table class for later use
         {
-            $table->formaction      = "delete_items";
-            $table->json_present    = true;
+            $table->formaction              = "delete_items";
+            $table->json_present            = true;
             $table->shortname_profile_field = $shortname_profile_field;
 
             $table->json_headings   = $json_headings;          
@@ -312,7 +315,7 @@ class report_sql extends report_base {
             $table->json_col_index  = $json_col_index;
         }
         else
-        {
+        {                                                           // this is the original functional code
             $table->formaction = "sendemail";
             $table->json_present = false;
         }

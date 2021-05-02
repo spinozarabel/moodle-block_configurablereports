@@ -384,7 +384,7 @@ function cr_print_table($table, $return = false) {
                     {   // original code
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
                     }
-                    elseif ($id_documentName == $key)
+                    elseif ($id_documentName === $key)
                     {   // if dealing with documents, we print link instead of raw data for ease of use
                         $docid        = $row[$key + 1];
                         $documentName = $item;
@@ -416,8 +416,8 @@ function cr_print_table($table, $return = false) {
     {   // Madhu added submit button for custom form action of delete_items
         $output .= '<input type="submit" value="delete selected items">';
     }
-    else 
-    {   // original code for submit button
+    if ($isuserid !== -1)
+    {   // original code for submit button if emails heading contains sendemail
         $output .= '<input type="submit" value="send notifications">';
     }
         

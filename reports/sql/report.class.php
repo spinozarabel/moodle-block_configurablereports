@@ -213,7 +213,7 @@ class report_sql extends report_base {
                         $i = 0;
                         foreach ($row as $colname => $value)                // loop 4 column loop
                         {
-                            if ($json_col_index == $i)                     // Is the column heading a JSON encoded one?
+                            if ($json_col_index === $i)                     // Is the column heading a JSON encoded one?
                             {
                                 foreach ($json_headings as $json_heading)
                                 {                                           // add as many new columns as json headings
@@ -250,6 +250,10 @@ class report_sql extends report_base {
                             $num_extra_rows = count($json_array);
                         }
                     }
+                    else 
+                    {       // ensure at least one loop so that original code functionality for non-json
+                        $num_extra_rows = 1;
+                    }
 
                     // outer loop is for possibly extra rows due to JSON. If not loop is executed just once
                     for ($i=0; $i <$num_extra_rows ; $i++)          // loop 5 for expanding rows
@@ -258,7 +262,7 @@ class report_sql extends report_base {
                         $merged_array_row = [];
                         foreach ($arrayrow as $ii => $cell)         // loop 6 for stuffing columns
                         {
-                            if ($ii == $json_col_index)
+                            if ($ii === $json_col_index)            // strict comparison otherwise null == 0
                             {
                                 foreach ($json_array[$i] as $key => $value) // loop 7 for expanding columns for json added
                                 {         

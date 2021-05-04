@@ -222,6 +222,11 @@ function cr_get_export_plugins() {
 function cr_print_table($table, $return = false) {
     global $COURSE;
 
+    // this object has information about json column, options, etc, from 
+    $json_options_obj = $table->json_options_obj ?? null;
+
+    $select_all_rows = $table->json_options_obj->select_all_rows ?? false;
+
     $output = '';
 
     if (isset($table->align)) {
@@ -274,7 +279,7 @@ function cr_print_table($table, $return = false) {
 
     $tableid = empty($table->id) ? '' : 'id="'.$table->id.'"';
 
-    if ($table->formaction == "delete_items")       // newly added action by Madhu
+    if ($table->formaction === "delete_items")       // newly added action by Madhu
     {
         $output .= '<form action="delete_json_items.php" method="post" id="sendemail">';
     }
@@ -375,11 +380,19 @@ function cr_print_table($table, $return = false) {
                     } else {
                         $extraclass = '';
                     }
-                    if ($id_usermoodle == $key && $table->formaction == "delete_items") 
-                    {   // we use the id column to insert the checkbox to select rows so as not to obscure data
-                        // If selected we add item to POST array variable, $_POST['rowsserialized']
-                        $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" ></td>';
-                    } 
+                    if ($id_usermoodle == $key && $table->formaction == "delete_items")
+                    {
+                        if ($select_all_rows)
+                        {
+                            // we use the id column to insert the checkbox to select rows so as not to obscure data
+                            // If selected we add item to POST array variable, $_POST['rowsserialized']. By default all rows are selected
+                            $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" checked></td>';
+                        }
+                        else
+                        {   // default is rows are unselected
+                            $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="rowsserialized[]" type="checkbox" value="'.$row_serialized.'" ></td>';
+                        } 
+                    }
                     elseif ($isuserid == $key && $table->formaction == "sendemail")
                     {   // original code
                         $output .= '<td style="'. $align[$key].$size[$key].$wrap[$key] .'" class="cell c'.$key.$extraclass.'"><input name="userids[]" type="checkbox" value="'.$item.'" checked></td>';
@@ -408,7 +421,7 @@ function cr_print_table($table, $return = false) {
     $output .= '<input type="hidden" name="reportid" value="' . $table->reportid .'">';
 
     // Madhu added the following for use in form action code
-    $output .= '<input type="hidden" name="shortname_profile_field" value="' . $table->shortname_profile_field .'">';
+    $output .= '<input type="hidden" name="shortname_profile_field" value="' . $table->json_options_obj->shortname_profile_field .'">';
     $output .= '<input type="hidden" name="tablehead" value="' . base64_encode(serialize($table->head)) .'">';
 
     // Add the submit button with button text dependent on action type

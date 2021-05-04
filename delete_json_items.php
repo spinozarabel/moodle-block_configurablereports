@@ -1,6 +1,6 @@
 <?php
 /*
-* Added by Madhu 2021 36_ver3
+* Added by Madhu 2021 36_ver4
 * This lets you delete selected JSON records from user's profile field.
 * OK form added to delete selected JSON items.
 */
@@ -100,7 +100,7 @@ foreach ($encoded_rows as $encoded_row)
         else 
         {
             ?>
-                <td><?php echo htmlspecialchars($row[$heading]); ?></td>
+                <td><?php echo $row[$heading]; ?></td>
             <?php
         }
         

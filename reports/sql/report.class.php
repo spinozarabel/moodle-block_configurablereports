@@ -15,7 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports ver :36_ver3
+ * Configurable Reports ver :36_ver4 report.class under sql added functionality is mostly new class methods added
+ * This is a JSON encoded array for options to direct the report.
+ * We Look for a column called options in sql data. USer changes the available options before running the report.
+ * For example, select_all:1 selects all JSON rows, 0 unselects all. User can then manually check/uncheck any.
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Juan leyva <http://www.twitter.com/jleyvadelgado> Madhu Avasarala modified for JSON records expansion
@@ -100,6 +103,8 @@ class report_sql extends report_base {
     public function create_report() {
         global $DB, $CFG;
 
+        $select_all_rows = false;            // default for seleting all rows, needed in locallib print table
+
         $components = cr_unserialize($this->config->components);
 
         $filters = (isset($components['filters']['elements'])) ? $components['filters']['elements'] : array();
@@ -132,144 +137,50 @@ class report_sql extends report_base {
             if ($rs = $this->execute_query($sql))
             {   // make sure records exist if not don't bother
                 // we need to detect possible presence of a JSON column in the extracted SQL records.
-                // Only 1st json_shortname column is expected and treated. Others are ignored.
-                $json_col_index 	= null;                                 // null this out to begin with
-
-                foreach ($rs as $row)                                       // loop 1 to look for JSON column                
-                {               
-                    $keys_row = array_keys((array)      $row);              // cast to array and get the keys
-                    $vals_row = array_values((array)    $row);              // cast to array and get the values
-
-                    foreach($keys_row as $ii => $colname)        // check this row for JSON presence. Loop 2
-                    {
-                      if ($json_col_index)
-                      {
-                        // not 1st time here, already found index, exit loop 2
-                        break;
-                      }
-                      if (stripos($colname, 'json') !== false)
-                      {
-                        // this column is a JSON encoded column, store its column index
-                        $json_col_index 	= $ii;
-
-                        // all JSON columns have to be named as json_shortname (of profile field)
-                        // extract user profile field's shortname by looking after the "_" character
-                        $shortname_profile_field = substr($colname, strpos($colname, "_") + 1); 
-                        // we have our json column index as well as the shortname, exit loop 2
-                        break;
-                      }
-                    }
-                    // finished with json_col_index finding.
-                    // now check if we have valid json data to extract json column headings from
-                    // A row can contain blank JSON data so may have to loop to find row with non-empty JSON data
-                    if ($json_col_index)
-                    {
-                      // see if this row has valid json data at column just found
-                      if (!empty($vals_row[$json_col_index]))
-                      {
-                        // we have found non-empty string, (still may not be valid json data)
-                        $json_val_html  = $vals_row[$json_col_index]; // possible html tags present
-                        // remove tags etc.
-                        $json_notags    = strip_tags(html_entity_decode($json_val_html));   // strip all tags
-                        $json_array 	= json_decode($json_notags, true);                  // decode to associative array
-
-                        // lets get the JSON headings from the 0th row
-                        if (!empty($json_array))
-                        {
-                            $num_json_cols  = count($json_array[0]);        // since array is not empty check 0th element
-                            $json_headings  = array_keys($json_array[0]);   // get the new column headers from JSON Keys
-
-                            break;                                          // get out of this loop 1 over rows
-                        }
-                        else
-                        {   // this row does not have valid json data, look in next row in loop 1
-                            continue;
-                        }
-                      }
-                      else
-                      {   // empty string found for this row, look in next row in loop 1
-                        continue;
-                      }
-                    }
-                    else
-                    {   // no json encoded column extracted in SQL records so get out of loop 1
-                      break;
-                    }
-                }
-
-                unset ($row);
-                unset ($json_array);
+                
+                $json_options_obj   = $this->get_json_options_info($rs);
+                $json_col_index     = $json_options_obj->json_col_index;
+                $options_col_index  = $json_options_obj->options_col_index;
 
                 // finally we come to section where we build the table array. (The HTML print out done in locallib)
                 // we add additional columns rows due to JSON if json data exists i.e $json_col_index != null
                 // we also add additional rows, 1 row for each JSON record, for same user.
                 // so for every (all) users we expand SQL columns by JSON headings. We remove the JSON column.
                 // for each user, we add extra rows if there are multiple JSON records.
-                foreach ($rs as $row)                                       // loop 3 row loop
+                foreach ($rs as $row)                                       // row loop
                 {
                     if (empty($finaltable))                                 // set the report's table headings                           
                     {
-                        // we reset an index for counting in column loop of 1st row
-                        $i = 0;
-                        foreach ($row as $colname => $value)                // loop 4 column loop
-                        {
-                            if ($json_col_index === $i)                     // Is the column heading a JSON encoded one?
-                            {
-                                foreach ($json_headings as $json_heading)
-                                {                                           // add as many new columns as json headings
-                                    $tablehead[] = $json_heading;
-                                }
-                            }
-                            else                                            // not a json_encoded column so use as is
-                            {
-                                $tablehead[] = $colname;
-                            }
-                            $i +=1;                            
-                        }
+                        $tablehead = $this->get_table_header($row);
                     }
                     // now we are building table data row
                     $arrayrow = array_values((array) $row);                // cast to numeric array
-                    
-                    if (isset($json_col_index))                           // extract JSON array in this row 
-                    {
-                        $json_val_html  = $arrayrow[$json_col_index] ?? []; // get the json string in this row if exists
 
-                        // remove tags etc.
-                        $json_notags    = strip_tags(html_entity_decode($json_val_html));
-
-                        // decode json string into associative array. Main array is numeric indexed though.
-                        $json_array 	= json_decode($json_notags, true);
-
-                        // if array is empty we still need one row to display blank json data
-                        if (empty($json_array))
-                        {
-                            $num_extra_rows = 1;
-                        }
-                        else 
-                        {
-                            $num_extra_rows = count($json_array);
-                        }
-                    }
-                    else 
-                    {       // ensure at least one loop so that original code functionality for non-json
-                        $num_extra_rows = 1;
-                    }
+                    // get json array the json column in this row as well as number of rows required
+                    $json_data_for_this_row = $this->get_json_data_for_this_row($arrayrow);
+                    $json_array             = $json_data_for_this_row->json_array;
+                    $num_extra_rows         = $json_data_for_this_row->num_extra_rows;
 
                     // outer loop is for possibly extra rows due to JSON. If not loop is executed just once
-                    for ($i=0; $i <$num_extra_rows ; $i++)          // loop 5 for expanding rows
+                    for ($i=0; $i <$num_extra_rows ; $i++)          // loop for expanding rows
                     { 
                         // merge the extra json data with original array row
                         $merged_array_row = [];
-                        foreach ($arrayrow as $ii => $cell)         // loop 6 for stuffing columns
+
+                        foreach ($arrayrow as $ii => $cell)         // loop for stuffing columns
                         {
                             if ($ii === $json_col_index)            // strict comparison otherwise null == 0
                             {
-                                foreach ($json_array[$i] as $key => $value) // loop 7 for expanding columns for json added
+                                foreach ($json_array[$i] as $key => $value) // loop for expanding columns for json added
                                 {         
                                     $merged_array_row[] = $value;
                                 }
                             }
-                            else                                            // non JSON data, use data as is. original code
+                            else if ($ii === $options_col_index)     // is this an options column? if so suppress it
+                            {
+                                // do nothing, so ignore this heading in the table
+                            }
+                            else                                            // normal data, use data as is. original code
                             {
                                 $merged_array_row[] = $cell;
                             }
@@ -312,11 +223,7 @@ class report_sql extends report_base {
         {
             $table->formaction              = "delete_items";
             $table->json_present            = true;
-            $table->shortname_profile_field = $shortname_profile_field;
-
-            $table->json_headings   = $json_headings;          
-            $table->num_json_cols   = $num_json_cols;
-            $table->json_col_index  = $json_col_index;
+            $table->json_options_obj        = $json_options_obj;
         }
         else
         {                                                           // this is the original functional code
@@ -336,6 +243,185 @@ class report_sql extends report_base {
         $this->finalreport->calcs = $calcs;
 
         return true;
-    }
+    }   // end of function create_report
 
-}
+     /** 
+      *  @param object:$rs is an array of rows in object format
+      *  @return object:$json_options_obj
+      *  This function return an object that contains JSON column information
+      *  as well as options column information
+      */
+    public function get_json_options_info($rs)
+    {
+        $json_col_index 	= null;                                                  // defaultInitialize
+
+        $json_options_obj   = new \stdClass;                                            
+
+        foreach ($rs as $row)                                                         // look for JSON, option columns               
+        {               
+            $keys_row = array_keys((array)      $row);                                  
+            $vals_row = array_values((array)    $row);                                  
+
+            foreach($keys_row as $ii => $colname)                                     // check each column of this row
+            {   
+                if (stripos($colname, 'json') !== false)
+                {
+                // this column is a JSON encoded column, store its column index
+                $json_col_index 	= $ii;
+                $json_options_obj->json_col_index = $json_col_index;
+
+                // all JSON columns have to be named as json_shortname (of profile field)
+                // extract user profile field's shortname by looking after the "_" character
+                $shortname_profile_field = substr($colname, strpos($colname, "_") + 1); 
+                $json_options_obj->shortname_profile_field = $shortname_profile_field;
+                }
+
+                if ($colname === 'options')
+                {
+                    // this column conntains directives for report as a JSON array
+                    $options_col_index   = $ii;                 // save this for later use
+
+                    $options_json        = $vals_row[$ii];      // get the JSON coded array
+                    $options_json_notags = strip_tags(html_entity_decode($options_json));   // strip all tags
+                    $options_array       = json_decode($options_json_notags, true);          // decode to associative array
+
+                    switch (true) 
+                    {
+                        case ($options_array["select_all"] == "1"):
+                            $select_all_rows = true;
+                            break;
+
+                        
+                        default:
+                            //
+                            break;
+                    }
+
+                    $json_options_obj->options_col_index = $options_col_index;
+                    $json_options_obj->select_all_rows = $select_all_rows;
+                }
+
+            }
+            // finished with column index finding
+            // now check if we have valid json data to extract json column headings from
+            // A row can contain blank JSON data so may have to loop rows to find non-empty JSON data
+            if ($json_col_index)
+            {
+                // see if this row has valid json data at column just found
+                if (!empty($vals_row[$json_col_index]))
+                {
+                    // we have found non-empty string, (still may not be valid json data)
+                    $json_val_html  = $vals_row[$json_col_index]; // possible html tags present
+                    // remove tags etc.
+                    $json_notags    = strip_tags(html_entity_decode($json_val_html));   // strip all tags
+                    $json_array 	= json_decode($json_notags, true);                  // decode to associative array
+
+                    // lets get the JSON headings from the 0th row
+                    if (!empty($json_array))
+                    {
+                        $num_json_cols  = count($json_array[0]);        // since array is not empty check 0th element
+                        $json_headings  = array_keys($json_array[0]);   // get the new column headers from JSON Keys
+
+                        $json_options_obj->num_json_cols = $num_json_cols;
+                        $json_options_obj->json_headings = $json_headings;
+
+                        break;                                          // get out of this loop 1 over rows
+                    }
+                    else
+                    {   // this row does not have valid json data, look in next row in loop 1
+                        continue;
+                    }
+                }
+                else
+                {   // empty string found for this row, look in next row in loop 1
+                    continue;
+                }
+            }
+            else
+            {   // no json encoded column extracted in SQL records so get out of loop 1
+                break;
+            }
+        }   // end of foreach row loop 1
+
+        $this->json_options_obj = $json_options_obj;
+
+        return $json_options_obj;
+
+    }   // end of function definition
+
+    /**
+     *  @param object:$row
+     *  @return array:$table_header_arr
+     */
+
+    public function get_table_header($row)
+    {
+        $table_header_arr = [];
+
+        // we reset an index for counting in column loop
+        $i = 0;
+
+        foreach ($row as $colname => $value)                
+        {
+            // Is the column heading a JSON encoded one?
+            if ($i === $this->json_options_obj->json_col_index)        
+            {
+                // yes. expand with json headings
+                foreach ($this->json_options_obj->json_headings as $json_heading)
+                {                                          
+                    $table_header_arr[] = $json_heading;
+                }
+            }
+            else if ($i === $this->json_options_obj->options_col_index)    // is this the options column?
+            {
+                // do nothing, so ignore 'options' heading in the table
+            }
+            else                                            // not a json_encoded or options column, use as is
+            {
+                $table_header_arr[] = $colname;
+            }
+            $i +=1;                            
+        }
+        return $table_header_arr;
+    }   // end of function definition
+
+    /**
+     *  @param array:$arrayrow a numerically indexed current row array
+     *  @param object:$json_data_for_this_row 
+     */
+    public function get_json_data_for_this_row($arrayrow)
+    {
+        $json_data_for_this_row = new \stdClass;
+
+        // ensure at least one loop so that original code functionality for non-json
+        $num_extra_rows = 1;
+
+        if (isset($this->json_options_obj->json_col_index))
+        {
+            $json_col_index = $this->json_options_obj->json_col_index;
+            $json_val_html  = $arrayrow[$json_col_index] ?? []; // get the json string in this row if exists
+
+            // remove tags etc.
+            $json_notags    = strip_tags(html_entity_decode($json_val_html));
+
+            // decode json string into associative array. Main array is numeric indexed though.
+            $json_array 	= json_decode($json_notags, true);
+
+            // if array is empty we still need one row to display blank json data
+            if (empty($json_array))
+            {
+                $num_extra_rows = 1;
+            }
+            else 
+            {
+                $num_extra_rows = count($json_array);
+            }
+        }
+
+        $json_data_for_this_row->json_array     = $json_array;
+        $json_data_for_this_row->num_extra_rows = $num_extra_rows;
+
+        return $json_data_for_this_row;
+    } // end of class definition
+
+}   // end of class definition

@@ -423,6 +423,8 @@ function cr_print_table($table, $return = false) {
     // Madhu added the following for use in form action code
     $output .= '<input type="hidden" name="shortname_profile_field" value="' . $table->json_options_obj->shortname_profile_field .'">';
     $output .= '<input type="hidden" name="tablehead" value="' . base64_encode(serialize($table->head)) .'">';
+    $output .= '<input type="hidden" name="json_col_index" value="' . $table->json_options_obj->json_col_index .'">';
+    $output .= '<input type="hidden" name="num_json_cols" value="' . $table->json_options_obj->num_json_cols .'">';
 
     // Add the submit button with button text dependent on action type
     if ($table->formaction == "delete_items") 

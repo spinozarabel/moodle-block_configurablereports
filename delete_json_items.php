@@ -138,6 +138,8 @@ class delete_json_items_form extends moodleform
         $mform->addElement('hidden', 'encoded_serialized_table', $this->_customdata['encoded_serialized_table']);
         $mform->addElement('hidden', 'reportid',                 $this->_customdata['reportid']);
         $mform->addElement('hidden', 'shortname_profile_field',  $this->_customdata['shortname_profile_field']);
+        $mform->addElement('hidden', 'json_col_index',           $this->_customdata['json_col_index']);
+        $mform->addElement('hidden', 'num_json_cols',            $this->_customdata['num_json_cols']);
 
         $buttons = array();
         $buttons[] =& $mform->createElement('submit', 'delete', 'Delete above items');
@@ -149,10 +151,12 @@ class delete_json_items_form extends moodleform
 
 $form = new \delete_json_items_form(null, [
                                             'serialize_array'              => $serialize_array, 
-                                            'encoded_serialized_table'     => $_POST['encoded_serialized_table'],
                                             'courseid'                     => $_POST['courseid'],
+                                            'encoded_serialized_table'     => $_POST['encoded_serialized_table'],                        
                                             'reportid'                     => $_POST['reportid'],
-                                            'shortname_profile_field'      => $shortname_profile_field
+                                            'shortname_profile_field'      => $shortname_profile_field,
+                                            'json_col_index'               => $_POST['json_col_index'],
+                                            'num_json_cols'                => $_POST['num_json_cols']
                                           ]
                                     );
 
@@ -166,6 +170,12 @@ else if ($formdata = $form->get_data())
     $rows_serialized         = $formdata->serialize_array;
 
     $shortname_profile_field = $formdata->shortname_profile_field;
+
+    // this is the index in the row that corresponds to start of JSON data
+    $json_col_index           = $formdata->json_col_index;
+
+    // This is the number of columns of JSON data starting from json_col_index, in the row data
+    $num_json_cols           = $formdata->num_json_cols;
 
     // unserialize to get the array of deletable rows
     $rows = unserialize($rows_serialized);
@@ -194,7 +204,7 @@ else if ($formdata = $form->get_data())
         if (empty($userdata_arr)) continue;
 
         // find index of sub-array in this array that matches with $row
-        $index = mysubarray_search($row_array, $userdata_arr);
+        $index = mysubarray_search($row_array, $userdata_arr, $json_col_index, $num_json_cols);
 
         //error_log("This is the json array index to be deleted: $doc_index");
         //error_log("This is the corresponding fileID to be deleted:" . $documentlinks_arr[$doc_index]['fileId']);
@@ -243,13 +253,17 @@ echo $OUTPUT->footer();
  * Remember that the record to be deleted has extra user information such as name, id, etc. That is why we seek the subset
  * A final trick is that we need to get rid of the "{ start in the JSON sub-array since it won't be there in the target.
 */
-function mysubarray_search($row_array, $userdata_arr)
+function mysubarray_search($row_array, $userdata_arr, $json_col_index, $num_json_cols)
 {
+    // first force all array values to strings especially for numbers so comparison can be correctly done
+    $row_array    = array_map('strval', $row_array);
     $json_row_arr = json_encode($row_array);
 
     foreach ($userdata_arr as $index => $sub_array) 
     {
         // remove the 1st 2 characters: "{ from the JSON string that will not have a correspondence in the target
+        // first force all array values to strings especially for numbers so comparison can be correctly done
+        $sub_array      = array_map('strval', $sub_array);      
         $json_sub_array = substr(json_encode($sub_array),2);
 
         // check to see if the JSON sub-array is a sub-set of the JSON record of item to be deleted.

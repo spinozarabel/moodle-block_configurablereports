@@ -212,8 +212,8 @@ function cr_get_export_plugins() {
     return $pluginoptions;
 }
 /**
- *  Modified by Madhu Avasarala: 36_ver3
- *  Added options for formaction to delete selected items of json records
+ *  Modified by Madhu Avasarala: 36_ver4
+ *  Added options for formaction to delete selected items of json records, ignore json parsing
  *  The table is printed out inside a form whose action depends on the $table->formaction set in the sql report class.
  *  Each selected row is made into an associated array, JSON encoded and then base64 encoded and put into an array
  *  This array is sent as a POST variable to be picked up by the action php code.
@@ -223,9 +223,11 @@ function cr_print_table($table, $return = false) {
     global $COURSE;
 
     // this object has information about json column, options, etc, from 
-    $json_options_obj = $table->json_options_obj ?? null;
+    $json_options_obj       = $table->json_options_obj ?? null;
 
-    $select_all_rows = $table->json_options_obj->select_all_rows ?? false;
+    $select_all_rows        = $table->json_options_obj->select_all_rows ?? false;
+
+    $ignore_json_parsing    = $table->json_options_obj->ignore_json_parsing ?? false;
 
     $output = '';
 
@@ -380,7 +382,7 @@ function cr_print_table($table, $return = false) {
                     } else {
                         $extraclass = '';
                     }
-                    if ($id_usermoodle == $key && $table->formaction == "delete_items")
+                    if ($id_usermoodle == $key && $table->formaction == "delete_items" && !$ignore_json_parsing)
                     {
                         if ($select_all_rows)
                         {
@@ -427,7 +429,7 @@ function cr_print_table($table, $return = false) {
     $output .= '<input type="hidden" name="num_json_cols" value="' . $table->json_options_obj->num_json_cols .'">';
 
     // Add the submit button with button text dependent on action type
-    if ($table->formaction == "delete_items") 
+    if ($table->formaction == "delete_items" && !$ignore_json_parsing) 
     {   // Madhu added submit button for custom form action of delete_items
         $output .= '<input type="submit" value="delete selected items">';
     }

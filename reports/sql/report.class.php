@@ -15,10 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports ver :36_ver4 report.class under sql added functionality is mostly new class methods added
- * This is a JSON encoded array for options to direct the report.
- * We Look for a column called options in sql data. USer changes the available options before running the report.
- * For example, select_all:1 selects all JSON rows, 0 unselects all. User can then manually check/uncheck any.
+ * Configurable Reports ver :36_ver4 report.class under sql
+ * added options array: select_all_rows, ignore_json_parsing. This is a JSON encoded array for options to direct the report.
+ * added functionality is mostly new class methods added
  * A Moodle block for creating customizable reports
  * @package blocks
  * @author: Juan leyva <http://www.twitter.com/jleyvadelgado> Madhu Avasarala modified for JSON records expansion
@@ -141,6 +140,7 @@ class report_sql extends report_base {
                 $json_options_obj   = $this->get_json_options_info($rs);
                 $json_col_index     = $json_options_obj->json_col_index;
                 $options_col_index  = $json_options_obj->options_col_index;
+                $ignore_json_parsing= $json_options_obj->ignore_json_parsing;
 
                 // finally we come to section where we build the table array. (The HTML print out done in locallib)
                 // we add additional columns rows due to JSON if json data exists i.e $json_col_index != null
@@ -169,10 +169,11 @@ class report_sql extends report_base {
 
                         foreach ($arrayrow as $ii => $cell)         // loop for stuffing columns
                         {
-                            if ($ii === $json_col_index)            // strict comparison otherwise null == 0
+                            if ($ii === $json_col_index && !$ignore_json_parsing) // strict comparison else nul === 0 happens
                             {
+                                // expand JSON columns only if options setting allows.
                                 foreach ($json_array[$i] as $key => $value) // loop for expanding columns for json added
-                                {         
+                                {          
                                     $merged_array_row[] = $value;
                                 }
                             }
@@ -254,6 +255,12 @@ class report_sql extends report_base {
     public function get_json_options_info($rs)
     {
         $json_col_index 	= null;                                                  // defaultInitialize
+        $json_array         = [];
+        $json_headings      = [];
+        $shortname_profile_field = "";
+        $options_array      = [];
+        $select_all_rows    = "";
+        $ignore_json_parsing = "";
 
         $json_options_obj   = new \stdClass;                                            
 
@@ -279,33 +286,37 @@ class report_sql extends report_base {
                 if ($colname === 'options')
                 {
                     // this column conntains directives for report as a JSON array
-                    $options_col_index   = $ii;                 // save this for later use
+                    $json_options_obj->options_col_index   = $ii;                 // save this
 
                     $options_json        = $vals_row[$ii];      // get the JSON coded array
                     $options_json_notags = strip_tags(html_entity_decode($options_json));   // strip all tags
-                    $options_array       = json_decode($options_json_notags, true);          // decode to associative array
+                    $options_array       = json_decode($options_json_notags, true);         // decode to associative array
 
-                    switch (true) 
+                    if ($options_array)
                     {
-                        case ($options_array["select_all"] == "1"):
-                            $select_all_rows = true;
-                            break;
-
-                        
-                        default:
-                            //
-                            break;
+                        foreach ($options_array as $options_key => $options_val)
+                        switch (true) 
+                        {
+                            case ($options_key === 'select_all_rows'):
+                                $json_options_obj->select_all_rows      = $options_val;
+                                $select_all_rows = $options_val;
+                                break;
+                            case ($options_key === 'ignore_json_parsing'):
+                                $json_options_obj->ignore_json_parsing  = $options_val;
+                                $ignore_json_parsing = $options_val;
+                                break;
+                            
+                            default:
+                                //
+                                break;
+                        }
                     }
-
-                    $json_options_obj->options_col_index = $options_col_index;
-                    $json_options_obj->select_all_rows = $select_all_rows;
                 }
-
             }
             // finished with column index finding
             // now check if we have valid json data to extract json column headings from
             // A row can contain blank JSON data so may have to loop rows to find non-empty JSON data
-            if ($json_col_index)
+            if ($json_col_index && !$ignore_json_parsing)
             {
                 // see if this row has valid json data at column just found
                 if (!empty($vals_row[$json_col_index]))
@@ -364,7 +375,7 @@ class report_sql extends report_base {
         foreach ($row as $colname => $value)                
         {
             // Is the column heading a JSON encoded one?
-            if ($i === $this->json_options_obj->json_col_index)        
+            if ($i === $this->json_options_obj->json_col_index && !$this->json_options_obj->ignore_json_parsing)        
             {
                 // yes. expand with json headings
                 foreach ($this->json_options_obj->json_headings as $json_heading)
@@ -392,11 +403,12 @@ class report_sql extends report_base {
     public function get_json_data_for_this_row($arrayrow)
     {
         $json_data_for_this_row = new \stdClass;
+        $json_array             = [];
 
         // ensure at least one loop so that original code functionality for non-json
         $num_extra_rows = 1;
 
-        if (isset($this->json_options_obj->json_col_index))
+        if (isset($this->json_options_obj->json_col_index) && !$this->json_options_obj->ignore_json_parsing)
         {
             $json_col_index = $this->json_options_obj->json_col_index;
             $json_val_html  = $arrayrow[$json_col_index] ?? []; // get the json string in this row if exists

@@ -147,10 +147,10 @@ class report_sql extends report_base {
                 // we also add additional rows, 1 row for each JSON record, for same user.
                 // so for every (all) users we expand SQL columns by JSON headings. We remove the JSON column.
                 // for each user, we add extra rows if there are multiple JSON records.
-                foreach ($rs as $row)                                       // row loop
-                {
-                    if (empty($finaltable))                                 // set the report's table headings                           
-                    {
+                foreach ($rs as $row)                                       
+                {   // loop through all rows. Prepare the table head array and then the row arrays for the table
+                    if (empty($finaltable))                                                            
+                    {   // build the report's table headings array. Expands for JSON if necessary
                         $tablehead = $this->get_table_header($row);
                     }
                     // now we are building table data row
@@ -162,22 +162,19 @@ class report_sql extends report_base {
                     $num_extra_rows         = $json_data_for_this_row->num_extra_rows;
 
                     // outer loop is for possibly extra rows due to JSON. If not loop is executed just once
-                    for ($i=0; $i <$num_extra_rows ; $i++)          // loop for expanding rows
-                    { 
+                    for ($i=0; $i <$num_extra_rows ; $i++):          // loop for expanding rows
                         // merge the extra json data with original array row
                         $merged_array_row = [];
 
-                        foreach ($arrayrow as $ii => $cell)         // loop for stuffing columns
-                        {
+                        foreach ($arrayrow as $ii => $cell):         // loop for stuffing columns
                             if ($ii === $json_col_index && !$ignore_json_parsing) // strict comparison else nul === 0 happens
                             {
                                 // expand JSON columns only if options setting allows.
-                                foreach ($json_array[$i] as $key => $value) // loop for expanding columns for json added
-                                {          
+                                foreach ($json_array[$i] as $key => $value): // loop for expanding columns for json added        
                                     $merged_array_row[] = $value;
-                                }
+                                endforeach;
                             }
-                            else if ($ii === $options_col_index)     // is this an options column? if so suppress it
+                            elseif ($ii === $options_col_index)     // is this an options column? if so suppress it
                             {
                                 // do nothing, so ignore this heading in the table
                             }
@@ -185,22 +182,20 @@ class report_sql extends report_base {
                             {
                                 $merged_array_row[] = $cell;
                             }
-                        }
+                        endforeach;
+
                         unset($cell);
 
-                        foreach ($merged_array_row as $ii => $cell)         // some formatting, original code
-                        {
-                            
-                                if (!$this->isForExport()) 
-                                {
-                                    $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
-                                }
-                                $merged_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
-                            
-                        }
+                        foreach ($merged_array_row as $ii => $cell):         // some formatting, original code
+                            if (!$this->isForExport()):
+                                $cell = format_text($cell, FORMAT_HTML, array('trusted' => true, 'noclean' => true, 'para' => false));
+                            endif;
+                            $merged_array_row[$ii] = str_replace('[[QUESTIONMARK]]', '?', $cell);
+                        endforeach;
+
                         $totalrecords++;                                    // increment table row count
                         $finaltable[] = $merged_array_row;                  // add just formed row to array of rows
-                    }
+                    endfor;
                     
                     
                 }                                                           // end of loop to build next table rows
@@ -264,13 +259,13 @@ class report_sql extends report_base {
 
         $json_options_obj   = new \stdClass;                                            
 
-        foreach ($rs as $row)                                                         // look for JSON, option columns               
-        {               
+        foreach ($rs as $row):                                              // look for JSON and option columns             
+                      
             $keys_row = array_keys((array)      $row);                                  
             $vals_row = array_values((array)    $row);                                  
 
-            foreach($keys_row as $ii => $colname)                                     // check each column of this row
-            {   
+            foreach($keys_row as $ii => $colname):                          // check each column of this row
+             
                 if (stripos($colname, 'json') !== false)
                 {
                 // this column is a JSON encoded column, store its column index
@@ -284,41 +279,41 @@ class report_sql extends report_base {
                 }
 
                 if ($colname === 'options')
-                {
-                    // this column conntains directives for report as a JSON array
-                    $json_options_obj->options_col_index   = $ii;                 // save this
+                {   // this column conntains directives for report. Process it and recover the directives
+                    $json_options_obj->options_col_index   = $ii;   
 
-                    $options_json        = $vals_row[$ii];      // get the JSON coded array
+                    $options_json        = $vals_row[$ii];      // get the JSON coded string
                     $options_json_notags = strip_tags(html_entity_decode($options_json));   // strip all tags
                     $options_array       = json_decode($options_json_notags, true);         // decode to associative array
 
                     if ($options_array)
-                    {
+                    {   // loop through array and recover the directives. Set them as properties of object
                         foreach ($options_array as $options_key => $options_val)
-                        switch (true) 
                         {
-                            case ($options_key === 'select_all_rows'):
-                                $json_options_obj->select_all_rows      = $options_val;
-                                $select_all_rows = $options_val;
-                                break;
-                            case ($options_key === 'ignore_json_parsing'):
-                                $json_options_obj->ignore_json_parsing  = $options_val;
-                                $ignore_json_parsing = $options_val;
-                                break;
-                            
-                            default:
-                                //
-                                break;
-                        }
+                            switch (true) 
+                            {
+                                case ($options_key === 'select_all_rows'):
+                                    $json_options_obj->select_all_rows      = $options_val;
+                                    $select_all_rows = $options_val;
+                                    break;
+                                case ($options_key === 'ignore_json_parsing'):
+                                    $json_options_obj->ignore_json_parsing  = $options_val;
+                                    $ignore_json_parsing = $options_val;
+                                    break;
+                                
+                                default:
+                                    //
+                                    break;
+                            }
+                        }        
                     }
                 }
-            }
-            // finished with column index finding
-            // now check if we have valid json data to extract json column headings from
-            // A row can contain blank JSON data so may have to loop rows to find non-empty JSON data
+            endforeach;
+
+            // now check if we have valid json data to extract json column headings
+
             if ($json_col_index && !$ignore_json_parsing)
-            {
-                // see if this row has valid json data at column just found
+            {   // see if this row has valid json data at column just found
                 if (!empty($vals_row[$json_col_index]))
                 {
                     // we have found non-empty string, (still may not be valid json data)
@@ -352,7 +347,8 @@ class report_sql extends report_base {
             {   // no json encoded column extracted in SQL records so get out of loop 1
                 break;
             }
-        }   // end of foreach row loop 1
+
+        endforeach;   // end of foreach row loop 1
 
         $this->json_options_obj = $json_options_obj;
 

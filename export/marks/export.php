@@ -1,19 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
+// v36_ver4p1 ause the new setting from config to read the subject sort order
 /**
  * Configurable Reports
  * A Moodle block for creating customizable reports
@@ -66,8 +52,8 @@ function export_report($report)
                              ];
 
     //1st we read in the google csv published file containing the subjects sort order
-    $googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
-  	if (empty($googlesheeturl))
+    $url_subject_sortorder  = get_config('block_configurable_reports', 'url_subject_sortorder');
+  	if (empty($url_subject_sortorder))
       {
           echo nl2br("Empty config setting for Google Published CSV file URL, please set in config: "  . "\n");
   		    error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
@@ -75,36 +61,34 @@ function export_report($report)
       }
     // this lists the subjects columnwise, with header being classsection.
     // Classsection is to be contained in every subject course name to be included in marks report
-    $subjects_sortorder = csv_to_associative_array($googlesheeturl);
+    $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
 
-
-
-
-    // 1st we add the new column header to the 0th header row
+    // 1st we add the new column headers to the 0th header row
     $matrix[0][8] = "letter_grade";
     $matrix[0][9] = "sort_order";
 
+    // this is the variable that holds all the letter grade arrays ikeyed by subject's courseid
     $subject_letters_array_courseid = [];
 
-    // now loop through the data contained in matrix array to determine the letter grade dependenent on subject.
-    // while we are at it, let's replace the subject string with the required marks card string
+    // now loop through the data contained in matrix array to determine the letter grade array of each subject.
+    // while we are at it, let's replace the subject string with the required marks card listing
     // for example Math Grade 8B will become Mathematics, etc.
 
     foreach ($matrix as $row_index => $row)
     {
       if ($row_index == 0)
       {
-        // skip this loop for header row0
+        // skip this iteration since this is header row0
         continue;
       }
 
-      $subject_courseid     = $matrix[$row_index][7];
+      $subject_courseid     = $matrix[$row_index][7];   // for example 67
 
-      $subject_description  = $matrix[$row_index][5];
+      $subject_description  = $matrix[$row_index][5];   // for example: 'Math Grade 8B'
 
-      $markspercentage      = $matrix[$row_index][6];
+      $markspercentage      = $matrix[$row_index][6];   // example: 87
 
-      $class_section        = $matrix[$row_index][4];
+      $class_section        = $matrix[$row_index][4];   // example: '8B'
 
       if (empty($subject_letters_array_courseid[$subject_courseid]))
       {

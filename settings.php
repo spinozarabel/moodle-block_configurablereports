@@ -88,7 +88,7 @@ if ($ADMIN->fulltree) {
 
 
     // added setting for URL of published google CSV containing grade mapping and fees
-    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/googlesheeturl', 'URL of published CSV',
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/googlesheeturl', 'URL of grades vs fees',
                     'Enter full path of published Google CSV containing grades vs fees', '', PARAM_URL, 80));
     // setting to control if we want to update user profile field fees
     $settings->add(new admin_setting_configcheckbox('block_configurable_reports/update_profile_fees', 'Check for YES',
@@ -96,4 +96,7 @@ if ($ADMIN->fulltree) {
     // setting to overwrite any existing fees records in user profile field fees with current data in report
     $settings->add(new admin_setting_configcheckbox('block_configurable_reports/overwrite_existing_fees', 'Check for YES',
         'Check if you wish to overwrite existing record with current report data, leave unchecked for NO', 1));
+    // added setting for URL of published google CSV containing subject sort order
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/url_subject_sortorder', 'URL of subject sort order',
+                    'Enter full path of published Google CSV containing subject sort order', '', PARAM_URL, 80));
 }

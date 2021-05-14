@@ -69,6 +69,7 @@ $string['export_AddCashFreeSync'] = "Sync Add CashFree Accts";
 $string['export_DelSimCashFree'] = "Sim Delete CashFree Accts";
 
 $string['export_feeProfileField'] = "Write Fee Details to Profile";
+$string['export_SimfeeProfileField'] = "Simulate Write Fee Details to Profile";
 $string['export_marks'] = "CSV export of marks for subjects in this course";
 $string['export_doclinks'] = "list table view of documents of users";
 $string['delete_json_items'] = "delete JSON items";

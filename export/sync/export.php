@@ -264,7 +264,7 @@ if($ldapconn) {
 // all done? clean up
 ldap_close($ldapconn);
     // Here is where we end the LDAP sync code
-    exit;
+    return;
 }
 //
 // Theis function takes an entry downloaded from LDAP and cleans it up

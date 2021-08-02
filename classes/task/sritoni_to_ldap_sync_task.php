@@ -46,9 +46,6 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
     {
         global $CFG;
 
-        require_once($CFG->dirroot.'/blocks/configurable_reports/report.class.php');
-        require_once($CFG->dirroot.'/blocks/configurable_reports/reports/'.$report->type.'/report.class.php');
-
         require_once("../../config.php");
         require_once($CFG->dirroot."/blocks/configurable_reports/locallib.php");
 
@@ -61,6 +58,9 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
 
         $reportclassname = 'report_'.$report->type;
         $reportclass = new $reportclassname($report);
+
+        require_once($CFG->dirroot.'/blocks/configurable_reports/report.class.php');
+        require_once($CFG->dirroot.'/blocks/configurable_reports/reports/'.$report->type.'/report.class.php');
 
         $reportclass->setForExport(true);
 

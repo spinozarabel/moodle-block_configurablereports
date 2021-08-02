@@ -51,7 +51,7 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
 
         $id         = 130;
         $download   = 1;
-        $format     = "sim";
+        $format     = "sync";
         $courseid   = 1;
 
         $report = $DB->get_record('block_configurable_reports', ['id' => $id]);

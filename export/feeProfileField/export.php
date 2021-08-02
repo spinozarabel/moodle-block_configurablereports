@@ -33,6 +33,8 @@ function export_report($report)
 
     require_once($CFG->libdir . '/csvlib.class.php');
 
+    $simulation = false;
+
     // flag to update user profile field or not, with possible new data
 	$update_profile_fees       =   get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
     // Overwrite even if array exists for concerned academic year
@@ -240,13 +242,15 @@ function export_report($report)
                 </tr>
         <?php
 
-        if ($update_profile_fees)
+        if ($update_profile_fees && !$simulation)
         {
             // convert the array to JSON and write it back to the user profile field
             $user_profile_fees->data = json_encode($fees_arr);
             // update the database record for this user for this field
             $DB->update_record('user_info_data', $user_profile_fees, $bulk=false);
         }
+        
+
 
     endforeach;
 

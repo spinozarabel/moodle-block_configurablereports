@@ -26,14 +26,16 @@ namespace block_configurable_reports\task;
  * @copyright  2015 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class sritoni_to_ldap_sync_task extends \core\task\scheduled_task {
+class sritoni_to_ldap_sync_task extends \core\task\scheduled_task 
+{
 
     /**
      * Get a descriptive name for this task (shown to admins).
      *
      * @return string
      */
-    public function get_name() {
+    public function get_name() 
+    {
         return "Sritoni to LDAP sync";
     }
 
@@ -42,13 +44,36 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task {
      */
     public function execute() 
     {
-        redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => 130, 
-                                                                                 'courseid' => 1,
-                                                                                 'download' => 1,
-                                                                                 'format'   => "sim",
-                                                                                ]
-                                )
-                );
-    }
+        global $CFG;
 
+        require_once($CFG->dirroot.'/blocks/configurable_reports/report.class.php');
+        require_once($CFG->dirroot.'/blocks/configurable_reports/reports/'.$report->type.'/report.class.php');
+
+        require_once("../../config.php");
+        require_once($CFG->dirroot."/blocks/configurable_reports/locallib.php");
+
+        $id         = 130;
+        $download   = 1;
+        $format     = "sim";
+        $courseid   = 1;
+
+        $report = $DB->get_record('block_configurable_reports', ['id' => $id]);
+
+        $reportclassname = 'report_'.$report->type;
+        $reportclass = new $reportclassname($report);
+
+        $reportclass->setForExport(true);
+
+        $reportclass->create_report();
+
+        core_php_time_limit::raise();
+        raise_memory_limit(MEMORY_EXTRA);
+        $exportplugin = $CFG->dirroot.'/blocks/configurable_reports/export/'.$format.'/export.php';
+        if (file_exists($exportplugin)) 
+        {
+            require_once($exportplugin);
+            export_report($reportclass->finalreport);
+        }
+
+    }
 }

@@ -44,7 +44,7 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
      */
     public function execute() 
     {
-        global $CFG;
+        global $CFG, $DB;
 
         require_once("../../config.php");
         require_once($CFG->dirroot."/blocks/configurable_reports/locallib.php");

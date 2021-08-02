@@ -66,8 +66,8 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
 
         $reportclass->create_report();
 
-        core_php_time_limit::raise();
-        raise_memory_limit(MEMORY_EXTRA);
+        //core_php_time_limit::raise();
+        //raise_memory_limit(MEMORY_EXTRA);
         $exportplugin = $CFG->dirroot.'/blocks/configurable_reports/export/'.$format.'/export.php';
         if (file_exists($exportplugin)) 
         {

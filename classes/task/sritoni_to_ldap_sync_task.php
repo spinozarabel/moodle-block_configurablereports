@@ -18,7 +18,7 @@
  * A scheduled task for CAS user sync.
  *
  */
-namespace configurable_reports\task;
+namespace block_configurable_reports\task;
 
 /**
  * A scheduled task class for CAS user sync.
@@ -34,7 +34,7 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return "sritoni_to_ldap_sync_task";
+        return "Sritoni to LDAP sync";
     }
 
     /**

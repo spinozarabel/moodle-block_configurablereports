@@ -56,11 +56,11 @@ class sritoni_to_ldap_sync_task extends \core\task\scheduled_task
 
         $report = $DB->get_record('block_configurable_reports', ['id' => $id]);
 
-        $reportclassname = 'report_'.$report->type;
-        $reportclass = new $reportclassname($report);
-
         require_once($CFG->dirroot.'/blocks/configurable_reports/report.class.php');
         require_once($CFG->dirroot.'/blocks/configurable_reports/reports/'.$report->type.'/report.class.php');
+
+        $reportclassname = 'report_'.$report->type;
+        $reportclass = new $reportclassname($report);
 
         $reportclass->setForExport(true);
 

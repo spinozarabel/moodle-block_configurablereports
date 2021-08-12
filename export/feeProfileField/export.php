@@ -61,12 +61,17 @@ function export_report($report)
 
 	// read file and parse to associative array. To access this in a function, make this a global there
     $fees_csv = $feepayment->csvfile_to_associative_array($googlesheeturl);
+    echo nl2br("fees CSV array as read from Google published file");
+    echo "<pre>" . print_r($fees_csv, true) ."</pre>";
 
     // define table and heading
     $feepayment->print_fee_table_header();
 
     // get the report as an associative array without header
     $report_array = $feepayment->matrix_associative;
+
+    echo nl2br("Report associative array built from report table");
+    echo "<pre>" . print_r($report_array, true) ."</pre>";
 
 	// for each of the users generated from SQL filter in the report, compile
     // from user as well as from google CSV file

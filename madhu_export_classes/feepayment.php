@@ -40,6 +40,8 @@ class feepayment
 
         // write back associative matrix to this object
         $this->matrix_associative = $matrix_associative;
+
+        print_r($this->matrix_associative);
     }
 
 

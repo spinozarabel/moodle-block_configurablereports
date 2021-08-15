@@ -42,7 +42,7 @@ function export_report($report)
 
     // new instance of the feepayment process that defines all the functions needed for payment process
     // it also generates the associative array from the report's table
-	$feepayment = new \block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation, $overwrite_existing_fees, $update_profile_fees );
+	$feepayment = new \block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation );
 
     // get the report as an associative array without header
     $report_array = $feepayment->matrix_associative;
@@ -51,7 +51,7 @@ function export_report($report)
     // echo "<pre>" . print_r($report_array, true) ."</pre>";
 
 	// read file and parse to associative array. To access this in a function, make this a global there
-    $fees_csv = $feepayment->csvfile_to_associative_array($googlesheeturl);
+    $fees_csv = $feepayment->csvfile_to_associative_array($feepayment->googlesheeturl);
 
     // echo nl2br("fees CSV array as read from Google published file");
     // echo "<pre>" . print_r($fees_csv, true) ."</pre>";

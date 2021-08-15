@@ -42,7 +42,7 @@ function export_report($report)
 
     // new instance of the feepayment process that defines all the functions needed for payment process
     // it also generates the associative array from the report's table
-	$feepayment = new block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation, $overwrite_existing_fees, $update_profile_fees );
+	$feepayment = new \block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation, $overwrite_existing_fees, $update_profile_fees );
 
     // get the report as an associative array without header
     $report_array = $feepayment->matrix_associative;

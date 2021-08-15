@@ -3,7 +3,7 @@
 * ver 1.0
 */
 
-namespace block_configurable_reports\madhu_export_classes;
+namespace \block_configurable_reports\madhu_export_classes;
 
 // if directly called die. Use standard WP and Moodle practices
 defined('MOODLE_INTERNAL') || die('direct access to this file is not permitted');

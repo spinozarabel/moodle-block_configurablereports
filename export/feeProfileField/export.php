@@ -81,6 +81,9 @@ function export_report($report)
         // for thiss user look up fees from sheet and formulate the new fees array to be added
         $new_fees_arr = $feepayment->get_new_fees_array( $user, $fees_csv );
 
+        echo nl2br("New fees Array looked up in fees_csv array");
+        echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";
+
         // read in the existing fees array from this user's custom field
         $updated_fees_arr = $feepayment->insert_new_fees_and_update_profile_field( $user, $new_fees_arr );
 

@@ -34,44 +34,30 @@ function export_report($report)
 
     require_once($CFG->libdir . '/csvlib.class.php');
     require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
-    require_once($CFG->dirroot."/blocks/configurable_reports/madhu_export_classes/feepayment.php");
+    // require_once($CFG->dirroot."/blocks/configurable_reports/madhu_export_classes/feepayment.php");
 
     $simulation = true;
 
     $verbose    = true;
 
-    // flag to update user profile field or not, with possible new data
-	$update_profile_fees       =   get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
-    // Overwrite even if array exists for concerned academic year
-	$overwrite_existing_fees   =   get_config('block_configurable_reports', 'overwrite_existing_fees')  ?? true;
-
-    // Read the CSv published Google Sheet, get its URL from config settings
-	$googlesheeturl  = get_config('block_configurable_reports', 'googlesheeturl');
-    
-	if (empty($googlesheeturl))
-    {
-        echo nl2br("Empty config setting for Google Published CSV file URL, please set in config: "  . "\n");
-		error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
-        return;
-    }
-
     // new instance of the feepayment process that defines all the functions needed for payment process
-	$feepayment = new feepayment( $report, $verbose, $simulation, $overwrite_existing_fees, $update_profile_fees );
-
-
-	// read file and parse to associative array. To access this in a function, make this a global there
-    $fees_csv = $feepayment->csvfile_to_associative_array($googlesheeturl);
-    echo nl2br("fees CSV array as read from Google published file");
-    echo "<pre>" . print_r($fees_csv, true) ."</pre>";
-
-    // define table and heading
-    $feepayment->print_fee_table_header();
+    // it also generates the associative array from the report's table
+	$feepayment = new block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation, $overwrite_existing_fees, $update_profile_fees );
 
     // get the report as an associative array without header
     $report_array = $feepayment->matrix_associative;
 
-    echo nl2br("Report associative array built from report table");
-    echo "<pre>" . print_r($report_array, true) ."</pre>";
+    // echo nl2br("Report associative array built from report table");
+    // echo "<pre>" . print_r($report_array, true) ."</pre>";
+
+	// read file and parse to associative array. To access this in a function, make this a global there
+    $fees_csv = $feepayment->csvfile_to_associative_array($googlesheeturl);
+
+    // echo nl2br("fees CSV array as read from Google published file");
+    // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
+
+    // define table and heading
+    $feepayment->print_fee_table_header();
 
 	// for each of the users generated from SQL filter in the report, compile
     // from user as well as from google CSV file

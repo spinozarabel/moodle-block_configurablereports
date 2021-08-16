@@ -103,6 +103,8 @@ class feepayment
      */
     public function new_fees_simulation($report)
     {
+        $simulation = true;
+        
         // print the table header
         $this->print_fee_table_header();
 
@@ -114,7 +116,7 @@ class feepayment
             // echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";
 
             // read in the existing fees array from this user's custom field
-            $updated_fees_arr = $this->insert_new_fees_and_update_profile_field( $user, $new_fees_arr );
+            $updated_fees_arr = $this->insert_new_fees_and_update_profile_field( $user, $new_fees_arr, $simulation );
 
             // print out a row of the fee table for this user's fee
             $this->print_fee_table_row( $user, $updated_fees_arr, $new_fees_arr );
@@ -128,7 +130,7 @@ class feepayment
     /**
      * 
      */
-    public function insert_new_fees_and_update_profile_field( $user, $new_fees_arr )
+    public function insert_new_fees_and_update_profile_field( $user, $new_fees_arr, $simulation = true )
     {
         global $DB;
 
@@ -184,7 +186,7 @@ class feepayment
             }
         }
         
-        if ($this->update_profile_fees && !$this->simulation)
+        if ($this->update_profile_fees && !$simulation)
         {
             // convert the array to JSON and write it back to the user profile field
             $user_profile_fees->data = json_encode($existing_fees_arr);

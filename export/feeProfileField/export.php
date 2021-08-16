@@ -47,13 +47,12 @@ function export_report($report)
     // echo nl2br("fees CSV array as read from Google published file");
     // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
 
-    // This is a simulation. A menu will be printed after the footer to do the real fees update
-    $feepayment->new_fees(true);
 
     ?>
             <h3> Click on button to execute stated function</h3>
             <form action="" method="post" id="form1">
                 <input type="submit" name="button" 	value="Back to Report"/>
+                <input type="submit" name="button" 	value="Simulate fees"/>
                 <input type="submit" name="button" 	value="Write fees to user data"/>
                 <input type="submit" name="button" 	value="update or create CF Accounts"/>
                 <input type="submit" name="button" 	value="Generate POs"/>
@@ -72,11 +71,16 @@ function export_report($report)
                                                                                         ]
                                         ));
                 break;
+
+                case "Simulate fees":
+                    $feepayment->new_fees($report, true);
+                    $feepayment->print_footer();
+                    break;
             
                 case "Write fees to user data":
                     // bredirect using new moodle_url
                     $feepayment->new_fees($report, false);
-
+                    $feepayment->print_footer();
                     break;
 
                 case "update or create CF Accounts":

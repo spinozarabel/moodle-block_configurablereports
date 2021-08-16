@@ -321,7 +321,7 @@ class feepayment
         switch ($button):
             case "Back to Report":
                 // bredirect using new moodle_url
-                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $report->id, 
+                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $report->table->reportid, 
                                                                                          'courseid' => $COURSE->id
                                                                                         ]
                                         ));

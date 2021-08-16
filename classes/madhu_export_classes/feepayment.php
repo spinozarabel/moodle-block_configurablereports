@@ -314,7 +314,8 @@ class feepayment
 
         <?php
 
-        $button = sanitize_text_field( $_POST['button'] );
+        // TODO sanitize the _POST variable
+        $button = ( $_POST['button'] );
 
         switch ($button):
             case "Back to Report":

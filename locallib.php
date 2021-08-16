@@ -229,6 +229,8 @@ function cr_print_table($table, $return = false) {
 
     $ignore_json_parsing    = $table->json_options_obj->ignore_json_parsing ?? false;
 
+    $id_documentName = null;
+
     $output = '';
 
     if (isset($table->align)) {

@@ -333,51 +333,10 @@ class feepayment
      */
     public function print_footer()
     {
-        global $COURSE;
         // close that HTML table tag
         ?>
                 </table>
         <?php
-
-        ?>
-            <h3> Click on button to execute stated function</h3>
-            <form action="" method="post" id="form1">
-                <input type="submit" name="button" 	value="Back to Report"/>
-                <input type="submit" name="button" 	value="Write fees to user data"/>
-                <input type="submit" name="button" 	value="update or create CF Accounts"/>
-                <input type="submit" name="button" 	value="Generate POs"/>
-            </form>
-
-        <?php
-
-        // TODO sanitize the _POST variable
-        $button = ( $_POST['button'] );
-
-        switch ($button):
-            case "Back to Report":
-                // bredirect using new moodle_url
-                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $this->report->table->reportid, 
-                                                                                         'courseid' => $COURSE->id
-                                                                                        ]
-                                        ));
-                break;
-            
-                case "Write fees to user data":
-                    // bredirect using new moodle_url
-                    $this->new_fees($report, false);
-
-                    break;
-
-                case "update or create CF Accounts":
-                    //
-                    $this->update_create_virtual_accounts_hset();
-                    break;
-
-                case "Generate POs":
-                    // Create new orders on hset-payments site for each user for this fee amount
-                    $this->generate_remote_payment_orders_hset_payments();
-                    break;
-        endswitch;
     }
 
     /**

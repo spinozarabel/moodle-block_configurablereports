@@ -296,8 +296,9 @@ class feepayment
     /**
      * 
      */
-    public function print_footer()
+    public function print_footer($report)
     {
+        global $COURSE;
         // close that HTML table tag
         ?>
                 </table>
@@ -320,6 +321,10 @@ class feepayment
         switch ($button):
             case "Back to Report":
                 // bredirect using new moodle_url
+                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $report->id, 
+                                                                                         'courseid' => $COURSE->id
+                                                                                        ]
+                                        ));
                 break;
             
                 case "Write fees to user data":

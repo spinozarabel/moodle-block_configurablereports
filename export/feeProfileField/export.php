@@ -80,7 +80,7 @@ function export_report($report)
     endforeach;
 
     // close table tags and print any menu needed for actions
-    $feepayment->print_footer();
+    $feepayment->print_footer($report);
 
 	exit;
 }

@@ -108,7 +108,7 @@ class feepayment
 
         foreach ($this->matrix_associative as $key => $user):
             // for thiss user look up fees from sheet and formulate the new fees array to be added
-            $new_fees_arr = $this->get_new_fees_array( $user, $this->$fees_csv );
+            $new_fees_arr = $this->get_new_fees_array( $user, $this->fees_csv );
 
             // echo nl2br("New fees Array looked up in fees_csv array");
             // echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";

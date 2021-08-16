@@ -43,10 +43,10 @@ class feepayment
     private function get_config()
     {
         // flag to update user profile field or not, with possible new data
-	    $this->update_profile_fees      =   get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
+	    $this->update_profile_fees      = get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
 
         // Overwrite even if array exists for concerned academic year
-	    $this->overwrite_existing_fees  =   get_config('block_configurable_reports', 'overwrite_existing_fees')  ?? true;
+	    $this->overwrite_existing_fees  = get_config('block_configurable_reports', 'overwrite_existing_fees')  ?? true;
 
         // Read the CSv published Google Sheet, get its URL from config settings
 	    $this->googlesheeturl           = get_config('block_configurable_reports', 'googlesheeturl');
@@ -292,6 +292,67 @@ class feepayment
                 </tr>
         <?php
     }
+
+    /**
+     * 
+     */
+    public function print_footer()
+    {
+        // close that HTML table tag
+        ?>
+                </table>
+        <?php
+
+        ?>
+            <h3> Click on button to execute stated function</h3>
+            <form action="" method="post" id="form1">
+                <input type="submit" name="button" 	value="Back to Report"/>
+                <input type="submit" name="button" 	value="Write fees to user data"/>
+                <input type="submit" name="button" 	value="update or create CF Accounts"/>
+                <input type="submit" name="button" 	value="Generate POs"/>
+            </form>
+
+        <?php
+
+        $button = sanitize_text_field( $_POST['button'] );
+
+        switch ($button):
+            case "Back to Report":
+                // bredirect using new moodle_url
+                break;
+            
+                case "Write fees to user data":
+                    // bredirect using new moodle_url
+                    break;
+
+                case "update or create CF Accounts":
+                    //
+                    $this->update_create_virtual_accounts_hset();
+                    break;
+
+                case "Generate POs":
+                    // Create new orders on hset-payments site for each user for this fee amount
+                    $this->generate_remote_payment_orders_hset_payments();
+                    break;
+        endswitch;
+    }
+
+    /**
+     * 
+     */
+    public function update_create_virtual_accounts_hset()
+    {
+        //
+    }
+
+    /**
+     * 
+     */
+    public function generate_remote_payment_orders_hset_payments()
+    {
+        //
+    }
+    
 
 
     /**

@@ -101,10 +101,8 @@ class feepayment
     /**
      * 
      */
-    public function new_fees_simulation($report)
+    public function new_fees($report, $simulation = true)
     {
-        $simulation = true;
-        
         // print the table header
         $this->print_fee_table_header();
 
@@ -125,6 +123,7 @@ class feepayment
 
         $this->print_footer($report);
     }
+
 
 
     /**

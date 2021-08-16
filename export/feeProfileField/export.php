@@ -47,7 +47,8 @@ function export_report($report)
     // echo nl2br("fees CSV array as read from Google published file");
     // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
 
-    $feepayment->new_fees_simulation($report);
+    // This is a simulation. A menu will be printed after the footer to do the real fees update
+    $feepayment->new_fees($report, true);
 
 	exit;
 }

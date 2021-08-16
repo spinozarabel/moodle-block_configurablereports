@@ -48,7 +48,7 @@ function export_report($report)
     // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
 
     // This is a simulation. A menu will be printed after the footer to do the real fees update
-    $feepayment->new_fees($report, true);
+    $feepayment->new_fees(true);
 
 	exit;
 }

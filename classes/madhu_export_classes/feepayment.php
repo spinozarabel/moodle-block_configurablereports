@@ -21,11 +21,13 @@ class feepayment
 
         $this->simulation               = $simulation;
 
+        $this->report = $report;
+
         // read in configuration settings and set them as properties to this
         $this->get_config();
 
         // matrix is record rows as an array. It is not yet associative
-        $matrix  = $this->get_report_matrix($report);
+        $matrix  = $this->get_report_matrix();
 
         // get working copy before manipulation
         $matrix_associative = $matrix;
@@ -65,9 +67,9 @@ class feepayment
     }
 
 
-    public function get_report_matrix ($report)
+    public function get_report_matrix ()
     {
-        $table      = $report->table;
+        $table      = $this->report->table;
         $matrix     = array();
         $filename   = 'report';
         $accounts   = array();
@@ -101,7 +103,7 @@ class feepayment
     /**
      * 
      */
-    public function new_fees($report, $simulation = true)
+    public function new_fees($simulation = true)
     {
         // print the table header
         $this->print_fee_table_header();
@@ -121,7 +123,7 @@ class feepayment
 
         endforeach;
 
-        $this->print_footer($report);
+        $this->print_footer();
     }
 
 
@@ -296,7 +298,7 @@ class feepayment
     /**
      * 
      */
-    public function print_fee_table_header () 
+    public function print_fee_table_header() 
     {
         // define table and heading
         ?>
@@ -329,7 +331,7 @@ class feepayment
     /**
      * 
      */
-    public function print_footer($report)
+    public function print_footer()
     {
         global $COURSE;
         // close that HTML table tag
@@ -354,7 +356,7 @@ class feepayment
         switch ($button):
             case "Back to Report":
                 // bredirect using new moodle_url
-                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $report->table->reportid, 
+                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $this->report->table->reportid, 
                                                                                          'courseid' => $COURSE->id
                                                                                         ]
                                         ));
@@ -362,6 +364,8 @@ class feepayment
             
                 case "Write fees to user data":
                     // bredirect using new moodle_url
+                    $this->new_fees($report, false);
+
                     break;
 
                 case "update or create CF Accounts":

@@ -138,6 +138,7 @@ class feepayment
             if ((-1) !== $key)
             {
                 // this already exists, we can rewrite this or ignore based on flag
+                $this->verbose ? error_log("This payment already exists in user's fee profile, user being:" . $user["username"]): false;
                 if ( $this->overwrite_existing_fees)
                 {
                     $existing_fees_arr[$key] = $new_fees_arr;

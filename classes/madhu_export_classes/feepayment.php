@@ -21,12 +21,13 @@ class feepayment
 
         $this->simulation               = $simulation;
 
+        // read in configuration settings and set them as properties to this
         $this->get_config();
 
         // matrix is record rows as an array. It is not yet associative
         $matrix  = $this->get_report_matrix($report);
 
-        // get working copy
+        // get working copy before manipulation
         $matrix_associative = $matrix;
 
         // transform copy into associative
@@ -36,8 +37,11 @@ class feepayment
 		});
 	    array_shift($matrix_associative); # remove column header
 
-        // write back associative matrix to this object
+        // write back associative matrix as property to this object
         $this->matrix_associative = $matrix_associative;
+
+        // get the fees_csv associative array read in from the google sheet
+        $this->fees_csv = $this->csvfile_to_associative_array($this->googlesheeturl);
     }
 
     private function get_config()
@@ -93,6 +97,33 @@ class feepayment
 
         return $matrix;
     }
+
+    /**
+     * 
+     */
+    public function new_fees_simulation($report)
+    {
+        // print the table header
+        $this->print_fee_table_header();
+
+        foreach ($this->matrix_associative as $key => $user):
+            // for thiss user look up fees from sheet and formulate the new fees array to be added
+            $new_fees_arr = $this->get_new_fees_array( $user, $this->$fees_csv );
+
+            // echo nl2br("New fees Array looked up in fees_csv array");
+            // echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";
+
+            // read in the existing fees array from this user's custom field
+            $updated_fees_arr = $this->insert_new_fees_and_update_profile_field( $user, $new_fees_arr );
+
+            // print out a row of the fee table for this user's fee
+            $this->print_fee_table_row( $user, $updated_fees_arr, $new_fees_arr );
+
+        endforeach;
+
+        $this->print_footer($report);
+    }
+
 
     /**
      * 

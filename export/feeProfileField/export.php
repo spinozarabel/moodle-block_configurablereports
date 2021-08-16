@@ -56,31 +56,7 @@ function export_report($report)
     // echo nl2br("fees CSV array as read from Google published file");
     // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
 
-    // define table and heading
-    $feepayment->print_fee_table_header();
-
-	// for each of the users generated from SQL filter in the report, compile
-    // from user as well as from google CSV file
-
-	foreach ($report_array as $key => $user):
-
-        // for thiss user look up fees from sheet and formulate the new fees array to be added
-        $new_fees_arr = $feepayment->get_new_fees_array( $user, $fees_csv );
-
-        // echo nl2br("New fees Array looked up in fees_csv array");
-        // echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";
-
-        // read in the existing fees array from this user's custom field
-        $updated_fees_arr = $feepayment->insert_new_fees_and_update_profile_field( $user, $new_fees_arr );
-
-        // print out a row of the fee table for this user's fee
-        $feepayment->print_fee_table_row( $user, $updated_fees_arr, $new_fees_arr );
-        
-
-    endforeach;
-
-    // close table tags and print any menu needed for actions
-    $feepayment->print_footer($report);
+    $feepayment->new_fees_simulation($report);
 
 	exit;
 }

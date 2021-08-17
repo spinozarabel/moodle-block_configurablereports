@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 function export_report($report)
 {
-    global $DB, $CFG;
+    global $DB, $CFG, $COURSE;
 
     require_once($CFG->libdir . '/csvlib.class.php');
     require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
@@ -49,25 +49,27 @@ function export_report($report)
 
 
     ?>
-            <h3> Click on button to execute stated function</h3>
+            <h4> Choose functionality and Click on button</h4>
             <form action="" method="post" id="form1">
                 <input type="submit" name="button" 	value="Back to Report"/>
                 <input type="submit" name="button" 	value="Simulate fees"/>
                 <input type="submit" name="button" 	value="Write fees to user data"/>
                 <input type="submit" name="button" 	value="update or create CF Accounts"/>
                 <input type="submit" name="button" 	value="Generate POs"/>
+                <input type="hidden" name="courseid" value="' . $COURSE->id .'">';
+                <input type="hidden" name="reportid" value="' . $report->table->reportid .'">';
             </form>
 
         <?php
 
         // TODO sanitize the _POST variable
-        $button = ( $_POST['button'] );
+        $button = filter_var($_POST['button'], FILTER_SANITIZE_STRING) ;
 
         switch ($button):
             case "Back to Report":
                 // bredirect using new moodle_url
-                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => 4, 
-                                                                                         'courseid' => 2
+                redirect(new \moodle_url('/blocks/configurable_reports/viewreport.php', ['id'       => $COURSE->id, 
+                                                                                         'courseid' => $report->table->reportid
                                                                                         ]
                                         ));
                 break;

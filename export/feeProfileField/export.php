@@ -56,8 +56,6 @@ function export_report($report)
                 <input type="submit" name="button" 	value="Write fees to user data"/>
                 <input type="submit" name="button" 	value="update or create CF Accounts"/>
                 <input type="submit" name="button" 	value="Generate POs"/>
-                <input type="hidden" name="courseid" value="' . $COURSE->id .'">';
-                <input type="hidden" name="reportid" value="' . $report->table->reportid .'">';
             </form>
 
         <?php

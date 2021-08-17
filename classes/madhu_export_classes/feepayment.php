@@ -105,6 +105,9 @@ class feepayment
      */
     public function new_fees($simulation = true)
     {
+        // reread the config file incase there have been recent changes
+        $this->get_config();
+
         // print the table header
         $this->print_fee_table_header();
 

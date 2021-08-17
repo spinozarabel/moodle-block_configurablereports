@@ -73,13 +73,13 @@ function export_report($report)
                 break;
 
                 case "Simulate fees":
-                    $feepayment->new_fees($report, true);
+                    $feepayment->new_fees( true );
                     $feepayment->print_footer();
                     break;
             
                 case "Write fees to user data":
                     // bredirect using new moodle_url
-                    $feepayment->new_fees($report, false);
+                    $feepayment->new_fees( false );
                     $feepayment->print_footer();
                     break;
 

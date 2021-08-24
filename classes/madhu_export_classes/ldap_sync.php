@@ -3,65 +3,70 @@
 * ver 1.0
 */
 
+namespace block_configurable_reports\madhu_export_classes;
+
 // if directly called die. Use standard WP and Moodle practices
 defined('MOODLE_INTERNAL') || die('direct access to this file is not permitted');
 
 // class definition begins
-class feepayment
+class ldap_sync
 {
 
-    public function __construct($report,   
-                                $verbose                    = true, 
-                                $simulation                 = false 
-                                )
+    public function __construct($report,   $verbose = true )
     {
         $this->verbose                  = $verbose;
 
-        $this->simulation               = $simulation;
+        $this->report = $report;
 
+        // read in configuration settings and set them as properties to this
         $this->get_config();
 
         // matrix is record rows as an array. It is not yet associative
-        $matrix  = $this->get_report_matrix($report);
+        $matrix  = $this->get_report_matrix();
 
-        // get working copy
-        $matrix_associative = $matrix;
+        // get working copy before manipulation
+        $csv = $matrix;
 
         // transform copy into associative
-        array_walk($matrix_associative, function(&$a) use ($matrix_associative)
+        array_walk($csv, function(&$a) use ($csv)
 		{
-			$a = array_combine($matrix_associative[0], $a);
+			$a = array_combine($csv[0], $a);
 		});
-	    array_shift($matrix_associative); # remove column header
+	    array_shift($csv); # remove column header
 
-        // write back associative matrix to this object
-        $this->matrix_associative = $matrix_associative;
+        // write back associative matrix as property to this object
+        $this->csv = $csv;
+
+
     }
 
     private function get_config()
     {
-        // flag to update user profile field or not, with possible new data
-	    $this->update_profile_fees      =   get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
+        $this->flag_add_simulate 	=	false;
+        $this->flag_del_simulate	=	false;
 
-        // Overwrite even if array exists for concerned academic year
-	    $this->overwrite_existing_fees  =   get_config('block_configurable_reports', 'overwrite_existing_fees')  ?? true;
+        // Set LDAP userpassword encryption to plain text. TRUE will set it to SHA1 and base64 encode
+        $this->flag_pw_encrypt      =   false;
+        // Flags to control Deletion and Modification of LDAP users' data during SYNC
 
-        // Read the CSv published Google Sheet, get its URL from config settings
-	    $this->googlesheeturl           = get_config('block_configurable_reports', 'googlesheeturl');
+        $this->flag_add_users 		= 	true;	// this allows the code to add users that don't exist yet in LDAP directory
+        $this->flag_mod_users		= 	get_config('block_configurable_reports', 'flag_mod_users');
+        $this->flag_delete_users 	= 	get_config('block_configurable_reports', 'flag_delete_users');
 
-        if (empty($this->googlesheeturl))
-        {
-            echo nl2br("Empty config setting for Google Published CSV file URL, please set in config: "  . "\n");
-            error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
-        }
+        // get the following data from the config settings of this block
+        $this->ldapserver 			= 	get_config('block_configurable_reports', 'ldap_server'); 	// 'ldaps://example.com'
+        $this->ldapuser   			= 	get_config('block_configurable_reports', 'ldap_admin');  	// 'cn=admin,dc=example,dc=edu,dc=in'
+        $this->ldappass   			= 	get_config('block_configurable_reports', 'ldap_password');
+        $this->ldaptree   			= 	get_config('block_configurable_reports', 'ldap_tree');		// "dc=example,dc=edu,dc=in";
+        $this->ldapfilter 			= 	"(objectClass=inetOrgPerson)";	// tailor this to your need
 
          
     }
 
 
-    public function get_report_matrix ($report)
+    public function get_report_matrix ()
     {
-        $table      = $report->table;
+        $table      = $this->report->table;
         $matrix     = array();
         $filename   = 'report';
         $accounts   = array();
@@ -95,7 +100,207 @@ class feepayment
     /**
      * 
      */
-    public function insert_new_fees_and_update_profile_field( $user, $new_fees_arr )
+    public function get_ldapentries()
+    {
+        // connect
+        $ldapconn = ldap_connect($this->ldapserver) or die("Could not connect to LDAP server.");
+        
+        if( empty($ldapconn) )
+        {
+            return;
+        }
+
+        // If you get hrere you made connection woth LDAP server - binding to ldap server
+        // but first set protocol version
+        ldap_set_option($ldapconn, LDAP_OPT_PROTOCOL_VERSION, 3);
+        //
+        $ldapbind = ldap_bind($ldapconn, $this->ldapuser, $this->ldappass) or die ("Error trying to bind: ".ldap_error($ldapconn));
+
+        // verify binding and if good search and download entries based on filter set below
+        if ($ldapbind) 
+        {
+            echo nl2br("LDAP Connection and Authenticated bind successful...\n");
+            // $ldapsearch contains the search, $data contains all the entries
+            //
+            $result = ldap_search($ldapconn,$this->ldaptree, $this->ldapfilter) or die ("Error in search query: ".ldap_error($ldapconn));
+            $data   = ldap_get_entries($ldapconn, $result);
+            
+            // print number of entries found
+            $this->ldapcount = ldap_count_entries($ldapconn, $result);
+            echo nl2br("Number of entries found in LDAP directory: " . $this->ldapcount . "\n");
+        }
+        else 
+        {
+            echo "LDAP bind failed...";
+            return;
+        }
+
+        // convert entries to associative type using cleanup function as given in php manual
+        $this->ldapentries = $this->cleanUpEntry( $data );
+
+        $this->ldapconn = $ldapconn;
+        $this->ldapbind = $ldapbind;
+    }
+
+
+    /**
+     * Add users to LDAP that are there in SriToni but not in LDAP
+     */
+    public function ldap_addusers( $simulate = true )
+    {
+        $csv            = $this->csv;
+        $ldapentries    = $this->ldapentries;
+
+        $csvcount       = count($csv);
+		
+        //print_r($csv[0]);
+
+		echo nl2br("Number of SriToni entries found: " . $csvcount . "\n");
+
+        // lets see if each entry in CSV is present in LDAP data. This is to add users into LDAP
+	
+	    $addcount 			= 0;	// keeps track of number of users added to LDAP
+	    $notaddcount 		= 0;    // keeps track of users not added due to whatever problem
+
+        $sim_add_count      = 0;
+
+        if ($this->flag_add_users) 
+        {
+            for ( $i = 0; $i < $csvcount; $i++ ):
+
+                // replace plain text passwords with SHA hashed ones if flag is set
+                if ($this->flag_pw_encrypt) 
+                {
+                    $csv[$i]["userpassword"] = '{SHA}' . base64_encode(sha1(  $csv[$i]["userpassword"], TRUE )); // hash for SHA
+                }
+
+                // get the dn of this csv user as uid , ou , ldaptree
+                $csvdn = $this->get_csvdn($csv[$i]);
+
+                // check if this dn is present amongst the array of dn's in the ldapentries
+                if (!array_key_exists($csvdn, $ldapentries))
+                {
+                    // This dn is not in LDAP and needs to be added to LDAP. Prepare the entry to be added
+                    $entry = $csv[$i];
+                  
+                    if ($simulate === false) 
+                    {
+                        $add = ldap_add($this->ldapconn, $csvdn, $entry);
+
+                        if ($add)   // was add successfull?
+                        {
+                            $addcount = $addcount + 1;
+                            echo nl2br("user with dn: " . $csvdn . " added to LDAP server" . "\n");
+                        }
+                        else 
+                        {
+                            echo nl2br("user with dn: " . $csvdn . " couldn't be added to LDAP server, check for blank fields" . "\n");
+                            $notaddcount = $notaddcount + 1;
+                        }
+                    } 
+                    else 
+                    {
+                        echo nl2br("user with dn: " . $csvdn . " Could be (Sim) added to LDAP server" . "\n");
+                        $sim_add_count	=	$sim_add_count + 1;  # increment simulated user addition
+                    }
+                }
+            endfor;
+        }
+    }
+
+    /**
+     * @param array $csvuser is a record in the associative array of Report matrix corresponding to data fof a single user
+     * @return string $csvdn is the dn of this user
+     */
+    private function get_csvdn($csvuser)
+    {
+        $csvuid = $csvuser["uid"];
+
+        if (stripos($csvuser["ou"] ,    "Teaching") !== false) 
+        { # does ou contain "Teaching"?
+            $ou = "employee";  # if so add to organization unit ou = employee
+        }
+        elseif (stripos($csvuser["ou"] , "Student") !== false) 
+        { # does ou contain "Student"?
+            $ou = "student";  # if so add to organization unit ou = student
+        }
+
+        // form the dn of the csv user as uid + ou + ldaptree
+        $csvdn = "uid=" . $csvuid . ",ou=" . $ou . "," . $this->ldaptree;  # form the dn of the user
+
+        return $csvdn;
+    }
+
+
+
+    /**
+     * 
+     */
+    private function cleanUpEntry( $data )
+    {
+        $retEntry = array();
+        for ( $i = 0; $i < $entry['count']; $i++ ) {
+            if (is_array($entry[$i])) {
+            $subtree = $entry[$i];
+            //This condition should be superfluous so just take the recursive call
+            //adapted to your situation in order to increase perf.
+            if ( ! empty($subtree['dn']) and ! isset($retEntry[$subtree['dn']])) {
+                $retEntry[$subtree['dn']] = cleanUpEntry($subtree);
+            }
+            else {
+                $retEntry[] = cleanUpEntry($subtree);
+            }
+            }
+            else {
+            $attribute = $entry[$i];
+            if ( $entry[$attribute]['count'] == 1 ) {
+                $retEntry[$attribute] = $entry[$attribute][0];
+            } else {
+                for ( $j = 0; $j < $entry[$attribute]['count']; $j++ ) {
+                $retEntry[$attribute][] = $entry[$attribute][$j];
+                }
+            }
+            }
+        }
+        return $retEntry;
+    }
+
+
+    /**
+     * 
+     */
+    public function new_fees($simulation = true)
+    {
+        // reread the config file incase there have been recent changes
+        $this->get_config();
+
+        // print the table header
+        $this->print_fee_table_header();
+
+        foreach ($this->csv as $key => $user):
+            // for thiss user look up fees from sheet and formulate the new fees array to be added
+            $new_fees_arr = $this->get_new_fees_array( $user, $this->fees_csv );
+
+            // echo nl2br("New fees Array looked up in fees_csv array");
+            // echo "<pre>" . print_r($new_fees_arr, true) ."</pre>";
+
+            // read in the existing fees array from this user's custom field
+            $updated_fees_arr = $this->insert_new_fees_and_update_profile_field( $user, $new_fees_arr, $simulation );
+
+            // print out a row of the fee table for this user's fee
+            $this->print_fee_table_row( $user, $updated_fees_arr, $new_fees_arr );
+
+        endforeach;
+
+        $this->print_footer();
+    }
+
+
+
+    /**
+     * 
+     */
+    public function insert_new_fees_and_update_profile_field( $user, $new_fees_arr, $simulation = true )
     {
         global $DB;
 
@@ -136,6 +341,7 @@ class feepayment
             if ((-1) !== $key)
             {
                 // this already exists, we can rewrite this or ignore based on flag
+                $this->verbose ? error_log("This payment already exists in user's fee profile, user being:" . $user["username"]): false;
                 if ( $this->overwrite_existing_fees)
                 {
                     $existing_fees_arr[$key] = $new_fees_arr;
@@ -150,7 +356,7 @@ class feepayment
             }
         }
         
-        if ($this->update_profile_fees && !$this->simulation)
+        if ($this->update_profile_fees && !$simulation)
         {
             // convert the array to JSON and write it back to the user profile field
             $user_profile_fees->data = json_encode($existing_fees_arr);
@@ -261,7 +467,7 @@ class feepayment
     /**
      * 
      */
-    public function print_fee_table_header () 
+    public function print_fee_table_header() 
     {
         // define table and heading
         ?>
@@ -290,6 +496,34 @@ class feepayment
                 </tr>
         <?php
     }
+
+    /**
+     * 
+     */
+    public function print_footer()
+    {
+        // close that HTML table tag
+        ?>
+                </table>
+        <?php
+    }
+
+    /**
+     * 
+     */
+    public function update_create_virtual_accounts_hset()
+    {
+        //
+    }
+
+    /**
+     * 
+     */
+    public function generate_remote_payment_orders_hset_payments()
+    {
+        //
+    }
+    
 
 
     /**

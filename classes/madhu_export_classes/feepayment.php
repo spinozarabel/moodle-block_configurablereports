@@ -12,18 +12,17 @@ defined('MOODLE_INTERNAL') || die('direct access to this file is not permitted')
 class feepayment
 {
 
-    public function __construct($report,   
-                                $verbose                    = true, 
-                                $simulation                 = false 
-                                )
+    public function __construct( $report, $site_name, $verbose= true, $simulation = false )
     {
-        $this->verbose                  = $verbose;
+        $this->verbose              = $verbose;
 
-        $this->simulation               = $simulation;
+        $this->simulation           = $simulation;
 
-        $this->report = $report;
+        $this->report               = $report;
 
-        // read in configuration settings and set them as properties to this
+        $this->site_name            = $site_name;
+
+        // read in configuration settings and set them as properties to this class
         $this->get_config();
 
         // matrix is record rows as an array. It is not yet associative
@@ -42,16 +41,21 @@ class feepayment
         // write back associative matrix as property to this object
         $this->matrix_associative = $matrix_associative;
 
-        // get the fees_csv associative array read in from the google sheet
+        // get the fees_csv associative array read in from the google sheet for fees published as a CSV file
+        // This is the source from which the fees for each student will be set for the upcoming billing
         $this->fees_csv = $this->csvfile_to_associative_array($this->googlesheeturl);
     }
 
+
+    /**
+     *  Read and set the configuration parameters for the class
+     */
     private function get_config()
     {
         // flag to update user profile field or not, with possible new data
 	    $this->update_profile_fees      = get_config('block_configurable_reports', 'update_profile_fees')      ?? false;
 
-        // Overwrite even if array exists for concerned academic year
+        // Overwrite even if array exists for concerned academic year with new data
 	    $this->overwrite_existing_fees  = get_config('block_configurable_reports', 'overwrite_existing_fees')  ?? true;
 
         // Read the CSv published Google Sheet, get its URL from config settings
@@ -63,11 +67,35 @@ class feepayment
             error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
         }
 
-         
+        // get information from config settings about names of sites and their beneficiary or account name
+        $this->sitenames_arr = explode( "," , get_config('block_configurable_reports', 'site_names') );
+
+        // read in beneficiary names from config settings into an array
+        $account_names_config = get_config('block_configurable_reports', 'account_names') ?? "";
+
+        // if empty exit with error message
+        if (empty($account_names_config))
+        {
+            echo nl2br("Empty config setting for account names, please set in config: "  . "\n");
+            return;
+        }
+
+        // read in comma separated account names into an array. These aare supposed to be in same order as site names
+        $this->beneficiary_nammes_arr = explode( "," , $account_names_config );
+
+        // get the index of array holding account for desired site name. This should be numerical
+        $site_index = array_search($site_name, $this->sitenames_arr);
+
+        // get the corresponding beneficiary_name for the site_name of interest, from array using searched index
+        $this->beneficiary_name = $this->beneficiary_nammes_arr[$site_index];
     }
 
 
-    public function get_report_matrix ()
+    /**
+     *  @return array $matrix
+     *  This function prepares the matrix of the table in the report.
+     */
+    public function get_report_matrix()
     {
         $table      = $this->report->table;
         $matrix     = array();
@@ -99,6 +127,263 @@ class feepayment
 
         return $matrix;
     }
+
+
+    /**
+     * This updates the virtual accounts if needed for all users for this site
+     * It also marks the users who need new VA created for this site
+     */
+    public function update_markcreate_virtualaccounts()
+    {
+        // print the table header for displaying the virtualaccounts information
+        $this->print_virtualaccounts_table_header();
+
+        // initialize the mark array to be null. This will hold keys of users in associative array that need VA creation
+        $mark_users_for_new_va = [];
+
+        // instantiate a new cashfree API class to get cashfree account information
+        $cf_autocollect_api = new \block_configurable_reports\madhu_export_classes\CfAutoCollect($this->site_name);
+
+        
+
+        foreach ($this->matrix_associative as $key => $user):
+
+            // get the virtual accounts information from table records derived associative array
+            $virtualaccounts_json = $user['virtualaccounts'] ?? "[]";
+
+            // decode to associative array
+            $virtualaccounts = json_decode($virtualaccounts_json, true);
+
+            // get keys of this array as a numerically indexed array
+            // if numerical we get 0,1 if not we get hset-payments, hsea-llp-payments as keys.
+            $virtualaccounts_keys = array_keys($virtualaccounts);
+
+            // search for the key corresponding to array containing desired site's beneficiary
+            $index_virtualaccounts = array_search($this->beneficiary_name, array_column($virtualaccounts, "beneficiary_name"));
+
+            // get the sub-array containing account details pertaining to beneficiary of desired payment site only
+                // $this->virtualaccount  = $virtualaccounts[get_bloginfo('name')];
+
+            // initialize desired virtualaccount to null
+            $virtualaccount = null;
+
+            if ($index_virtualaccounts)
+            {
+                $virtualaccount  = $virtualaccounts[$virtualaccounts_keys[$index_virtualaccounts]];
+            }
+
+            // check if this virtual account is blank or has invalid information
+            if ( empty($virtualaccount) || stripos( $virtualaccount['va_id'], $user['id'] ) === false || $user['account_number'] == "0000")
+            {
+                // check if this account exists at Cashfree but just not updated in SriToni
+                // pad moodleuserid with 0's to get vAccountId
+                $vAccountId = str_pad($user['id'], 4, "0", STR_PAD_LEFT);
+                $vA = $cf_autocollect_api->getvAccountGivenId($vAccountId);
+
+                if  ( empty($vA) )
+                {
+                    // mark this user for a new VA creation
+                    $mark_users_for_new_va[] = $key;
+                }
+                else
+                {
+                    // this account does Exist, so update the user's profile field with the updated site account
+                    $virtualaccount = array (
+                                                "beneficiary_name"  => $this->beneficiary_name ,
+                                                "va_id"             => $vA->vAccountId ,
+                                                "account_number"    => $vA->virtualAccountNumber ,
+                                                "va_ifsc_code"      => $vA->ifsc,
+                    );
+
+                    $virtualaccounts[$virtualaccounts_keys[$index_virtualaccounts]] = $virtualaccount;
+
+                    $virtualaccounts_json = json_encode($virtualaccounts);
+
+                    // only update user profile field with new data if not a simulation and update flag is TRUE
+
+                    // Get the Moodle profile_field_virtualaccounts for this user to update
+                    // you may get error if this record has not been set before
+                    $field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+                    $user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+                                                                                            'userid'   =>  $user['id'],
+                                                                                            'fieldid'  =>  $field->id,
+                                                                                            )
+                                                                    );
+
+                    $user_profile_virtualaccounts->data = $virtualaccounts_json;
+                    $DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+                }
+            }
+
+            $this->print_virtualaccounts_table_row( $user, $virtualaccount );
+
+        endforeach;  
+
+        $this->mark_users_for_new_va = $mark_users_for_new_va;
+    }
+
+
+    /**
+     * 
+     */
+    public function print_virtualaccounts_table_row($user)
+    {
+        // print out the full row aith all data
+        ?>
+                <tr>
+                    <td><?php echo htmlspecialchars( $user["username"] ); ?></td>
+                    <td><?php echo htmlspecialchars( $user["idnumber"] ); ?></td>
+                    <td><?php echo htmlspecialchars( $user["id"] ); ?></td>
+                    <td><?php echo htmlspecialchars( $user["present_grade"] ); ?></td>
+                    <td><?php echo htmlspecialchars( $new_fees_arr['fees_for'] ); ?></td>
+                    <td><?php echo htmlspecialchars( $new_fees_arr['amount'] ); ?></td>
+                    <td><?php echo htmlspecialchars( $new_fees_arr['ay']) ; ?></td>
+                    <td><?php echo htmlspecialchars(json_encode( $updated_fees_arr )); ?></td>
+                    <td><?php echo htmlspecialchars( $new_fees_arr['payee'] ); ?></td>
+                </tr>
+        <?php
+    }
+
+
+
+    /**
+     *  @return null
+     *  Use the array $this->mark_users_for_new_va to create new VA's for them and update user profiles with new data
+     */
+    public function create_marked_virtual_accounts()
+    {
+        $cf_autocollect_api = new \block_configurable_reports\madhu_export_classes\CfAutoCollect($this->site_name);
+
+        foreach ($this->mark_users_for_new_va as $index => $key):
+
+            // pick the user who has been selected for new VA creation using the key from the marked array
+            $user = $this->matrix_associative[$key];
+
+            // prepare the required information to create new Cashfree Virtual Account
+            $employeenumber = $user["employeenumber"];	// this is the unique sritoni idnumber assigned by school
+			$fullname 		= $user["displayname"];		// full name in SriToni
+			$moodleuserid   = $user["id"];				// unique id used internally by Moodle in the user tables
+            $phone          = $user["phone"];           // mobile of user
+            $email          = $user["mail"];
+            $moodleusername = $user["uid"];              // sritoni username issued by school
+            if (strlen($phone) !=10)
+            {
+                $phone  = "1234567890";     // phone dummy number
+            }
+
+            // pad moodleuserid with 0's to get vAccountId
+            $vAccountId = str_pad($moodleuserid, 4, "0", STR_PAD_LEFT);
+
+            $vA 	= $cf_autocollect_api->createVirtualAccount($vAccountId, $fullname, $phone, $email);
+
+            $new_virtualaccount = array	(
+                                        "beneficiary_name"  => $this->beneficiary_name ,
+                                        "va_id"             => $vAccountId ,
+                                        "account_number"    => $vA->accountNumber ,
+                                        "va_ifsc_code"      => $vA->ifsc ,
+                                        );
+            // get the virtual accounts information from LDAP Entry
+            $virtualaccounts_json = $user['virtualaccounts'] ?? "[]";
+
+            // decode to associative array
+            $virtualaccounts = json_decode($virtualaccounts_json, true);
+
+            // get keys of this array as a numerically indexed array
+            // if numerical we get 0,1 if not we get hset-payments, hsea-llp-payments as keys.
+            $virtualaccounts_keys = array_keys($virtualaccounts);
+
+            // search for the key corresponding to array containing this site's beneficiary
+            $index_virtualaccounts = array_search($this->beneficiary_name, array_column($virtualaccounts, "beneficiary_name"));
+
+            $virtualaccounts[$virtualaccounts_keys[$index_virtualaccounts]] = $new_virtualaccount;
+
+ 
+            
+            // Get the Moodle profile_field_virtualaccounts for this user to update
+            // you may get error if this record has not been set before
+            $field = $DB->get_record('user_info_field', array('shortname' => "virtualaccounts"));
+            $user_profile_virtualaccounts = $DB->get_record('user_info_data', array(
+                                                                                    'userid'   =>  $user['id'],
+                                                                                    'fieldid'  =>  $field->id,
+                                                                                    )
+                                                            );
+
+            $user_profile_virtualaccounts->data = json_encode($virtualaccounts);
+            $DB->update_record('user_info_data', $user_profile_virtualaccounts, $bulk=false);
+            
+            
+        endforeach;
+    }
+
+
+
+    /**
+     * Take the JSON encoded string from the virtualaccounts field
+     * Extract the virtualaccount array for passed in user for the site under consideration
+     */
+    public function get_user_virtualaccount_array($user)
+    {
+        // get the virtual accounts information from LDAP Entry
+        $virtualaccounts_json = $user['virtualaccounts'] ?? "[]";
+
+        // decode to associative array
+        $virtualaccounts = json_decode($virtualaccounts_json, true);
+
+        // get keys of this array as a numerically indexed array
+        // if numerical we get 0,1 if not we get hset-payments, hsea-llp-payments as keys.
+        $virtualaccounts_keys = array_keys($virtualaccounts);
+
+        // search for the key corresponding to array containing this site's beneficiary
+        $index_virtualaccounts = array_search($this->beneficiary_name, array_column($virtualaccounts, "beneficiary_name"));
+
+        // get the sub-array containing account details pertaining to beneficiary of this payment site only
+            // $this->virtualaccount  = $virtualaccounts[get_bloginfo('name')];
+        $virtualaccount = null;
+
+        if ($index_virtualaccounts)
+        {
+            $virtualaccount  = $virtualaccounts[$virtualaccounts_keys[$index_virtualaccounts]];
+        }
+
+        return $virtualaccount;
+    }
+
+
+
+
+    /**
+     * 
+     */
+    public function print_virtualaccounts_table_header()
+    {
+        // define table and heading
+        ?>
+            <style>
+            table {
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid orange;
+                padding: 10px;
+                text-align: left;
+            }
+            </style>
+
+            <table style="width:100%">
+                <tr>
+                    <th>username</th>
+                    <th>idnumber</th>
+                    <th>Moodle ID</th> 
+                    <th>VA ID</th>
+                    <th>VAccount No</th>
+                    <th>IFSC Code</th>
+                    <th>Beneficiary</th>
+                    <th>JSON data for field</th>
+                </tr>
+        <?php
+    }
+
+
 
     /**
      * 

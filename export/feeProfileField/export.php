@@ -33,19 +33,19 @@ function export_report($report)
     global $DB, $CFG, $COURSE;
 
     require_once($CFG->libdir . '/csvlib.class.php');
-    require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
+    // require_once($CFG->dirroot."/blocks/configurable_reports/cashfree_api/cfAutoCollect.inc.php");
     // require_once($CFG->dirroot."/blocks/configurable_reports/madhu_export_classes/feepayment.php");
 
     $simulation = true;
 
     $verbose    = true;
 
+    // details of site and the associated beneficiary or account name
+    $site_name  = 'hset-payments';
+
     // new instance of the feepayment process that defines all the functions needed for payment process
     // it also generates the associative array from the report's table
-	$feepayment = new \block_configurable_reports\madhu_export_classes\feepayment( $report, $verbose, $simulation );
-
-    // echo nl2br("fees CSV array as read from Google published file");
-    // echo "<pre>" . print_r($fees_csv, true) ."</pre>";
+	$feepayment = new \block_configurable_reports\madhu_export_classes\feepayment( $report, $site_name, $verbose, $simulation );
 
 
     ?>
@@ -54,7 +54,8 @@ function export_report($report)
                 <input type="submit" name="button" 	value="Back to Report"/>
                 <input type="submit" name="button" 	value="Simulate fees"/>
                 <input type="submit" name="button" 	value="Write fees to user data"/>
-                <input type="submit" name="button" 	value="update or create CF Accounts"/>
+                <input type="submit" name="button" 	value="update and mark create"/>
+                <input type="submit" name="button" 	value="create marked"/>
                 <input type="submit" name="button" 	value="Generate POs"/>
             </form>
 
@@ -83,14 +84,22 @@ function export_report($report)
                     $feepayment->print_footer();
                     break;
 
-                case "update or create CF Accounts":
-                    //
-                    $feepayment->update_create_virtual_accounts_hset();
+                case "update and mark create":
+                    $simulation = true;         
+                    $feepayment->update_markcreate_virtualaccounts();
+                    $feepayment->print_footer();
+                    break;
+
+                case "create marked":
+                    $simulation = true;         
+                    $feepayment->create_marked_virtual_accounts();
+                    $feepayment->print_footer();
                     break;
 
                 case "Generate POs":
-                    // Create new orders on hset-payments site for each user for this fee amount
-                    $feepayment->generate_remote_payment_orders_hset_payments();
+                    $simulation = true;
+                    $feepayment->generate_remote_payment_orders_hset_payments($simulation);
+                    $feepayment->print_footer();
                     break;
         endswitch;
 

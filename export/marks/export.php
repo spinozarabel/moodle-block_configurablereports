@@ -63,6 +63,12 @@ function export_report($report)
     // Classsection is to be contained in every subject course name to be included in marks report
     $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
 
+    if ( empty($subjects_sortorder) )
+    {
+      error_log("extracted subjects_sortorder array is empty check published CSV published file");
+      return;
+    }
+    
     // 1st we add the new column headers to the 0th header row
     $matrix[0][8] = "letter_grade";
     $matrix[0][9] = "sort_order";
@@ -88,7 +94,7 @@ function export_report($report)
 
       $markspercentage      = $matrix[$row_index][6];   // example: 87
 
-      $class_section        = $matrix[$row_index][4];   // example: '8B'
+      $class_section        = $matrix[$row_index][4];   // example: '8B' heading is called gradesection
 
       if (empty($subject_letters_array_courseid[$subject_courseid]))
       {
@@ -152,6 +158,9 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
   $subjects_official_list = array_column($subjects_sortorder, $class_section);
+
+  // debug check to see if official list order is being extracted correctlt
+  error_log(print_r($subjects_official_list, true));
 
   // this row pertains to which subject? try to match to each subject and see the match
   switch (true)

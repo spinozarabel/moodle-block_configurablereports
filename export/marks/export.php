@@ -168,7 +168,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   {
     // The key does not exist as specified. Lets check if there is a partial match
     // extract all the 1D keys into an array
-    $keys_class_section = array_keys($subjects_official_list);
+    $keys_class_section = array_keys($subjects_sortorder);
     var_dump($keys_class_section);
     
     // see if there is a partial match

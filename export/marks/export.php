@@ -62,6 +62,8 @@ function export_report($report)
     // this lists the subjects columnwise, with header being classsection.
     // Classsection is to be contained in every subject course name to be included in marks report
     $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
+    var_dump($subjects_sortorder);
+    return;
    
     if ( empty($subjects_sortorder) )
     {

@@ -62,10 +62,7 @@ function export_report($report)
     // this lists the subjects columnwise, with header being classsection.
     // Classsection is to be contained in every subject course name to be included in marks report
     $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
-    var_dump($subjects_sortorder);
-    return;
    
-
     if ( empty($subjects_sortorder) )
     {
       error_log("extracted subjects_sortorder array is empty check published CSV published file");
@@ -163,7 +160,12 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   $subjects_official_list = array_column($subjects_sortorder, $class_section);
 
   // debug check to see if official list order is being extracted correctlt
-  error_log(print_r($subjects_official_list, true));
+  if (empty($subjects_official_list))
+  {
+    echo nl2br("Error - Subjects Official List could not be extracted for Class_section:" . $class_section  . "\n");
+    return [];
+  }
+  
 
   // this row pertains to which subject? try to match to each subject and see the match
   switch (true)

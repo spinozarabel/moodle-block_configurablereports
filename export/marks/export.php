@@ -157,7 +157,33 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   $a   = $subject_letters_array_courseid[$subject_courseid];
 
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
-  $subjects_official_list = array_column($subjects_sortorder, $class_section);
+  // We have 3 possibilities: $class_section is an exact match to a key in the Google CSV sheet
+  // Or it could be a partial match in either way or there is no match at all.
+  if (array_key_exists($class_section, $subjects_sortorder))
+  {
+    // the given key exists, so extract the desired column as an array
+    $subjects_official_list = array_column($subjects_sortorder, $class_section);
+  }
+  else
+  {
+    // The key does not exist as specified. Lets check if there is a partial match
+    // extract all the 1D keys into an array
+    $keys_class_section = array_keys($subjects_official_list);
+    
+    // see if there is a partial match
+    foreach ($keys_class_section as $index => $key_class_section)
+    {
+      if ( stripos($key_class_section, $class_section) !== false || stripos($class_section, $key_class_section) !== false )
+      {
+        // We have a partial match, lets get the index to key off of
+        $subjects_official_list = array_column($subjects_sortorder, $key_class_section);
+        
+        // let's get out of the foreach loop
+        break;
+
+      }
+    }
+  }
 
   // debug check to see if official list order is being extracted correctlt
   if (empty($subjects_official_list))

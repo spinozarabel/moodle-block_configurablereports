@@ -62,9 +62,6 @@ function export_report($report)
     // this lists the subjects columnwise, with header being classsection.
     // Classsection is to be contained in every subject course name to be included in marks report
     $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
-    $b = array_column($subjects_sortorder, "Grade 8B");
-    var_dump($b);
-    return;
    
     if ( empty($subjects_sortorder) )
     {
@@ -162,7 +159,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
   // We have 3 possibilities: $class_section is an exact match to a key in the Google CSV sheet
   // Or it could be a partial match in either way or there is no match at all.
-  if (array_key_exists($class_section, $subjects_sortorder))
+  if (array_key_exists($class_section, $subjects_sortorder[0]))
   {
     // the given key exists, so extract the desired column as an array
     $subjects_official_list = array_column($subjects_sortorder, $class_section);
@@ -171,8 +168,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   {
     // The key does not exist as specified. Lets check if there is a partial match
     // extract all the 1D keys into an array
-    $keys_class_section = array_keys($subjects_sortorder);
-    var_dump($keys_class_section);
+    $keys_class_section = array_keys($subjects_sortorder[0]);
     
     // see if there is a partial match
     foreach ($keys_class_section as $index => $key_class_section)

@@ -166,25 +166,26 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   }
   else
   {
-    // The key does not exist as specified. Lets check if there is a partial match
-    // extract all the 1D keys into an array
+    // The key does not exist as specified. Lets check if there is a partial match, for example 8B vs Grade 8B,
+    // extract all the keys into an array - keys are same for all sub-arrays so check any one of them
     $keys_class_section = array_keys($subjects_sortorder[0]);
     
-    // see if there is a partial match
+    // see if there is a partial match between class section from SQL table to Google spread sheet column header
     foreach ($keys_class_section as $index => $key_class_section)
     {
       if ( stripos($key_class_section, $class_section) !== false || stripos($class_section, $key_class_section) !== false )
       {
-        // We have a partial match, lets get the index to key off of
+        // We have a partial match, lets get thhis key to extract our column of subjects from CSV spreadsheet array
         $subjects_official_list = array_column($subjects_sortorder, $key_class_section);
 
-        // let's get out of the foreach loop
+        // We got what we wanted, let's get out of the foreach loop
         break;
       }
+      // keep searching the loop
     }
   }
 
-  // debug check to see if official list order is being extracted correctlt
+  // what if we didn't find the key and so the subjects?
   if (empty($subjects_official_list))
   {
     echo nl2br("Error - Subjects Official List could not be extracted for Class_section:" . $class_section  . "\n");
@@ -192,7 +193,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   }
   
 
-  // this row pertains to which subject? try to match to each subject and see the match
+  // this row pertains to which subject? ENglish but NOT Literarute
   switch (true)
   {
     case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):
@@ -665,7 +666,7 @@ function get_subject_letter_array($subject_courseid):array
   if ($letter_records = $DB->get_records_sql($sql))
   {
     // these overridden grade letter records do exist. They list lowest letter 1st
-    // fill in the letter and corresponding lowerbound from records.
+    // fill in the letter and corresponding lowerbound from records. Upper bound is next loop below
     foreach ($letter_records AS $index => $letter_record)
     {
         $letter_range_array[$index] = [$letter_record->letter, "upper bound", $letter_record->lowerboundary];

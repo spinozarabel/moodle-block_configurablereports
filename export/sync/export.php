@@ -132,7 +132,8 @@ if($ldapconn) {
       if ($flag_pw_encrypt) {
         // replace plain text passwords with SHA hashed ones
         $pwtext = $csv[$i]["userpassword"]; // lastname + ID + '!'
-        $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+        // $pwhash = '{SHA}' . base64_encode(sha1( $pwtext, TRUE )); // hash for SHA
+		$pwhash = sha1( $pwtext); // hash for SHA
         $csv[$i]["userpassword"] = $pwhash;  // replace the text password with hashed one
         //
       }

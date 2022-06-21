@@ -55,7 +55,7 @@ function export_report($report) {
 $flag_add_simulate 		=	  false;
 $flag_del_simulate		=	  false;
 // Set LDAP userpassword encryption to plain text. TRUE will set it to SHA1 and base64 encode
-$flag_pw_encrypt      	=   true;
+$flag_pw_encrypt      	=   false;
 // Flags to control Deletion and Modification of LDAP users' data during SYNC
 $flag_add_users 		= 	true;			# this allows the code to add users that don't exist yet in LDAP directory
 $flag_mod_users			= 	get_config('block_configurable_reports', 'flag_mod_users');

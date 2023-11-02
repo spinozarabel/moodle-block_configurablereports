@@ -174,6 +174,9 @@ function export_report($report)
         </tr>
       <?php
     }
+    ?>
+      </table>
+    <?php
 
     /*
     //---end of additional code to process matrix array for marks CSV export--->

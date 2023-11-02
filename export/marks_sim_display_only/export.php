@@ -133,19 +133,6 @@ function export_report($report)
       // print out the full row aith all data
       echo nl2br("$row[0], $row[1], $row[2], $row[3], $row[4], $subject_course_name, $row[6], $row[7], $subject_letter[0], $subject_letter[1], $subject_letter[2]");
     }
-
-    /*
-    //---end of additional code to process matrix array for marks CSV export--->
-
-    $csvexport = new csv_export_writer();
-    $csvexport->set_filename($filename);
-
-    foreach ($matrix as $ri => $col) {
-        $csvexport->add_data($col);
-    }
-    $csvexport->download_file();
-
-    */
     
     exit;
 }

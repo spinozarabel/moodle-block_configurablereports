@@ -192,6 +192,7 @@ function export_report($report)
     exit;
 
     */
+    die;
 }
 
 /**

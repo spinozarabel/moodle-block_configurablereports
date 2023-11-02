@@ -144,10 +144,10 @@ function export_report($report)
         $csvexport->add_data($col);
     }
     $csvexport->download_file();
-    
-    exit;
 
     */
+    
+    exit;
 }
 
 /**

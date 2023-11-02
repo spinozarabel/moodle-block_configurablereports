@@ -81,33 +81,6 @@ function export_report($report)
     // while we are at it, let's replace the subject string with the required marks card listing
     // for example Math Grade 8B will become Mathematics, etc.
 
-    // define table and heading
-    ?>
-        <style>
-          table {
-          border-collapse: collapse;
-          }
-          th, td {
-          border: 1px solid orange;
-          padding: 10px;
-          text-align: left;
-          }
-        </style>
-        <table style="width:100%">
-    		  <tr>
-            <th>username</th>
-            <th>fullname</th>
-				    <th>id</th>
-            <th>idnumber</th>
-            <th>gradesection</th>
-    			  <th>course</th>
-            <th>marks</th>
-				    <th>courseid</th>
-				    <th>subject</th>
-            <th>letter</th>
-            <th>sortorder</th>
-    		  </tr>
-    <?php
 
     foreach ($matrix as $row_index => $row)
     {
@@ -158,25 +131,8 @@ function export_report($report)
       $matrix[$row_index][9] = $subject_letter[2]; // sort order for listing. New column added
 
       // print out the full row aith all data
-      ?>
-        <tr>
-            <td><?php echo htmlspecialchars( $row[0] ); ?></td>
-            <td><?php echo htmlspecialchars( $row[1] ); ?></td>
-            <td><?php echo htmlspecialchars( $row[2] ); ?></td>
-            <td><?php echo htmlspecialchars( $row[3] ); ?></td>
-            <td><?php echo htmlspecialchars( $row[4] ); ?></td>
-            <td><?php echo htmlspecialchars( $subject_course_name ); ?></td>
-            <td><?php echo htmlspecialchars( $row[6] ); ?></td>
-            <td><?php echo htmlspecialchars( $row[7] ); ?></td>
-            <td><?php echo htmlspecialchars( $matrix[$row_index][5] ); ?></td>
-            <td><?php echo htmlspecialchars( $matrix[$row_index][8] ); ?></td>
-            <td><?php echo htmlspecialchars( $matrix[$row_index][9] ); ?></td>
-        </tr>
-      <?php
+      echo nl2br("$row[0], $row[1], $row[2], $row[3], $row[4], $subject_course_name, $row[6], $row[7], $subject_letter[0], $subject_letter[1], $subject_letter[2]");
     }
-    ?></table><?php
-    
-    echo nl2br(" ENd of table");
 
     /*
     //---end of additional code to process matrix array for marks CSV export--->
@@ -192,7 +148,6 @@ function export_report($report)
     exit;
 
     */
-    die;
 }
 
 /**

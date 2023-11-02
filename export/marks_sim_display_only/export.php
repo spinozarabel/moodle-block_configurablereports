@@ -13,7 +13,7 @@ function export_report($report)
 {
     global $DB, $CFG;
 
-    require_once($CFG->libdir . '/csvlib.class.php');
+    // require_once($CFG->libdir . '/csvlib.class.php');
 
 
     $table = $report->table;

@@ -131,7 +131,7 @@ function export_report($report)
       $matrix[$row_index][9] = $subject_letter[2]; // sort order for listing. New column added
 
       // print out the full row aith all data
-      echo nl2br("$row[0], $row[1], $row[2], $row[3], $row[4], $subject_course_name, $row[6], $row[7], $subject_letter[0], $subject_letter[1], $subject_letter[2]");
+      echo nl2br("$row[0], $row[1], $row[2], $row[3], $row[4], $subject_course_name, $row[6], $row[7], $subject_letter[0], $subject_letter[1], $subject_letter[2]" . "\n");
     }
     
     exit;

@@ -125,4 +125,29 @@ if ($ADMIN->fulltree) {
             get_string('allowedsqlusersinfo', 'block_configurable_reports'), '', PARAM_TEXT
         )
     );
+
+    // LDAP settings
+	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_server', 'LDAP URL',
+    'ldaps://example.com', '', PARAM_RAW, 40));
+
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_admin', 'LDAP Admin',
+        'cn=admin,dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
+
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_password', 'LDAP Admin Password',
+        'Enter password for LDAP Admin Account', '', PARAM_RAW, 40));
+
+    $settings->add(new admin_setting_configtext('block_configurable_reports/ldap_tree', 'LDAP Tree',
+        'dc=example,dc=edu,dc=in', '', PARAM_RAW, 40));
+
+    // setting to control deletion of LDAP users doing LDAP Sync
+    $settings->add(new admin_setting_configcheckbox('block_configurable_reports/flag_delete_users', 'Check for YES',
+        'Check box to delete LDAP users during Sync, leave unchecked NOT to delete LDAP users during Sync', 1));
+
+    // setting to control Modification of LDAP users doing LDAP Sync
+    $settings->add(new admin_setting_configcheckbox('block_configurable_reports/flag_mod_users', 'Check for YES',
+        'Check box to Modify Existing LDAP users during Sync, leave unchecked to NOT Modify LDAP users during Sync', 1));
+
+    // added setting for URL of published google CSV containing subject sort order
+    $settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/url_subject_sortorder', 'URL of subject sort order',
+        'Enter full path of published Google CSV containing subject sort order', '', PARAM_URL, 80));
 }

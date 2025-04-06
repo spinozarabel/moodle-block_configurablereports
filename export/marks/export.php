@@ -36,6 +36,10 @@ function export_report($report)
         }
     }
     //---Start of additional code to process matrix array for marks CSV export->
+    // The data in the CSV is as follows:
+    // username      fullname           id idnumber gradesection subject  markspercentage courseid
+    // aadhya.reddy	Aadhya V Reddy	1315	HSEA17066	8B	Biology Grade 8B	56.00	           232
+
     // define default grade array from site-wide letter ranges from SriToni
     $default_letters_array = [
                                 ["A",   100,    93],
@@ -60,7 +64,7 @@ function export_report($report)
           return;
       }
     // this lists the subjects columnwise, with header being classsection.
-    // Classsection is to be contained in every subject course name to be included in marks report
+    // Classsection is to be contained in every subject course name to be included in marks report such as Grade 8B, Grade 8Y, etc.
     $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
    
     if ( empty($subjects_sortorder) )
@@ -69,11 +73,11 @@ function export_report($report)
       return;
     }
     
-    // 1st we add the new column headers to the 0th header row
+    // 1st we add new column headers to the 0th header row
     $matrix[0][8] = "letter_grade";
     $matrix[0][9] = "sort_order";
 
-    // this is the variable that holds all the letter grade arrays ikeyed by subject's courseid
+    // this is the array that holds all the letter grade arrays keyed by subject's courseid
     $subject_letters_array_courseid = [];
 
     // now loop through the data contained in matrix array to determine the letter grade array of each subject.
@@ -99,7 +103,7 @@ function export_report($report)
       if (empty($subject_letters_array_courseid[$subject_courseid]))
       {
         // we have not yet attempted to get possibly overridden letter grades for this $subject_courseid
-        // so get the array if it exists. If not ause the sitewide default deletters array
+        // so get the array if it exists. If not, use the sitewide default deletters array
         $temp_array = get_subject_letter_array($subject_courseid);
 
         if (!empty($temp_array))
@@ -110,8 +114,6 @@ function export_report($report)
         {
           $subject_letters_array_courseid[$subject_courseid] = $default_letters_array;
         }
-
-
       }
 
       // get the subject name and letter and order as it must appear in marks card
@@ -159,6 +161,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   // based on the class cection, extract the column of subjects' officila list in their desired listing order
   // We have 3 possibilities: $class_section is an exact match to a key in the Google CSV sheet
   // Or it could be a partial match in either way or there is no match at all.
+  // the keys are the same in all rows so we choose the 1st row to get the keys
   if (array_key_exists($class_section, $subjects_sortorder[0]))
   {
     // the given key exists, so extract the desired column as an array
@@ -193,7 +196,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
   }
   
 
-  // this row pertains to which subject? ENglish but NOT Literarute
+  // this row pertains to which subject? English but NOT Literarute
   switch (true)
   {
     case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):
@@ -205,9 +208,9 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
           if (stripos($subject, 'English') !== false && stripos($subject, 'Literature') === false)
           {
             // we found our subject: English, not literature in english
-            $subject_listing  = $subject;
-            $sort_order       = $key;
-            // get out of loop
+            $subject_listing  = $subject; // subject as it will appear in the marks card
+            $sort_order       = $key;     // sort order for this subject in the marks card
+            // get out of loop and return the needed 3 element subject array
             break;
           }
         }
@@ -580,7 +583,7 @@ function get_subjectname_letter_order($subject_description, $markspercentage,
 */
 function get_letter($markspercentage, $a):string
 {
-  // llop through each range for the letter grade
+  // loop through each range for the letter grade
   foreach ($a as $i => $range)
   {
       // assign this range letter grade if falls in this range

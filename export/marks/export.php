@@ -1,0 +1,719 @@
+<?php
+// v36_ver4p1 ause the new setting from config to read the subject sort order
+/**
+ * Configurable Reports
+ * A Moodle block for creating customizable reports
+ * @package blocks
+ * @author: Juan leyva <http://www.twitter.com/jleyvadelgado>
+ * @date: 2009
+ */
+
+function export_report($report)
+{
+    global $DB, $CFG;
+
+    require_once($CFG->libdir . '/csvlib.class.php');
+
+
+    $table = $report->table;
+    $matrix = array();
+    $filename = 'report';
+
+    if (!empty($table->head)) {
+        $countcols = count($table->head);
+        $keys = array_keys($table->head);
+        $lastkey = end($keys);
+        foreach ($table->head as $key => $heading) {
+            $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($heading))));
+        }
+    }
+
+    if (!empty($table->data)) {
+        foreach ($table->data as $rkey => $row) {
+            foreach ($row as $key => $item) {
+                $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br($item))));
+            }
+        }
+    }
+    //---Start of additional code to process matrix array for marks CSV export->
+    // The data in the CSV is as follows:
+    // username      fullname           id idnumber gradesection subject  markspercentage courseid
+    // aadhya.reddy	Aadhya V Reddy	1315	HSEA17066	8B	Biology Grade 8B	56.00	           232
+
+    // define default grade array from site-wide letter ranges from SriToni
+    $default_letters_array = [
+                                ["A",   100,    93],
+                                ["A-",  92.99,  90],
+                                ["B+",  89.99,  87],
+                                ["B",   86.99,  83],
+                                ["B-",  82.99,  80],
+                                ["C+",  79.99,  77],
+                                ["C",   76.99,  73],
+                                ["C-",  72.99,  70],
+                                ["D+",  69.99,  67],
+                                ["D",   66.99,  60],
+                                ["F",   59.99,   0],
+                             ];
+
+    //1st we read in the google csv published file containing the subjects sort order
+    $url_subject_sortorder  = get_config('block_configurable_reports', 'url_subject_sortorder');
+  	if (empty($url_subject_sortorder))
+      {
+          echo nl2br("Empty config setting for Google Published CSV file URL, please set in config: "  . "\n");
+  		    error_log("Empty config setting for Google Published CSV file URL in plugin configurable_reports, please set in config");
+          return;
+      }
+    // this lists the subjects columnwise, with header being classsection.
+    // Classsection is to be contained in every subject course name to be included in marks report such as Grade 8B, Grade 8Y, etc.
+    $subjects_sortorder = csv_to_associative_array($url_subject_sortorder);
+   
+    if ( empty($subjects_sortorder) )
+    {
+      error_log("extracted subjects_sortorder array is empty check published CSV published file");
+      return;
+    }
+    
+    // 1st we add new column headers to the 0th header row
+    $matrix[0][8] = "letter_grade";
+    $matrix[0][9] = "sort_order";
+
+    // this is the array that holds all the letter grade arrays keyed by subject's courseid
+    $subject_letters_array_courseid = [];
+
+    // now loop through the data contained in matrix array to determine the letter grade array of each subject.
+    // while we are at it, let's replace the subject string with the required marks card listing
+    // for example Math Grade 8B will become Mathematics, etc.
+
+    foreach ($matrix as $row_index => $row)
+    {
+      if ($row_index == 0)
+      {
+        // skip this iteration since this is header row0
+        continue;
+      }
+
+      $subject_courseid     = $matrix[$row_index][7];   // for example 67
+
+      $subject_description  = $matrix[$row_index][5];   // for example: 'Math Grade 8B'
+
+      $markspercentage      = $matrix[$row_index][6];   // example: 87
+
+      $class_section        = $matrix[$row_index][4];   // example: '8B' heading is called gradesection
+
+      if (empty($subject_letters_array_courseid[$subject_courseid]))
+      {
+        // we have not yet attempted to get possibly overridden letter grades for this $subject_courseid
+        // so get the array if it exists. If not, use the sitewide default deletters array
+        $temp_array = get_subject_letter_array($subject_courseid);
+
+        if (!empty($temp_array))
+        {
+          $subject_letters_array_courseid[$subject_courseid] = $temp_array;
+        }
+        else
+        {
+          $subject_letters_array_courseid[$subject_courseid] = $default_letters_array;
+        }
+      }
+
+      // get the subject name and letter and order as it must appear in marks card
+      $subject_letter = get_subjectname_letter_order($subject_description, $markspercentage,
+                                                     $class_section, $subjects_sortorder,
+                                                     $subject_courseid, $subject_letters_array_courseid);
+
+
+
+      // look up the dynamic letter_grade and put this value in the matrix data for export
+      $matrix[$row_index][5] = $subject_letter[0]; // subject name as in marks card based on course description mapping
+      $matrix[$row_index][8] = $subject_letter[1]; // dynamic letter grade, new column added
+      $matrix[$row_index][9] = $subject_letter[2]; // sort order for listing. New column added
+    }
+
+
+    //---end of additional code to process matrix array for marks CSV export--->
+
+    $csvexport = new csv_export_writer();
+    $csvexport->set_filename($filename);
+
+    foreach ($matrix as $ri => $col) {
+        $csvexport->add_data($col);
+    }
+    $csvexport->download_file();
+    exit;
+}
+
+/**
+**  @param string:$subject_description - holds the full subject description derived from course title
+**  @param integer:$markspercentage - is the percentage marks for this siubject
+**  @param string:$class_section - this is the class and section, for example: 8B
+**  @param array:$subjects_sortorder derived from google sheet published as CSV
+**  @param array:$subject_letters_array_courseid is the letter_range_array indexed by courseid.
+**  @return array subject description as desired on marks card and letter grade and sort order for marks card ex: ["English", "A", 3]
+*/
+function get_subjectname_letter_order($subject_description, $markspercentage,
+                                      $class_section, $subjects_sortorder,
+                                      $subject_courseid, $subject_letters_array_courseid):array
+{
+
+  // get the overridden/default letter ranges for this course based on course id.
+  $a   = $subject_letters_array_courseid[$subject_courseid];
+
+  // based on the class cection, extract the column of subjects' officila list in their desired listing order
+  // We have 3 possibilities: $class_section is an exact match to a key in the Google CSV sheet
+  // Or it could be a partial match in either way or there is no match at all.
+  // the keys are the same in all rows so we choose the 1st row to get the keys
+  if (array_key_exists($class_section, $subjects_sortorder[0]))
+  {
+    // the given key exists, so extract the desired column as an array
+    $subjects_official_list = array_column($subjects_sortorder, $class_section);
+  }
+  else
+  {
+    // The key does not exist as specified. Lets check if there is a partial match, for example 8B vs Grade 8B,
+    // extract all the keys into an array - keys are same for all sub-arrays so check any one of them
+    $keys_class_section = array_keys($subjects_sortorder[0]);
+    
+    // see if there is a partial match between class section from SQL table to Google spread sheet column header
+    foreach ($keys_class_section as $index => $key_class_section)
+    {
+      if ( stripos($key_class_section, $class_section) !== false || stripos($class_section, $key_class_section) !== false )
+      {
+        // We have a partial match, lets get thhis key to extract our column of subjects from CSV spreadsheet array
+        $subjects_official_list = array_column($subjects_sortorder, $key_class_section);
+
+        // We got what we wanted, let's get out of the foreach loop
+        break;
+      }
+      // keep searching the loop
+    }
+  }
+
+  // what if we didn't find the key and so the subjects?
+  if (empty($subjects_official_list))
+  {
+    echo nl2br("Error - Subjects Official List could not be extracted for Class_section:" . $class_section  . "\n");
+    return [];
+  }
+  
+
+  // this row pertains to which subject? English but NOT Literarute
+  switch (true)
+  {
+    case (stripos($subject_description, 'English') !== false && stripos($subject_description, 'Literature') === false):
+        // subject description contains the word English but not Literature so this is the English subject course
+        // we need to determine the subject dependent letter grade if not alreay done and also its sort order
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'English') !== false && stripos($subject, 'Literature') === false)
+          {
+            // we found our subject: English, not literature in english
+            $subject_listing  = $subject; // subject as it will appear in the marks card
+            $sort_order       = $key;     // sort order for this subject in the marks card
+            // get out of loop and return the needed 3 element subject array
+            break;
+          }
+        }
+
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Literature in English
+    case (stripos($subject_description, 'Literature') !== false  && stripos($subject_description, 'English') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Literature') !== false && stripos($subject, 'English') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    // Hindi
+    case (stripos($subject_description, 'Hindi') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Hindi') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    // Kannada
+    case (stripos($subject_description, 'Kannada') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Kannada') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    // French
+    case (stripos($subject_description, 'French') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'French') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    // History
+    case (stripos($subject_description, 'History') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'History') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Mathematics
+    case (stripos($subject_description, 'Math') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Math') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+    // Physics
+    case (stripos($subject_description, 'Physics') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Physics') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Biology
+    case (stripos($subject_description, 'Biology') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Biology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Chemistry
+    case (stripos($subject_description, 'Chemistry') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Chemistry') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Computer Science / Computer Studies
+    case (stripos($subject_description, 'Computer') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Computer') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Economics
+    case (stripos($subject_description, 'Econom') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Econom') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Sociology
+    case (stripos($subject_description, 'Sociology') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Sociology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Psychology
+    case (stripos($subject_description, 'Psychology') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Psychology') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Geography
+    case (stripos($subject_description, 'Geography') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Geography') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Business
+    case (stripos($subject_description, 'Business') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Business') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Art and Design
+    case (stripos($subject_description, 'Art and Design') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Art and Design') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+    // Music
+    case (stripos($subject_description, 'Music') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Music') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+
+    // Music
+    case (stripos($subject_description, 'Environment') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Environment') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+        // Physical Education
+        case (stripos($subject_description, 'Physical Education') !== false):
+
+            foreach ($subjects_official_list as $key => $subject)
+            {
+              if (stripos($subject, 'Physical Education') !== false)
+              {
+                // we found our element.
+                $subject_listing  = $subject;
+                $sort_order       = $key;
+                // get out of loop
+                break;
+              }
+            }
+            return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+
+    // Accounts
+    case (stripos($subject_description, 'Account') !== false):
+
+        foreach ($subjects_official_list as $key => $subject)
+        {
+          if (stripos($subject, 'Account') !== false)
+          {
+            // we found our element.
+            $subject_listing  = $subject;
+            $sort_order       = $key;
+            // get out of loop
+            break;
+          }
+        }
+        return [$subject_listing, get_letter($markspercentage, $a), $sort_order];
+
+
+
+
+
+    default:
+        // for all unknown subject mappings. Just return the original with a fixed grade letter and list at end
+        return [$subject_description, "Z", 100];
+
+  }     // switch end
+
+
+}       // function end
+
+
+/**
+**  @param integer:$markspercentage
+**  @param array:$a example:
+**      $a = [
+**            ["A", 100,  90],   // A
+**            ["B", 89,   80],   // B
+**            ["C", 79,   70],   // C
+**            ["D", 69,   60]    // D
+**          ];
+*/
+function get_letter($markspercentage, $a):string
+{
+  // loop through each range for the letter grade
+  foreach ($a as $i => $range)
+  {
+      // assign this range letter grade if falls in this range
+      if ($markspercentage <= $range[1]  && $markspercentage >= $range[2])
+      {
+          return $range[0];
+      }
+
+  }
+  // uncaught case so return exception letter grade
+  return "Z";
+}
+
+
+/**
+ * This routine is attributed to https://github.com/rap2hpoutre/csv-to-associative-array
+  *
+ * The items in the 1st line (column headers) become the fields of the array
+ * each line of the CSV file is parsed into a sub-array using these fields
+ * The 1st index of the array is an integer pointing to these sub arrays
+ * The 1st row of the CSV file is ignored and index 0 points to 2nd line of CSV file
+ * This is the example data:
+ *
+ * grade1,grade2,grade3
+ * grade2,grade3,grade4
+ * 10000,20000,30000
+ *
+ * This is the associative array
+ * Array
+ *(
+ *  [0] => Array
+ *		(
+ *			[grade1] => grade2
+ *          [grade2] => grade3
+ *			[grade3] => grade4
+ *		)
+ *  [1] => Array
+ *      (
+ *          [grade1] => 10000
+ *          [grade2] => 20000
+ *          [grade3] => 30000
+ *      )
+ * )
+ */
+function csv_to_associative_array($file, $delimiter = ',', $enclosure = '"')
+{
+    if (($handle = fopen($file, "r")) !== false)
+    {
+        $headers = fgetcsv($handle, 0, $delimiter, $enclosure);
+        $lines = [];
+        while (($data = fgetcsv($handle, 0, $delimiter, $enclosure)) !== false)
+        {
+            $current = [];
+            $i = 0;
+            foreach ($headers as $header)
+            {
+                $current[$header] = $data[$i++];
+            }
+            $lines[] = $current;
+        }
+        fclose($handle);
+        return $lines;
+	}
+}      // function
+
+
+
+/**
+**    @param string:$subject_courseid is the course id of the subject which belongs to this row for this student
+**    @return array:$letter_range_array which consists of record id, followed by letter followed by lower boundary
+*/
+function get_subject_letter_array($subject_courseid):array
+{
+  global $DB, $CFG;
+
+  $letter_range_array = [];
+
+  $sql = "SELECT gl.*
+          FROM {grade_letters} gl
+            JOIN {context} ctx ON ctx.id = gl.contextid
+            JOIN {course} c ON c.id = ctx.instanceid
+                     WHERE c.id = {$subject_courseid}";
+  if ($letter_records = $DB->get_records_sql($sql))
+  {
+    // these overridden grade letter records do exist. They list lowest letter 1st
+    // fill in the letter and corresponding lowerbound from records. Upper bound is next loop below
+    foreach ($letter_records AS $index => $letter_record)
+    {
+        $letter_range_array[$index] = [$letter_record->letter, "upper bound", $letter_record->lowerboundary];
+    }
+
+    // fill in upperbound for letter from lowerbound of upper letter in next record
+    // 1st get the keys of letter sub-arrays as they are the same as table ids
+    $keys = array_keys($letter_range_array);
+
+    // The loop $index is now from 0-> ++
+    foreach(array_keys($keys) as $index )
+    {
+      // 1st look for highest letter sub-array
+      $current_key = $keys[$index];             // this is the original tabl ID of letter record
+      $current_letter = $letter_range_array[$current_key][0];   // get the current letter
+
+      $end_key = end($keys);                                    // get the last letter from the just filled loop prior to this
+      $end_letter = $letter_range_array[$end_key][0];
+
+      // if current letter is same as last letter, we set the upperbound to 100 as highest percentage
+      if ($current_letter == $end_letter)
+      {
+        // this is the highest letter grade and so its upper bound is 100
+        $letter_range_array[$current_key][1] = 100;
+
+        // print for debug
+        // error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
+        //          " Upper: " . $letter_range_array[$current_key][1] . " Lower: " . $letter_range_array[$current_key][2]);
+      }
+      else
+      {
+        // for all letters other than highest, its upperbound is lowerbound of next higher letter coming after it in array
+        $next_key = $keys[$index + 1];
+        $letter_range_array[$current_key][1] = floatval($letter_range_array[$next_key][2]) - 0.01;
+        // we subtract 0.01 so there is no overlap between letter ranges
+        // error_log("SUbject ID: " . $subject_courseid . "Letter: " . $letter_range_array[$current_key][0] .
+        //          " Upper: " . $letter_range_array[$current_key][1] . " Lower: " . $letter_range_array[$current_key][2]);
+      }
+
+    }
+
+    unset($letter_records);
+
+    return $letter_range_array;
+  }
+  return [];
+}

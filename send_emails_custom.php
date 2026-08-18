@@ -123,9 +123,6 @@ if ($form->is_cancelled()) {
                 $mother = cr_form_parent_user_object($mothers_email, $abouttosenduser);
             }
 
-            $fathers_email = $abouttosenduser->profile_field_fatheremail;
-            error_log("Fathers Email: " . $fathers_email);
-
             if (!empty($fathers_email)) {
                 $father = cr_form_parent_user_object($fathers_email, $abouttosenduser);
             }

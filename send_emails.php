@@ -33,7 +33,7 @@ require_login();
 global $PAGE, $USER, $DB, $COURSE;
 $context = context_course::instance($COURSE->id);
 $PAGE->set_context($context);
-
+var_dump($_POST['userids']);
 if (!has_capability('block/configurable_reports:managereports', $context) &&
     !has_capability('block/configurable_reports:manageownreports', $context)) {
     throw new moodle_exception('badpermissions');
@@ -45,8 +45,6 @@ if (!has_capability('block/configurable_reports:managereports', $context) &&
  * @package   block_configurable_reports
  * @author    Juan leyva <http://www.twitter.com/jleyvadelgado>
  */
-
-var_dump($_POST['userids']);
 class sendemail_form extends moodleform {
 
     /**

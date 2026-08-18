@@ -237,19 +237,13 @@ function cr_form_parent_user_object(string $parent_email, object $student_user) 
         // form the minimum user object for use with email_to_user()
         $parent_user = new stdclass();
         $parent_user->id = -99;
-        $parent_user->firstname = 'Parent of';
-        $parent_user->lastname = ' ' . $student_user->firstname . ' ' . $student_user->lastname;
+        $parent_user->firstname = 'Parent of ';
+        $parent_user->lastname = $student_user->firstname . ' ' . $student_user->lastname;
         $parent_user->email = $email;
-        $parent_user->firstnamephonetic = 'Parent';
-        $parent_user->lastnamephonetic = ' ' . $student_user->firstname . ' ' . $student_user->lastname;
-        $parent_user->middlename = ' ';
-        $parent_user->alternatename = ' ';
-        $parent_user->icq = ' ';
-        $parent_user->aim = ' ';
-        $parent_user->yahoo = ' ';
-        $parent_user->skype = ' ';
-        $parent_user->msn = ' ';
-        
+        $parent_user->firstnamephonetic = 'Parent of ';
+        $parent_user->lastnamephonetic = $student_user->firstname . ' ' . $student_user->lastname;
+        $parent_user->middlename = '';
+        $parent_user->alternatename = '';
         $parent_user->mailformat = 1;  // HTML format
         $parent_user->maildisplay = true;
         $parent_user->suspended = 0;

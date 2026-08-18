@@ -295,6 +295,19 @@ function cr_get_export_plugins(): array {
 function cr_print_table(object $table, bool $return = false) {
     global $COURSE;
 
+    // --- CUSTOM HOOK START MA ---
+    require_once(__DIR__ . '/locallib_custom.php');
+
+    // If the table contains a heading named "onlyparents" or "studentandparents" call the custom function
+    if (cr_has_specific_column($table, "onlyparents") || 
+        cr_has_specific_column($table, "studentandparents")) {
+
+        return cr_print_table_custom($table, $return);
+    }
+    // since the table does not have custom column names we proceed with original flow
+    
+    // --- CUSTOM HOOK END ---
+
     $output = '';
 
     if (isset($table->align)) {

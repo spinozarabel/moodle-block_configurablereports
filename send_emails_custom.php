@@ -112,8 +112,11 @@ if ($form->is_cancelled()) {
             // e.g. motheremail, fatheremail
             // form a uminimum required ser object for use with email_to_user()
             // for the purpose of passing the correct user object with parents email id
-            $mothers_email = $abouttosenduser->profile_field_motheremail;
+            $mothers_email = $abouttosenduser->profile['motheremail'] ?? '';
+            $fathers_email = $abouttosenduser->profile['fatheremail'] ?? '';
+
             error_log("Mothers Email: " . $mothers_email);
+            error_log("Fathers Email: " . $fathers_email);
 
             if (!empty($mothers_email)) {
                 $mother = cr_form_parent_user_object($mothers_email, $abouttosenduser);

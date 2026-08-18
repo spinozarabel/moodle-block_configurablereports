@@ -80,6 +80,8 @@ class sendemail_form extends moodleform {
 
 }
 
+error_log(print_r($_POST,true));
+
 // TODO _POST?? not Moodle way.
 $form = new sendemail_form(null, [
     'usersids' => implode(',', $_POST['userids']),

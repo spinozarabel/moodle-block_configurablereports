@@ -9,6 +9,13 @@ require_once('../../config.php');
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . '/formslib.php');
 
+// get the hidden values in the form sent by cr_print_table_custom
+$userids_array                     = optional_param_array('userids', [], PARAM_INT);
+$courseid                          = optional_param('courseid', 0, PARAM_INT);
+$is_sendemailonlyparents_enabled   = optional_param('is_sendemailonlyparents_enabled', false, PARAM_BOOL);
+$is_sendemailstudentandparents_enabled = optional_param('is_sendemailstudentandparents_enabled', false, PARAM_BOOL);
+
+
 require_login();
 global $PAGE, $USER, $DB, $COURSE;
 $context = context_course::instance($COURSE->id);
@@ -64,12 +71,14 @@ class sendemail_form extends moodleform {
 
 }
 
-// TODO _POST?? not Moodle way.
+$unique_userids = array_unique($userids_array);
+$userids_string = implode(',', $unique_userids);
+
 $form = new sendemail_form(null, [
-    'usersids' => implode(',', $_POST['userids']),
-    'courseid' => (int) $_POST['courseid'],
-    'is_sendemailonlyparents_enabled' => $_POST['is_sendemailonlyparents_enabled'],
-    'is_sendemailstudentandparents_enabled' => $_POST['is_sendemailstudentandparents_enabled'],
+    'usersids' => $userids_string,
+    'courseid' => $courseid,
+    'is_sendemailonlyparents_enabled' => $is_sendemailonlyparents_enabled,
+    'is_sendemailstudentandparents_enabled' => $is_sendemailstudentandparents_enabled,
 ]);
 
 if ($form->is_cancelled()) {
@@ -86,8 +95,16 @@ if ($form->is_cancelled()) {
 
     foreach (explode(',', $data->usersids) as $userid) {
 
+        // initialize mother and father objects
+        $mother = null;
+        $father = null;
+
+        $userid = (int) $userid;
+
+        if (empty($userid)) continue;
+
         // Get the Moodle User object given the moodle user id
-        $abouttosenduser = $DB->get_record('user', ['id' => (int) $userid]);
+        $abouttosenduser = $DB->get_record('user', ['id' => $userid]);
 
         if ($abouttosenduser) {
             profile_load_custom_fields($abouttosenduser);

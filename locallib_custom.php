@@ -164,7 +164,7 @@ function cr_print_table_custom(object $table, bool $return = false) {
                     if ($keyouter == $isuserid) {
                         $output .= '<td style="' . $align[$keyouter] . $size[$keyouter] . $wrap[$keyouter] . '" class="cell c' .
                             $keyouter .
-                            $extraclass . '"><input name="userids[]" type="checkbox" value="' . s($item) . '"></td>';
+                            $extraclass . '"><input name="userids[]" type="checkbox" value="' . s($item) . '" checked></td>';
                     } else {
                         $output .= '<td style="' . $align[$keyouter] . $size[$keyouter] . $wrap[$keyouter] . '" class="cell c' .
                             $keyouter .

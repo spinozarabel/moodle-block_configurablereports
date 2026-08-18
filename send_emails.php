@@ -45,11 +45,14 @@ if (!has_capability('block/configurable_reports:managereports', $context) &&
  * @package   block_configurable_reports
  * @author    Juan leyva <http://www.twitter.com/jleyvadelgado>
  */
+
+var_dump($_POST['userids']);
 class sendemail_form extends moodleform {
 
     /**
      * Form definition
      */
+    
     public function definition(): void {
         global $COURSE;
 

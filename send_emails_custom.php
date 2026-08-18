@@ -89,6 +89,7 @@ if ($form->is_cancelled()) {
 
     // Include the user profile library
     require_once($CFG->dirroot . '/user/profile/lib.php');
+    require_once(__DIR__ . '/locallib_custom.php');
 
     $is_sendemailonlyparents_enabled = $data->is_sendemailonlyparents_enabled;
     $is_sendemailstudentandparents_enabled = $data->is_sendemailstudentandparents_enabled;

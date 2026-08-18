@@ -33,7 +33,7 @@ require_login();
 global $PAGE, $USER, $DB, $COURSE;
 $context = context_course::instance($COURSE->id);
 $PAGE->set_context($context);
-var_dump($_POST['userids']);
+
 if (!has_capability('block/configurable_reports:managereports', $context) &&
     !has_capability('block/configurable_reports:manageownreports', $context)) {
     throw new moodle_exception('badpermissions');
@@ -81,7 +81,6 @@ class sendemail_form extends moodleform {
 
 }
 
-error_log(print_r($_POST['userids'],true));
 
 // TODO _POST?? not Moodle way.
 $form = new sendemail_form(null, [

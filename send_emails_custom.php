@@ -53,8 +53,8 @@ class sendemail_form extends moodleform {
         $mform->addElement('hidden', 'courseid', $this->_customdata['courseid']);
 
         // add hidden elements onlyparents and studentandparents to pass
-        $mform->addElement('hidden', 'onlyparents', $this->_customdata['onlyparents']);
-        $mform->addElement('hidden', 'studentandparents', $this->_customdata['studentandparents']);
+        $mform->addElement('hidden', 'is_sendemailonlyparents_enabled', $this->_customdata['is_sendemailonlyparents_enabled']);
+        $mform->addElement('hidden', 'is_sendemailstudentandparents_enabled', $this->_customdata['is_sendemailstudentandparents_enabled']);
 
         $mform->addElement('text', 'subject', get_string('email_subject', 'block_configurable_reports'));
         $mform->setType('subject', PARAM_TEXT);
@@ -113,12 +113,14 @@ if ($form->is_cancelled()) {
             // form a uminimum required ser object for use with email_to_user()
             // for the purpose of passing the correct user object with parents email id
             $mothers_email = $abouttosenduser->profile_field_motheremail;
+            error_log("Mothers Email: " . $mothers_email);
 
             if (!empty($mothers_email)) {
                 $mother = cr_form_parent_user_object($mothers_email, $abouttosenduser);
             }
 
             $fathers_email = $abouttosenduser->profile_field_fatheremail;
+            error_log("Fathers Email: " . $fathers_email);
 
             if (!empty($fathers_email)) {
                 $father = cr_form_parent_user_object($fathers_email, $abouttosenduser);
@@ -136,9 +138,11 @@ if ($form->is_cancelled()) {
 
             if ($is_sendemailstudentandparents_enabled) {
                 if ($mother) {
+                    error_log("Sending email to mother: " . $mother->email);
                     email_to_user($mother, $USER, $data->subject, format_text($data->content['text']), $data->content['text']);
                 }
                 if ($father) {
+                    error_log("Sending email to father: " . $father->email);
                     email_to_user($father, $USER, $data->subject, format_text($data->content['text']), $data->content['text']);
                 }
                 email_to_user($abouttosenduser, $USER, $data->subject, format_text($data->content['text']), $data->content['text']);

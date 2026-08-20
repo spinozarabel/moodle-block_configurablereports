@@ -126,6 +126,7 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    // Customization begins here to the end of the file
     // LDAP settings
 	$settings->add(new admin_setting_configpasswordunmask('block_configurable_reports/ldap_server', 'LDAP URL',
     'ldaps://example.com', '', PARAM_RAW, 40));

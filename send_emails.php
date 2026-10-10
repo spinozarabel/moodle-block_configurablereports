@@ -50,6 +50,7 @@ class sendemail_form extends moodleform {
     /**
      * Form definition
      */
+    
     public function definition(): void {
         global $COURSE;
 
@@ -79,6 +80,7 @@ class sendemail_form extends moodleform {
     }
 
 }
+
 
 // TODO _POST?? not Moodle way.
 $form = new sendemail_form(null, [

@@ -68,7 +68,7 @@ class plugin_enrolledstudents extends filter_base {
         }
 
         if ($this->report->type !== 'sql') {
-            return [$filterenrolledstudents];
+            return $this->narrow_to((array) $finalelements, $filterenrolledstudents);
         }
 
         if (preg_match("/%%FILTER_COURSEENROLLEDSTUDENTS:([^%]+)%%/i", $finalelements, $output)) {
@@ -85,10 +85,6 @@ class plugin_enrolledstudents extends filter_base {
         $filterenrolledstudents = optional_param('filter_enrolledstudents', 0, PARAM_INT);
         if (!$filterenrolledstudents) {
             return [$sql, []];
-        }
-
-        if ($this->report->type !== 'sql') {
-            return [$filterenrolledstudents];
         }
 
         $params = [];
@@ -146,13 +142,8 @@ class plugin_enrolledstudents extends filter_base {
                 $nameformat = get_string('fullnamedisplay');
             }
 
-            if (class_exists('\core_user\fields')) {
-                $namesArray = \core_user\fields::get_name_fields();
-                $allnames = \core_user\fields::for_name()->get_sql('', false, '', '', false)->selects;
-            } else {
-                $namesArray = get_all_user_name_fields();
-                $allnames = get_all_user_name_fields(true);
-            }
+            $namesArray = \core_user\fields::get_name_fields();
+            $allnames = \core_user\fields::for_name()->get_sql('', false, '', '', false)->selects;
             $sort = implode(',', order_in_string($namesArray, $nameformat));
 
             [$usql, $params] = $remotedb->get_in_or_equal($enrolledstudentslist);

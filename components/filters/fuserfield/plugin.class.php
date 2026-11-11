@@ -66,38 +66,68 @@ class plugin_fuserfield extends filter_base {
         return $this->execute_users($finalelements, $data);
     }
 
+    /**
+     * Read the value the viewer picked from the filter.
+     *
+     * The options are base64 encoded so that any field value can serve as an option value, but PARAM_BASE64 is
+     * meant for PEM data and rejects a single line of more than 64 characters, which is any value over 48 bytes.
+     * Decode strictly instead, which is the check that actually matters here.
+     *
+     * @param string $field The user field the filter is on.
+     * @return string The value picked, or '' when nothing valid was submitted.
+     */
+    private function get_submitted_value(string $field): string {
+        $submitted = optional_param('filter_fuserfield_' . $field, '', PARAM_RAW);
+        $decoded = $submitted === '' ? false : base64_decode($submitted, true);
+
+        return $decoded === false ? '' : $decoded;
+    }
+
     #[\Override]
     function execute_for_sql_report(string $sql, ?\stdClass $data = null): array {
         global $remotedb;
 
-        $filterfuserfield = optional_param('filter_fuserfield_' . $data->field, 0, PARAM_BASE64);
-        $filter = base64_decode($filterfuserfield);
-        $columns = $remotedb->get_columns('user');
+        $filter = $this->get_submitted_value($data->field);
 
-        $column = $columns[$data->field] ?? null;
-        if (!$column) {
-            throw new moodle_exception('nosuchcolumn');
+        if (strpos($data->field, 'profile_') === 0) {
+            // Custom profile fields are stored as text in user_info_data.
+            $shortname = substr($data->field, strlen('profile_'));
+            if (!$remotedb->record_exists('user_info_field', ['shortname' => $shortname])) {
+                throw new moodle_exception('nosuchcolumn');
+            }
+            $metatype = 'X';
+        } else {
+            $columns = $remotedb->get_columns('user');
+            $column = $columns[$data->field] ?? null;
+            if (!$column) {
+                throw new moodle_exception('nosuchcolumn');
+            }
+            // Use Moodle's DB-independent meta type: the native type differs per database
+            // (e.g. tinyint/longtext on MySQL are not "int"/"text").
+            $metatype = $column->__get('meta_type');
         }
 
-        if ($filterfuserfield) {
-            switch ($column->__get('type')) {
-                case 'int':
-                case 'bigint':
+        // The expression the match uses, so that an empty filter removes exactly what a filled one replaces.
+        $filtermatch = 'FILTER_USERS(_' . preg_quote($data->field, '/') . ')?';
+
+        if ($filter !== '') {
+            switch ($metatype) {
+                case 'I':
+                case 'R':
                     if (!is_numeric($filter)) {
                         throw new moodle_exception('invalidfiltervalue');
                     }
                     $filter = clean_param($filter, PARAM_INT);
                     break;
-                case 'float':
-                case 'decimal':
+                case 'N':
+                case 'F':
                     if (!is_numeric($filter)) {
                         throw new moodle_exception('invalidfiltervalue');
                     }
                     $filter = clean_param($filter, PARAM_FLOAT);
                     break;
-                case 'char':
-                case 'varchar':
-                case 'text':
+                case 'C':
+                case 'X':
                     if (!is_string($filter)) {
                         throw new moodle_exception('invalidfiltervalue');
                     }
@@ -106,13 +136,10 @@ class plugin_fuserfield extends filter_base {
                     throw new moodle_exception('invalidfiltervalue');
             }
         } else {
-            $pattern = '/%%FILTER_USERS:' . preg_quote($data->field, '/') . ':.%%/i';
-            $sql = preg_replace($pattern, '', $sql);
+            $sql = preg_replace("/%%{$filtermatch}:[^%]+%%/i", '', $sql);
             return [$sql, []];
         }
 
-            // For backwards compatibility with existing reports.
-        $filtermatch = "FILTER_USERS(_{$data->field})?";
         return $this->sql_replace($filter, $filtermatch, $sql);
     }
 
@@ -126,17 +153,17 @@ class plugin_fuserfield extends filter_base {
     private function execute_users($finalelements, $data) {
         global $remotedb;
 
-        $filterfuserfield = optional_param('filter_fuserfield_' . $data->field, 0, PARAM_BASE64);
-        if ($filterfuserfield) {
-            $filter = base64_decode($filterfuserfield);
+        $filter = $this->get_submitted_value($data->field);
+        if ($filter !== '') {
 
             if (strpos($data->field, 'profile_') === 0) {
                 $conditions = ['shortname' => str_replace('profile_', '', $data->field)];
                 if ($fieldid = $remotedb->get_field('user_info_field', 'id', $conditions)) {
-                    [$likesql, $likeparams] = $remotedb->sql_like('data', ':data', false);
+                    // sql_like() returns a string, not [sql, params]. "Contains" like 5.2.
+                    $likesql = $remotedb->sql_like('data', ':data', false);
                     [$insql, $inparams] = $remotedb->get_in_or_equal($finalelements, SQL_PARAMS_NAMED);
                     $sql = "fieldid = :fieldid AND {$likesql} AND userid $insql";
-                    $params = array_merge(['fieldid' => $fieldid], $likeparams, $inparams);
+                    $params = array_merge(['fieldid' => $fieldid, 'data' => '%' . $filter . '%'], $inparams);
 
                     if ($infodata = $remotedb->get_records_select('user_info_data', $sql, $params)) {
                         $finalusersid = [];
@@ -147,11 +174,14 @@ class plugin_fuserfield extends filter_base {
                         return $finalusersid;
                     }
                 }
-            } else {
+            } else if (array_key_exists($data->field, $remotedb->get_columns('user')) &&
+                    !in_array($data->field, cr_get_sensitive_user_columns(), true)) {
+                // Imported reports skip the form, so the field is only used once known to be a user column.
                 [$insql, $inparams] = $remotedb->get_in_or_equal($finalelements, SQL_PARAMS_NAMED);
-                [$likesql, $likeparams] = $remotedb->sql_like($data->field, ':data', false);
+                // sql_like() returns a string, not [sql, params]. "Contains" like 5.2.
+                $likesql = $remotedb->sql_like($data->field, ':data', false);
                 $sql = "{$likesql} AND id {$insql}";
-                $params = array_merge($likeparams, $inparams);
+                $params = array_merge(['data' => '%' . $filter . '%'], $inparams);
                 if ($elements = $remotedb->get_records_select('user', $sql, $params)) {
                     $finalelements = array_keys($elements);
                 }
@@ -187,53 +217,64 @@ class plugin_fuserfield extends filter_base {
             }
         }
 
+        foreach (cr_get_sensitive_user_columns() as $column) {
+            unset($usercolumns[$column]);
+        }
+
         if (!isset($usercolumns[$formdata->field])) {
             throw new moodle_exception('nosuchcolumn');
         }
 
-        $reportclassname = 'report_' . $this->report->type;
-        $reportclass = new $reportclassname($this->report);
-
-        if ($this->report->type === 'sql') {
-            $conditions = [];
-            if ($formdata->excludedeletedusers) {
-                $conditions['deleted'] = 0;
-            }
-            $userlist = array_keys($remotedb->get_records('user', $conditions));
-        } else {
+        // A SQL report covers every user, so there is no list to narrow the values by. Asking for one
+        // loads the whole user table and then binds a parameter per row, which hangs a large site and
+        // can pass the database's own limit on parameters, so only the other report types build it.
+        $userlist = null;
+        if ($this->report->type !== 'sql') {
+            $reportclassname = 'report_' . $this->report->type;
+            $reportclass = new $reportclassname($this->report);
             $components = cr_unserialize($this->report->components);
-            $conditions = $components['conditions'] ?? null;
-            $userlist = $reportclass->elements_by_conditions($conditions);
+            $userlist = $reportclass->elements_by_conditions($components['conditions'] ?? null);
         }
-        if (!empty($userlist)) {
+        $excludedeleted = $this->report->type === 'sql' && !empty($formdata->excludedeletedusers);
+
+        if ($userlist === null || !empty($userlist)) {
             if (strpos($formdata->field, 'profile_') === 0) {
                 $conditions = ['shortname' => str_replace('profile_', '', $formdata->field)];
                 if ($field = $remotedb->get_record('user_info_field', $conditions)) {
                     $selectname = format_string($field->name);
-                    [$usql, $params] = $remotedb->get_in_or_equal($userlist);
-                    $sql = "SELECT DISTINCT(data) as data FROM {user_info_data} WHERE fieldid = ? AND userid $usql";
-                    $params = array_merge([$field->id], $params);
+                    $sql = "SELECT DISTINCT(data) as data FROM {user_info_data} WHERE fieldid = ?";
+                    $params = [$field->id];
+                    $order = " ORDER BY data ASC";
+                    if ($userlist !== null) {
+                        [$usql, $userparams] = $remotedb->get_in_or_equal($userlist);
+                        $sql .= " AND userid $usql";
+                        $params = array_merge($params, $userparams);
+                    } else if ($excludedeleted) {
+                        $sql .= " AND userid IN (SELECT id FROM {user} WHERE deleted = 0)";
+                    }
 
-                    if ($infodata = $remotedb->get_records_sql($sql, $params)) {
-                        $finalusersid = [];
+                    if ($infodata = $remotedb->get_records_sql($sql . $order, $params)) {
                         foreach ($infodata as $d) {
                             $filteroptions[base64_encode(format_string($d->data))] = format_string($d->data);
                         }
                     }
                 }
             } else {
-                // If lang string does not exist, use the sanitised field name as a fallback.
-                try {
-                    $selectname = get_string($formdata->field);
-                } catch (Exception $e) {
-                    $selectname = s($formdata->field);
-                }
+                $selectname = cr_get_field_name($formdata->field);
 
-                [$usql, $params] = $remotedb->get_in_or_equal($userlist);
-                $sql = "SELECT DISTINCT({$formdata->field}) as ufield FROM {user} WHERE id $usql ORDER BY ufield ASC";
+                $sql = "SELECT DISTINCT({$formdata->field}) as ufield FROM {user}";
+                $params = [];
+                if ($userlist !== null) {
+                    [$usql, $params] = $remotedb->get_in_or_equal($userlist);
+                    $sql .= " WHERE id $usql";
+                } else if ($excludedeleted) {
+                    $sql .= " WHERE deleted = 0";
+                }
+                $sql .= " ORDER BY ufield ASC";
+
                 if ($rs = $remotedb->get_recordset_sql($sql, $params)) {
                     foreach ($rs as $u) {
-                        $filteroptions[base64_encode($u->ufield)] = $u->ufield;
+                        $filteroptions[base64_encode($u->ufield)] = s($u->ufield);
                     }
                     $rs->close();
                 }
@@ -241,7 +282,7 @@ class plugin_fuserfield extends filter_base {
         }
 
         $mform->addElement('select', 'filter_fuserfield_' . $formdata->field, $selectname, $filteroptions);
-        $mform->setType('filter_fuserfield_' . $formdata->field, PARAM_BASE64);
+        $mform->setType('filter_fuserfield_' . $formdata->field, PARAM_RAW);
     }
 
     /**
@@ -255,11 +296,15 @@ class plugin_fuserfield extends filter_base {
     private function sql_replace(string $filtersearchtext, $filterstrmatch, $finalelements) {
         global $DB;
 
-        $sql = '';
+        // Keep the SQL unchanged when the placeholder is not in the query (5.2 behaviour).
+        $sql = $finalelements;
         $params = [];
         if (preg_match("/%%$filterstrmatch:([^%]+)%%/i", $finalelements, $output)) {
             $idoperator = $output[count($output) - 1];
-            [$field, $operator] = preg_split('/:/', $idoperator);
+            [$field, $operator] = array_pad(preg_split('/:/', $idoperator), 2, '');
+            // Field may be "alias.column", which is not a valid named param. Include the placeholder so
+            // two filters using the same column (e.g. "uid.data" for profile fields) don't share a param.
+            $paramname = 'fuserfield_' . strtolower(preg_replace('/[^a-z0-9_]/i', '_', trim($output[0], '%')));
 
             if (empty($operator)) {
                 $operator = '~';
@@ -268,15 +313,16 @@ class plugin_fuserfield extends filter_base {
             }
 
             if ($operator === '~') {
-                $replace = ' AND ' . $DB->sql_like($field, ":{$field}", false, false);
-                $params[$field] = $filtersearchtext;
+                // "Contains", like 5.2 (LIKE '%text%').
+                $replace = ' AND ' . $DB->sql_like($field, ":{$paramname}", false, false);
+                $params[$paramname] = '%' . $filtersearchtext . '%';
             } else if ($operator === 'in') {
                 [$insql, $inparams] = $DB->get_in_or_equal(explode(',', $filtersearchtext), SQL_PARAMS_NAMED);
                 $replace = " AND {$field} {$insql}";
                 $params = array_merge($params, $inparams);
             } else {
-                $replace = " AND {$field} {$operator} :{$field}";
-                $params[$field] = $filtersearchtext;
+                $replace = " AND {$field} {$operator} :{$paramname}";
+                $params[$paramname] = $filtersearchtext;
             }
             $sql = str_replace($output[0], $replace, $finalelements);
         }

@@ -1,0 +1,14 @@
+name: Publish release to camp
+on:
+  release:
+    types: [published]
+  # Run by hand: pick the tag in the "Use workflow from" ref dropdown, not a branch.
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  camp:
+    uses: camp-registry/camp-workflows/.github/workflows/release.yml@v1
